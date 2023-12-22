@@ -159,3 +159,38 @@ migrations_plot <- region_changes %>% ungroup() %>%
   coord_sf(crs = ru_crs) +
   scale_fill_distiller(palette = "PiYG", direction = 1)
 migrations_plot
+
+# With revexp and employees
+revexp_data_path <- "../tax-service-opendata/revexp/csv/group_A.csv"
+revexp_data <- read_csv(revexp_data_path)
+sshr_data_path <- "../tax-service-opendata/sshr/csv/group_A.csv"
+sshr_data <- read_csv(sshr_data_path)
+
+count_profit_employees_by_region_plot <- rsmp_data %>%
+  filter(
+    start_date <= "2021-12-31",
+    end_date >= "2021-12-31",
+    substr(activity_code_main, 1, 2) == "01"
+  ) %>% 
+  left_join(filter(revexp_data, year == 2021), by = "tin") %>% 
+  left_join(filter(sshr_data, year == 2021), by = "tin") %>% 
+  mutate(profit = revenue - expediture) %>% 
+  select(tin, region, profit, employees_count) %>% 
+  group_by(region) %>% 
+  summarise(
+    count = n(),
+    profit = sum(profit, na.rm = TRUE),
+    employees = sum(employees_count, na.rm = TRUE)
+  ) %>% 
+  pivot_longer(-region, names_to = "option", values_to = "value") %>% 
+  right_join(regions, by = c("region" = "name")) %>% 
+  st_as_sf() %>% 
+  group_by(option) %>% 
+  mutate(value = rescale(value)) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_sf(aes(fill = value), size = .1) +
+  coord_sf(crs = ru_crs) +
+  facet_wrap(~option, ncol = 2) +
+  scale_fill_distiller(palette = "YlGn", direction = 1)
+count_profit_employees_by_region_plot

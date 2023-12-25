@@ -1,3 +1,8 @@
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(tidyr)
+
 rsmp_raw_data_path <- "../tax-service-opendata/rsmp/xml"
 
 raw_files <- list.files(raw_data_path, pattern = "*.zip", full.names = TRUE)
@@ -94,3 +99,45 @@ counts_funnel <- data.frame(
 out_data <- read_csv(rsmp_out_file)
 out_org_count <- table(out_data$kind)["1"]
 out_ind_count <- table(out_data$kind)["2"]
+
+# Validation
+val_stats <- read_csv("../tax-service-opendata/Stats_for_validation.csv")
+
+corr_by_year_all <- val_stats %>% 
+  group_by(year) %>% 
+  summarise(cor = cor(count_reestr, count_rosstat, method = "spearman"))
+corr_by_year_filtered <- val_stats %>% 
+  filter(group != "O", group != "P", group != "U") %>% 
+  group_by(year) %>% 
+  summarise(cor = cor(count_reestr, count_rosstat, method = "spearman"))
+corr_by_year <- left_join(
+  yearly_corr_all,
+  yearly_corr_filtered,
+  by = "year",
+  suffix = c("_all", "_filtered")
+)
+
+corr_by_region_all <- val_stats %>% 
+  group_by(region) %>% 
+  summarise(cor = cor(count_reestr, count_rosstat, method = "spearman")) %>% 
+  arrange(cor)
+corr_by_region_filtered <- val_stats %>% 
+  filter(group != "O", group != "P", group != "U") %>% 
+  group_by(region) %>% 
+  summarise(cor = cor(count_reestr, count_rosstat, method = "spearman")) %>% 
+  arrange(cor)
+corr_by_region <- left_join(
+  corr_by_region_all, corr_by_region_filtered,
+  by = "region", suffix = c("_all", "_filtered")) %>% 
+  pivot_longer(-region, names_to = "option", values_to = "cor")
+corr_by_region_plot <- ggplot(corr_by_region, aes(x = cor, color = option)) +
+  geom_freqpoly(binwidth = .05) +
+  scale_color_discrete(name = "Группы ОКВЭД", labels = c("Все", "Все, кроме O, P, U")) +
+  labs(x = "Коэффициент корреляции Спирмена", y = "Число субъектов России")
+corr_by_region_plot
+
+corr_by_group <- val_stats %>% 
+  group_by(group) %>% 
+  summarise(cor = cor(count_reestr, count_rosstat, method = "spearman")) %>% 
+  arrange(cor)
+

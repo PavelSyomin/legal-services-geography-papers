@@ -1,4 +1,6 @@
 library(DiagrammeR)
+library(DiagrammeRsvg)
+library(rsvg)
 
 diagram <- grViz("digraph {
   
@@ -67,3 +69,6 @@ D3a -> {A3b, A3c}
 {D4a, D4b, D4c} -> A5 -> D5 
 }")
 
+diagram %>% export_svg() %>% charToRaw() %>% rsvg_png("assets/diagram.png")
+
+            

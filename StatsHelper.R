@@ -5,7 +5,7 @@ library(tidyr)
 
 rsmp_raw_data_path <- "../tax-service-opendata/rsmp/xml"
 
-raw_files <- list.files(raw_data_path, pattern = "*.zip", full.names = TRUE)
+raw_files <- list.files(rsmp_raw_data_path, pattern = "*.zip", full.names = TRUE)
 raw_files_count <- length(raw_files)
 raw_files_count
 
@@ -111,8 +111,8 @@ corr_by_year_filtered <- val_stats %>%
   group_by(year) %>% 
   summarise(cor = cor(count_reestr, count_rosstat, method = "spearman"))
 corr_by_year <- left_join(
-  yearly_corr_all,
-  yearly_corr_filtered,
+  corr_by_year_all,
+  corr_by_year_filtered,
   by = "year",
   suffix = c("_all", "_filtered")
 )

@@ -1,0 +1,169 @@
+---
+output:
+  odt_document:
+    number_sections: true
+    reference_odt: assets/reference.odt
+bibliography: assets/biblio_en.bib
+csl: "assets/citations.csl"
+link-bibliography: false
+nocite: |
+  @*
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE, 
+  message = FALSE, 
+  echo = FALSE, 
+  fig.width = 6.5, 
+  fig.height = 5,
+  fig.id = FALSE,
+  dpi = 300)
+options(knitr.kable.NA = "—")
+```
+
+```{r imports, cache = TRUE, include = FALSE}
+source("Plots.R")
+source("StatsHelper.R")
+source("Diagram.R")
+```
+
+UDC 911.3, 519.688
+
+<br>
+
+**Technology of Using Federal Taxpayer Service's Open Data for Making a Geo-Referenced Dataset about Small and Medium-Sized Businesses in Russia**
+
+<br>
+
+Syomin Pavel Olegovich
+
+<br>
+
+Perm State National University, 15 Bukireva st., Perm, 614068, Russian Federation
+
+<br>
+
+Syomin Pavel Olegovich: ntsp\@ya.ru, ORCID 0000-0002-4015-9206
+
+<br>
+
+Contact:  
+
+Syomin Pavel Olegovich  
+
+Phone +7 9222 06 77 01  
+
+Email: ntsp\@ya.ru  
+
+Address: 35-62 Kosmonavtov st., Sverdlovsk obl., Nizhniy Tagil, 622002, Russia
+
+# Abstract {-}
+
+The paper features a technology (algorithm, application) for making of a tabular georeferenced dataset about small and medium-sized bisunesses (SMBs) in Russia based on open data of Federal Taxpayer Service (FTS) of Russia. The resulting dataset covers the period from 2016 to 2023 and the whole area of Russia. It can be considered as a complete list, or population, of SMBs and contains information about category, name, address, activity code, revenue, expediture, number of employees of an organization or an individual entrepreneur. The spatial resolution of the dataset is by settlement, including geographical coordinates and municipality code; the temporal resolution is up to a year or month depending on the features; the resolution regarding the activity type is by concrete activity code according to the state classifier. In comparison to the typical data paper, this article contains the description of the methods used to produce the data and demonstrates the application of the proposed technology rather than the description of the dataset itself. Using the algorithm and its sample implementation on Python, a researcher can perform the data processing independently and obtain the up-to-date copy of the resulting data, optionally tailored to its specific purposes. The algorithm is optimized so that it runs on a typical PC despite the relatively large (~2Tb) size of unpacked source data. The dataset produced by the proposed method can be used for spatial analysis of SMBs in Russia as well as a proxy data source which is quite relevant for analysis of Russia's economy. The detalization up to a specific organizations enables the use of the produced dataset as a free partial alternative to commercial business intelligence systems like Spark and Kontur.Focus. Also, the presence of geographical coordinates makes mapping easy, and municipality codes may be used to join the dataset with official statistical databases.
+
+**Keywords:** open data, spatial analysis, spatial data, administrative data, small&medium business, business registry, dataset, big data, Apache Spark, FTS of Russia
+
+# Bibliography {-}
+
+<div id="refs"></div>
+
+
+\newpage
+
+```{r fig-1-diagram, fig.cap = "Fig. 1. Data Processing Diagram"}
+grid::grid.raster(diagram_raster)
+```
+
+<br>
+
+```{r tab-1-sizes-funnel}
+bytes_in_mb <- 2 ** 20
+sizes_funnel <-  sizes_funnel / bytes_in_mb
+knitr::kable(
+  sizes_funnel,
+  digits = 0,
+  format.args = list(scientific = FALSE),
+  col.names = c("SMB Registry", "Revenue+Expediture", "Employees", "Total"),
+  caption = "Table 1. Change in the data volumes during program execution (in megabytes). Rows are stages, columns are source datasets and totals")
+```
+
+<br>
+
+```{r tab-2-counts-funnel}
+counts_funnel <- counts_funnel / 1000 # in thousands
+knitr::kable(
+  counts_funnel,
+  digits = 0,
+  format.args = list(scientific = FALSE),
+  col.names = c("SMB Registry", "Revenue+Expediture", "Employees"),
+  caption = "Table 2. Change in the number of records during program execution (in thousands). Rows are stages, columns are source datasets")
+```
+
+<br>
+
+```{r fig-2-time-series-plot, fig.cap = "Fig. 2. Monthly changes in the number of SMBs in the demo dataset in 2016–2023. Only top 15 regions are shown"}
+time_series_plot
+```
+
+<br>
+
+```{r fig-3-regions-agri-forest, fig.cap = "Fig. 3. Regional distribution of SMBs which main activity is agriculture or forestry. Color represents the min-max scaled value"}
+regions_plot_agri_forestry
+```
+
+<br>
+
+```{r fig-3-regions-wheat-potato, fig.cap = "Fig. 4. Regional distribution of SMBs which main activity is growing of wheat or potato. Color represents the min-max scaled value, gray is no data"}
+regions_plot_wheat_potato
+```
+
+<br>
+
+```{r fig-5-activity-by-settlements-russia, fig.cap = "Fig. 5. Count of SMBs in some Russian settlements with dominant activity type. The counts are represented with circle size, and the most popular activity group in the settlement is displayed by color. Only settlements with 50+ SMBs are shown"}
+activity_by_settlements
+```
+
+<br>
+
+```{r fig-6-activity-by-settlements_svr, fig.cap = "Fig. 6. Count of SMBs in settlements of Sverdlovsk region with dominant activity type. The counts are represented with circle size, and the most popular activity group in the settlement is displayed by color. All settlements regardless of the counts are shown"}
+activity_by_settlements_svr
+```
+
+<br>
+
+```{r fig-7-migrations, fig.cap = "Fig. 7. Regional distribution of SMBs which have arrived to or left the region during 2016–2023. The color is min-max scaled value, -1 is the top decline, while +1 is the top growth"}
+migrations_plot
+```
+
+<br>
+
+```{r fig-8-count-employees-profit-by-region, fig.cap = "Fig. 8. Regional distribution of counts of SMBs, their total profit and total number of employees in the demo dataset in 2021"}
+count_profit_employees_by_region_plot
+```
+
+<br>
+
+```{r tab-3-corr-by-year}
+knitr::kable(
+  corr_by_year,
+  digits = 2, 
+  col.names = c("Year", "$\\rho_{Spearman}$, all activity groups", "$\\rho_{Spearman}$, excluding groups O, P, U"),
+  caption = "Table 3. The correlation between the count of SMBs and total count of businesses by year")
+```
+
+<br>
+
+```{r fig-9-corr-by-region, fig.cap = "Fig. 9. Distribution of regions by the correlation coefficient between the SMBs counts and total businesses counts"}
+corr_by_region_plot
+```
+
+<br>
+
+```{r tab-4-corr_by_group}
+knitr::kable(
+  corr_by_group,
+  digits = 2,
+  col.names = c("Activity group", "$\\rho_{Spearman}$"),
+  caption = "Table 4. The correlation between the count of SMBs and total count of businesses by activity group")
+```

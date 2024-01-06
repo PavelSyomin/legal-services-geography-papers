@@ -69,6 +69,4 @@ D3a -> {A3b, A3c}
 {D4a, D4b, D4c} -> A5 -> D5 
 }")
 
-diagram %>% export_svg() %>% charToRaw() %>% rsvg_png("assets/diagram.png")
-
-            
+diagram_raster <- diagram %>% export_svg() %>% charToRaw() %>% rsvg_nativeraster(width = 2000)

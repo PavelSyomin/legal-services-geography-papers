@@ -6,6 +6,47 @@ library(scales)
 library(sf)
 library(tidyr)
 
+labels <- data.frame(
+  ru = c(
+    "Субъект России",
+    "Год",
+    "Количество субъектов МСП",
+    "Сельское хозяйство",
+    "Лесное хозяйство",
+    "Пшеница",
+    "Картофель",
+    "Количество фирм",
+    "Группа ОКВЭД",
+    "Сельское хозяйство",
+    "Лесоводство и лесозаготовки",
+    "Рыболовство и рыбоводство",
+    "Изменение за 2016–2023",
+    "Количество фирм",
+    "Численность работников",
+    "Прибыль"
+  ),
+  en = c(
+    "Region",
+    "Year",
+    "SMBs count",
+    "Agriculture",
+    "Forestry",
+    "Wheat",
+    "Potato",
+    "SMBs count",
+    "Activity group",
+    "Agriculture",
+    "Forestry",
+    "Fishery",
+    "Change, 2016–2023",
+    "SMBs count",
+    "Employees count",
+    "Total profit"
+    
+  )
+)
+labels <- labels[[LOCALE]]
+
 rsmp_data_path <- "../tax-service-opendata/rsmp/reestr_group_A/data_product.csv"
 rsmp_data <- read_csv(rsmp_data_path)
 
@@ -28,8 +69,8 @@ time_series_plot <- expand(monthly_counts, region, date) %>%
   ggplot(aes(x = date, y = n, color = region)) +
   geom_line(na.rm = TRUE) +
   scale_y_continuous(trans = "log10") +
-  scale_color_discrete(name = "Субъект России") +
-  labs(x = "Год", y = "Количество субъектов МСП") +
+  scale_color_discrete(name = labels[1]) +
+  labs(x = labels[2], y = labels[3]) +
   theme_bw(base_size = 12, base_family = "Times New Roman")
 time_series_plot
 
@@ -42,7 +83,7 @@ regions <- regions_boundaries %>%
   left_join(regions, by = c("shapeISO" = "iso_code")) %>% 
   select(name)
 
-ac_code_mapping <- c("01" = "Сельское хозяйство", "02" = "Лесное хозяйство")
+ac_code_mapping <- c("01" = labels[4], "02" = labels[5])
 regions_plot_agri_forestry <- rsmp_data %>%
   mutate(
     ac_start = substr(activity_code_main, 1, 2),
@@ -69,7 +110,7 @@ regions_plot_agri_forestry <- rsmp_data %>%
   theme(legend.position = "bottom")
 regions_plot_agri_forestry
 
-ac_code_mapping_wp <- c("01.11.11" = "Пшеница", "01.13.31" = "Картофель")
+ac_code_mapping_wp <- c("01.11.11" = labels[6], "01.13.31" = labels[7])
 regions_plot_wheat_potato <- rsmp_data %>%
   mutate(
     ac_type = ac_code_mapping_wp[activity_code_main]) %>% 
@@ -82,7 +123,7 @@ regions_plot_wheat_potato <- rsmp_data %>%
   mutate(n = rescale(n)) %>% 
   pivot_wider(names_from = ac_type, values_from = n) %>% 
   right_join(regions, by = c("region" = "name")) %>% 
-  pivot_longer(cols = "Картофель":"Пшеница", names_to = "ac_type", values_to = "n") %>% 
+  pivot_longer(cols = c(labels[6], labels[7]), names_to = "ac_type", values_to = "n") %>% 
   st_as_sf() %>% 
   ggplot() +
   geom_sf(aes(fill = n), size = .1) +
@@ -114,8 +155,8 @@ activity_by_settlements <- regions %>% ggplot() +
   geom_sf(size = .1) +
   geom_sf(data = activity_by_settlements_df, aes(color = ac_type, size = n)) +
   coord_sf(crs = ru_crs) +
-  scale_size_continuous(name = "Количество фирм") +
-  scale_color_discrete(name = "Группа ОКВЭД", labels = c("Сельское хозяйство", "Лесоводство и лесозаготовки", "Рыболовство и рыбоводство")) +
+  scale_size_continuous(name = labels[8]) +
+  scale_color_discrete(name = labels[9], labels = c(labels[10], labels[11], labels[12])) +
   theme_bw(base_size = 12, base_family = "Times New Roman") +
   theme(legend.position = "bottom", legend.direction = "vertical")
 activity_by_settlements
@@ -137,8 +178,8 @@ activity_by_settlements_svr <- ru_svr %>%
   geom_sf() +
   geom_sf(data = ru_svr_activity, aes(color = ac_type, size = n)) +
   coord_sf(crs = 4326) +
-  scale_size_continuous(name = "Количество фирм") +
-  scale_color_discrete(name = "Группа ОКВЭД", labels = c("Сельское хозяйство", "Лесоводство и лесозаготовки", "Рыболовство и рыбоводство")) +
+  scale_size_continuous(name = labels[8]) +
+  scale_color_discrete(name = labels[9], labels = c(labels[10], labels[11], labels[12])) +
   theme_bw(base_size = 12, base_family = "Times New Roman")
 activity_by_settlements_svr
 
@@ -161,7 +202,7 @@ migrations_plot <- region_changes %>% ungroup() %>%
   ggplot() +
   geom_sf(aes(fill = change), size = .1) + 
   coord_sf(crs = ru_crs) +
-  scale_fill_distiller(name = "Изменение за 2016–2023", palette = "PiYG", direction = 1) +
+  scale_fill_distiller(name = labels[13], palette = "PiYG", direction = 1) +
   theme_bw(base_size = 12, base_family = "Times New Roman") +
   theme(legend.position = "bottom")
 migrations_plot
@@ -194,7 +235,7 @@ count_profit_employees_by_region_plot <- rsmp_data %>%
   group_by(option) %>% 
   mutate(value = rescale(value)) %>% 
   ungroup() %>% 
-  mutate(option = factor(option, levels = c("count", "employees", "profit"), labels = c("Количество фирм", "Численность работников", "Прибыль"))) %>% 
+  mutate(option = factor(option, levels = c("count", "employees", "profit"), labels = c(labels[14], labels[15], labels[16]))) %>% 
   ggplot() +
   geom_sf(aes(fill = value), size = .1) +
   coord_sf(crs = ru_crs) +

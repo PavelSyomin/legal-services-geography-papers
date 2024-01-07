@@ -3,6 +3,31 @@ library(ggplot2)
 library(readr)
 library(tidyr)
 
+labels <- data.frame(
+  ru = c(
+    "Исходные данные",
+    "Промежуточные файлы",
+    "Итоговые таблицы",
+    "Панельное представление",
+    "Группы ОКВЭД",
+    "Все",
+    "Все, кроме O, P, U",
+    "Коэффициент корреляции Спирмена",
+    "Число субъектов России"
+  ),
+  en = c(
+    "Source data",
+    "Intermediary files",
+    "Resulting tables",
+    "Panel view",
+    "Activity groups",
+    "All",
+    "All except for O, P, U",
+    "Spearman's rho",
+    "Number of regions"
+  )
+)
+labels <- labels[[LOCALE]]
 rsmp_raw_data_path <- "../tax-service-opendata/rsmp/xml"
 
 raw_files <- list.files(rsmp_raw_data_path, pattern = "*.zip", full.names = TRUE)
@@ -54,7 +79,7 @@ sizes_funnel <- data.frame(
   rsmp = c(rsmp_source_files_size, rsmp_intermediate_data_files_size, rsmp_out_file_size, rsmp_panel_file_size),
   revexp = c(revexp_source_files_size, revexp_intermediate_data_files_size, revexp_out_file_size, NA),
   sshr = c(sshr_source_files_size, sshr_intermediate_data_files_size, sshr_out_file_size, NA),
-  row.names = c("Исходные данные", "Промежуточные файлы", "Итоговые таблицы", "Панельное представление")
+  row.names = c(labels[1], labels[2], labels[3], labels[4])
 )
 sizes_funnel$total <- rowSums(sizes_funnel, na.rm = TRUE)
 
@@ -93,7 +118,7 @@ counts_funnel <- data.frame(
   rsmp = c(rsmp_source_obs_count, rsmp_intermediate_obs_count, rsmp_out_obs_count, rsmp_panel_obs_count),
   revexp = c(revexp_intermediate_obs_count, revexp_intermediate_obs_count, revexp_out_obs_count, NA),
   sshr = c(sshr_intermediate_obs_count, sshr_intermediate_obs_count, sshr_out_obs_count, NA),
-  row.names = c("Исходные данные", "Промежуточные файлы", "Итоговые таблицы", "Панельное представление")
+  row.names = c(labels[1], labels[2], labels[3], labels[4])
 )
 
 out_data <- read_csv(rsmp_out_file)
@@ -132,8 +157,8 @@ corr_by_region <- left_join(
   pivot_longer(-region, names_to = "option", values_to = "cor")
 corr_by_region_plot <- ggplot(corr_by_region, aes(x = cor, color = option)) +
   geom_freqpoly(binwidth = .05) +
-  scale_color_discrete(name = "Группы ОКВЭД", labels = c("Все", "Все, кроме O, P, U")) +
-  labs(x = "Коэффициент корреляции Спирмена", y = "Число субъектов России")
+  scale_color_discrete(name = labels[5], labels = c(labels[6], labels[7])) +
+  labs(x = labels[8], y = labels[9])
 corr_by_region_plot
 
 corr_by_group <- val_stats %>% 

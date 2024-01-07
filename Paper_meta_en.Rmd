@@ -6,8 +6,7 @@ output:
 bibliography: assets/biblio_en.bib
 csl: "assets/citations.csl"
 link-bibliography: false
-nocite: |
-  @*
+nocite: "@*"
 ---
 
 ```{r setup, include=FALSE}
@@ -20,6 +19,7 @@ knitr::opts_chunk$set(
   fig.id = FALSE,
   dpi = 300)
 options(knitr.kable.NA = "—")
+LOCALE = "en"
 ```
 
 ```{r imports, cache = TRUE, include = FALSE}
@@ -36,11 +36,11 @@ UDC 911.3, 519.688
 
 <br>
 
-Syomin Pavel Olegovich
+Pavel O. Syomin
 
 <br>
 
-Perm State National University, 15 Bukireva st., Perm, 614068, Russian Federation
+Perm State University, 15 Bukireva st., Perm, 614068, Russian Federation
 
 <br>
 
@@ -50,7 +50,7 @@ Syomin Pavel Olegovich: ntsp\@ya.ru, ORCID 0000-0002-4015-9206
 
 Contact:  
 
-Syomin Pavel Olegovich  
+Pavel O. Syomin 
 
 Phone +7 9222 06 77 01  
 

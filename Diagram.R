@@ -8,21 +8,21 @@ labels <- data.frame(
     "Извлечённые данные\n(N csv-файлов)",
     "Объединённая таблица\n(csv-файл)",
     "Геопривязанная таблица\n(csv-файл)",
-    "Извлечение, фильтрация,\nтрансформация (2а)",
-    "Агрегирование (3а)",
+    "Извлечение, фильтрация,\nтрансформация (2a)",
+    "Агрегирование (3a)",
     "Геопривязка (4)",
     "Доходы и расходы\n(M zip-архивов)",
     "Извлечённые данные\n(M csv-файлов)",
     "Отфильтрованная таблица\n(csv-файл)",
-    "Извлечение и трансформация (2б)",
-    "Агрегирование и фильтрация(3б)",
+    "Извлечение и трансформация (2b)",
+    "Агрегирование и фильтрация(3b)",
     "Число работников\n(K zip-архивов)",
     "Извлечённые данные\n(K csv-файлов)",
     "Отфильтрованная таблица\n(csv-файл)",
-    "Извлечение, трансформация (2в)",
-    "Агрегирование и фильтрация (3в)",
+    "Извлечение, трансформация (2c)",
+    "Агрегирование и фильтрация (3c)",
     "Открытые данные ФНС России",
-    "Панельное представление",
+    "Панельная таблица",
     "Справочник\nнаселённых пунктов",
     "Загрузка (1)",
     "Объединение и трансформация (5)"
@@ -32,21 +32,21 @@ labels <- data.frame(
     "Extracted data\n(N csv files)",
     "Joint table\n(a csv file)",
     "Georeferenced table\n(a csv file)",
-    "Extract, filter,\ntransform (2а)",
-    "Aggregate (3а)",
+    "Extract, filter,\ntransform (2a)",
+    "Aggregate (3a)",
     "Georeference (4)",
-    "Revenue&expediture\n(M zip archives)",
+    "Revenue&expenditure\n(M zip archives)",
     "Extracted data\n(M csv files)",
     "Filtered table\n(a csv file)",
-    "Extract and transform (2б)",
-    "Aggregate and filter(3б)",
+    "Extract and transform (2b)",
+    "Aggregate and filter (3b)",
     "Employees count\n(K zip files)",
     "Extracted data\n(K csv files)",
     "Filtered table\n(a csv file)",
-    "Extract and transform (2в)",
-    "Aggregate and filte (3в)",
+    "Extract and transform (2c)",
+    "Aggregate and filter (3c)",
     "FTS open data",
-    "Panel view",
+    "Panel table",
     "Settlements\nlookup table",
     "Download (1)",
     "Join and transform (5)"
@@ -61,7 +61,7 @@ graph[layout = dot, fontname = 'Ubuntu', fontsize = 18]
 
 subgraph cluster_a {
   rank = same;
-  node[shape = box, width = 2.5, height = .5, fixedsize = True]
+  node[shape = box, width = 2.7, height = .5, fixedsize = True]
   D1a[label='@@1']
   D2a[label='@@2']
   D3a[label='@@3']
@@ -77,7 +77,7 @@ subgraph cluster_a {
 
 subgraph cluster_b {
   rank = same;
-  node[shape = box, width = 2.5, height = .5, fixedsize = True]
+  node[shape = box, width = 2.7, height = .5, fixedsize = True]
   D1b[label='@@8']
   D2b[label='@@9']
   D4b[label='@@10']
@@ -85,13 +85,13 @@ subgraph cluster_b {
   node[shape = none, width = 2, height = .5, fixedsize = True]
   A2b[label = '@@11']
   A3b[label = '@@12']
-  
+
   D1b -> A2b -> D2b -> A3b -> D4b
 }
 
 subgraph cluster_c {
   rank = min;
-  node[shape = box, width = 2.5, height = .5, fixedsize = True]
+  node[shape = box, width = 2.7, height = .5, fixedsize = True]
   D1c[label='@@13']
   D2c[label='@@14']
   D4c[label='@@15']
@@ -145,6 +145,6 @@ D3a -> {A3b, A3c}
 [21]: labels[21]
 [22]: labels[22]
 ")
-
+diagram
 diagram_raster <- diagram %>% export_svg() %>% charToRaw() %>% rsvg_nativeraster(width = 2000)
 grid::grid.raster(diagram_raster)

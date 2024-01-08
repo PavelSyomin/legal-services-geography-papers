@@ -60,7 +60,7 @@ Address: 35-62 Kosmonavtov st., Sverdlovsk obl., Nizhniy Tagil, 622002, Russia
 
 # Abstract {-}
 
-The paper features a technology (algorithm, application) for making of a tabular georeferenced dataset about small and medium-sized bisunesses (SMBs) in Russia based on open data of Federal Taxpayer Service (FTS) of Russia. The resulting dataset covers the period from 2016 to 2023 and the whole area of Russia. It can be considered as a complete list, or population, of SMBs and contains information about category, name, address, activity code, revenue, expediture, number of employees of an organization or an individual entrepreneur. The spatial resolution of the dataset is by settlement, including geographical coordinates and municipality code; the temporal resolution is up to a year or month depending on the features; the resolution regarding the activity type is by concrete activity code according to the state classifier. In comparison to the typical data paper, this article contains the description of the methods used to produce the data and demonstrates the application of the proposed technology rather than the description of the dataset itself. Using the algorithm and its sample implementation on Python, a researcher can perform the data processing independently and obtain the up-to-date copy of the resulting data, optionally tailored to its specific purposes. The algorithm is optimized so that it runs on a typical PC despite the relatively large (~2Tb) size of unpacked source data. The dataset produced by the proposed method can be used for spatial analysis of SMBs in Russia as well as a proxy data source which is quite relevant for analysis of Russia's economy. The detalization up to a specific organizations enables the use of the produced dataset as a free partial alternative to commercial business intelligence systems like Spark and Kontur.Focus. Also, the presence of geographical coordinates makes mapping easy, and municipality codes may be used to join the dataset with official statistical databases.
+The paper features a technology for creating a geo-referenced tabular dataset of small and medium-sized businesses (SMBs) in Russia based on open data from the Federal Tax Service (FTS of Russia). The resulting dataset covers the entire territory of Russia for 2016—2023. It is a complete list of SMBs and it contains information on registration numbers, category, name, address, activity type, income, expenses, and number of employees. In spatial terms, the dataset is detailed down to settlements, including geographic coordinates and municipal code (OKTMO); in a temporary sense — up to months or years, depending on the specific feature; in relation to the type of activity — up to individual codes of the activity classifier. Unlike a classic data paper, the article does not describe the resulting dataset as such, but outlines a reproducible methodology for creating it and demonstrates its use to obtain a dataset of firms in the agriculture, forestry and fisheries sectors. Using the proposed algorithm and its implementation in Python, the researcher can independently process the source data and get an up-to-date version of the dataset, tailored to his purposes. The algorithm is optimized so that it runs on a typical PC despite the relatively large (~2Tb uncompressed) volume of source data. The dataset produced by the proposed method can be used for spatial analysis of SMBs in Russia and as an open, free and relatively representative source of information about the Russian economy in the context of specific organizations, making it possible to partially replace commercial business intelligence systems like Spark and Kontur.Focus. In addition, thanks to the coordinates, the data set can be used for mapping without additional processing, and the presence of OKTMO codes allows it to be combined with official statistical information.
 
 **Keywords:** open data, spatial analysis, spatial data, administrative data, small&medium business, business registry, dataset, big data, Apache Spark, FTS of Russia
 
@@ -84,7 +84,7 @@ knitr::kable(
   sizes_funnel,
   digits = 0,
   format.args = list(scientific = FALSE),
-  col.names = c("SMB Registry", "Revenue+Expediture", "Employees", "Total"),
+  col.names = c("SMB Registry", "Revenue+Expenditure", "Employees", "Total"),
   caption = "Table 1. Change in the data volume during program execution (in megabytes). Rows are stages, columns are source datasets and totals")
 ```
 
@@ -96,7 +96,7 @@ knitr::kable(
   counts_funnel,
   digits = 0,
   format.args = list(scientific = FALSE),
-  col.names = c("SMB Registry", "Revenue+Expediture", "Employees"),
+  col.names = c("SMB Registry", "Revenue+Expenditure", "Employees"),
   caption = "Table 2. Change in the number of records during program execution (in thousands). Rows are stages, columns are source datasets")
 ```
 
@@ -132,7 +132,7 @@ activity_by_settlements_svr
 
 <br>
 
-```{r fig-7-migrations, fig.cap = "Fig. 7. Regional distribution of SMBs which have arrived to or left the region during 2016–2023. The color is min-max scaled value, -1 is the top decline, while +1 is the top growth"}
+```{r fig-7-migrations, fig.cap = "Fig. 7. Regional distribution of SMBs which have arrived to or left the region during 2016–2023"}
 migrations_plot
 ```
 

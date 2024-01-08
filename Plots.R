@@ -202,7 +202,7 @@ migrations_plot <- region_changes %>% ungroup() %>%
   ggplot() +
   geom_sf(aes(fill = change), size = .1) + 
   coord_sf(crs = ru_crs) +
-  scale_fill_distiller(name = labels[13], palette = "PiYG", direction = 1) +
+  scale_fill_gradient2(name = labels[13], low = "#d01c8b", high = "#4dac26") +
   theme_bw(base_size = 12, base_family = "Times New Roman") +
   theme(legend.position = "bottom")
 migrations_plot

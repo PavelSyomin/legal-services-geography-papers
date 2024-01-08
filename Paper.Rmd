@@ -22,9 +22,9 @@ LOCALE = "ru"
 ```
 
 ```{r imports, cache = TRUE, include = FALSE}
-source("Plots.R")
-source("StatsHelper.R")
-source("Diagram.R")
+source("helpers/Plots.R")
+source("helpers/Stats.R")
+source("helpers/Diagram.R")
 ```
 
 УДК 911.3, 519.688

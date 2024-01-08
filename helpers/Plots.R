@@ -6,6 +6,7 @@ library(scales)
 library(sf)
 library(tidyr)
 
+# Localized labels
 labels <- data.frame(
   ru = c(
     "Субъект России",
@@ -47,8 +48,18 @@ labels <- data.frame(
 )
 labels <- labels[[LOCALE]]
 
+# Data
 rsmp_data_path <- "../tax-service-opendata/rsmp/reestr_group_A/data_product.csv"
 rsmp_data <- read_csv(rsmp_data_path)
+
+# Maps
+regions_boundaries <- st_read("assets/ru.geojson")
+ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
+regions <- read_csv("../tax-service-opendata/assets/regions.csv")
+regions <- regions_boundaries %>% 
+  left_join(regions, by = c("shapeISO" = "iso_code")) %>% 
+  select(name, name_en = shapeName)
+ru_svr <- st_read("assets/ru_svr.geojson")
 
 # Regions time series
 monthly_counts <- do.call(rbind, lapply(
@@ -69,20 +80,23 @@ time_series_plot <- expand(monthly_counts, region, date) %>%
   ggplot(aes(x = date, y = n, color = region)) +
   geom_line(na.rm = TRUE) +
   scale_y_continuous(trans = "log10") +
-  scale_color_discrete(name = labels[1]) +
   labs(x = labels[2], y = labels[3]) +
   theme_bw(base_size = 12, base_family = "Times New Roman")
+
+if (LOCALE == "en") {
+  time_series_plot <- time_series_plot + 
+    scale_color_discrete(
+      name = labels[1],
+      labels = function(breaks) {
+        br <- data.frame(name = breaks)
+        left_join(br, regions) %>% select(name_en) %>% pull
+    })
+} else {
+  time_series_plot <- time_series_plot + scale_color_discrete(name = labels[1])
+}
 time_series_plot
 
-# Maps
-regions_boundaries <- st_read("geoBoundaries-RUS-ADM1_simplified.geojson")
-ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
-regions <- read_csv("../tax-service-opendata/assets/regions.csv")
-
-regions <- regions_boundaries %>% 
-  left_join(regions, by = c("shapeISO" = "iso_code")) %>% 
-  select(name)
-
+# Regional distribution
 ac_code_mapping <- c("01" = labels[4], "02" = labels[5])
 regions_plot_agri_forestry <- rsmp_data %>%
   mutate(
@@ -138,6 +152,7 @@ regions_plot_wheat_potato <- rsmp_data %>%
   theme(legend.position = "bottom")
 regions_plot_wheat_potato
 
+# Distribution by settlements
 activity_by_settlements_df <- rsmp_data %>%
   mutate(ac_type = substr(activity_code_main, 1, 2)) %>% 
   filter(
@@ -172,7 +187,6 @@ ru_svr_activity <- rsmp_data %>%
   drop_na() %>% 
   st_as_sf(coords = c("lon", "lat"), crs = 4326) 
 
-ru_svr <- st_read("ru_svr.geojson")
 activity_by_settlements_svr <- ru_svr %>% 
   ggplot() +
   geom_sf() +
@@ -183,6 +197,7 @@ activity_by_settlements_svr <- ru_svr %>%
   theme_bw(base_size = 12, base_family = "Times New Roman")
 activity_by_settlements_svr
 
+# Migrations
 region_changes <- rsmp_data %>% 
   select(tin, region) %>% 
   group_by(tin) %>% 

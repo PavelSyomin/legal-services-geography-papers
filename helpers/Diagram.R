@@ -57,7 +57,7 @@ labels <- labels[[LOCALE]]
 
 diagram <- grViz("digraph {
   
-graph[layout = dot, fontname = 'Ubuntu', fontsize = 18]
+graph[layout = dot, fontname = 'Times New Roman', fontsize = 18]
 
 subgraph cluster_a {
   rank = same;
@@ -145,6 +145,5 @@ D3a -> {A3b, A3c}
 [21]: labels[21]
 [22]: labels[22]
 ")
-diagram
+
 diagram_raster <- diagram %>% export_svg() %>% charToRaw() %>% rsvg_nativeraster(width = 2000)
-grid::grid.raster(diagram_raster)

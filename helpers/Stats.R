@@ -158,7 +158,8 @@ corr_by_region <- left_join(
 corr_by_region_plot <- ggplot(corr_by_region, aes(x = cor, color = option)) +
   geom_freqpoly(binwidth = .05) +
   scale_color_discrete(name = labels[5], labels = c(labels[6], labels[7])) +
-  labs(x = labels[8], y = labels[9])
+  labs(x = labels[8], y = labels[9]) +
+  theme_bw(base_size = 12, base_family = "Times New Roman")
 corr_by_region_plot
 
 corr_by_group <- val_stats %>% 

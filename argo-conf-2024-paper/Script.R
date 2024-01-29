@@ -5,7 +5,7 @@ library(scatterpie)
 library(sf)
 library(tidyr)
 
-data_path <- "../ru-smb-companies/group_A/panel.csv"
+data_path <- "../../ru-smb-companies/group_A/panel.csv"
 data <- read_csv(data_path)
 
 total <- data %>% distinct(tin) %>% nrow()

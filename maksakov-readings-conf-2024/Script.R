@@ -13,17 +13,45 @@ empl <- read_csv("../../ru-smb-companies/legal/empl.csv")
 cities <- read_csv("cities.csv")
 regions <- st_read("ru.geojson")
 
+# Number of unique companies
+companies_count <- n_distinct(data[data$kind == 1, "tin"])
+
+# Number of companies as of 2016-08-10 (to compare with Moiseeva2016)
+companies_count_08_2016 <- nrow(filter(data, kind == 1, start_date == "2016-08-10"))
+
 # Calculate the absolute numbers and shares of companies
 # with changes in location
 # Location is defined as change either in region or settlement
-data %>% 
+migration_count_distribution <- data %>% 
   filter(kind == 1) %>% 
   group_by(tin) %>%
   distinct(region, settlement) %>% 
   count() %>% 
   ungroup() %>% 
   count(n, name = "count") %>% 
-  mutate(share = 100 * count / sum(count))
+  mutate(
+    n = n - 1,
+    share = 100 * count / sum(count))
+
+# Draw it on plot
+mig_count_distr_plot <- migration_count_distribution %>% 
+  ggplot(aes(x = n, y = count)) +
+  geom_col() +
+  geom_text(
+    aes(y = 1e6, label = scales::number(share, accuracy = 0.01, suffix = " %")),
+    color = "gray30", size = 3
+    ) + 
+  geom_text(aes(label = count), vjust = -.5) + 
+  scale_y_log10(limits = c(NA, 1e6), breaks = 10^(1:5), labels = ~ .x) +
+  labs(
+    x = "Count of migrations by a company", 
+    y = "Count of companies (log10 scale)") +
+  theme_bw() +
+  theme(
+    panel.grid.minor.x = element_blank(), 
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.y = element_blank())
+mig_count_distr_plot
 
 # Prepare the base dataset to analyze migrations of companies
 max_empl <- c(15, 100, 250)
@@ -78,29 +106,53 @@ migrations <- data %>%
   st_drop_geometry()
 
 # Distribution of companies' sizes by migration status
+smb_categories <- c("Микропредприятие", "Малое предприятие", "Среднее предприятие")
 c1 <- data %>% 
   distinct(tin, .keep_all = TRUE) %>% 
   count(category)
 c2 <- migrations %>% 
   distinct(tin, .keep_all = TRUE) %>% 
   count(category)
-count_by_category <- inner_join(c1, c2, by = "category", suffix = c("_all", "_migrated"))
-categories_chisq <- count_by_category %>% filter(category != 3) %>% 
-  select(n_all, n_migrated) %>% 
-  chisq.test()
+count_by_category <- inner_join(
+  c1, c2, by = "category", suffix = c("_all", "_migrated")) %>% 
+  mutate(category = smb_categories[category])
+categories_test <- count_by_category %>% filter(category != "Среднее предприятие") %>% 
+  mutate(non_migrated = n_all - n_migrated) %>% 
+  select(mig = n_migrated, stay = non_migrated) %>% 
+  fisher.test()
 
+mig_by_category_plot <- count_by_category %>% 
+  filter(category != "Среднее предприятие") %>% 
+  mutate(
+    non_migrated = n_all - n_migrated,
+    share_migrated = n_migrated / n_all,
+    share_non_migrated = non_migrated / n_all) %>%
+  select(category, mig = share_migrated, stay = share_non_migrated) %>% 
+  pivot_longer(cols = mig:stay, names_to = "option", values_to = "count") %>% 
+  ggplot(aes(x = category, y = count, fill = option)) +
+    geom_col(width = 0.5) +
+    scale_y_continuous(labels = scales::label_percent()) +
+    scale_fill_discrete(name = "", labels = c("Migrated", "Stayed")) +
+    coord_flip() +
+    labs(x = "", y = "Share of companies") +
+    theme_bw() +
+    theme(
+      legend.position = "bottom", 
+      legend.direction = "horizontal",
+      panel.grid.minor.x = element_blank())
+    
 # Distance of migrations
-migrations %>% 
+mig_distance_plot <- migrations %>% 
   drop_na(distance) %>% 
   ggplot(aes(x = distance)) +
   geom_freqpoly(bins = 50) +
   scale_x_continuous(trans = "log10", breaks = 10^(-1:3), labels = ~ .x) +
   theme_bw(base_size = 14, base_family = "Times New Roman") +
-  labs(x = "Расстояние миграции, км", y = "Число компаний")
+  labs(x = "Distance of migration, km", y = "Count of companies")
 
 # Date of migrations
 # Overall timeline
-migrations %>% 
+mig_timeline_plot <- migrations %>% 
   mutate(yearmon = as.Date(format(date, "%Y-%m-01"))) %>% 
   ggplot(aes(x = yearmon)) +
     geom_bar() +
@@ -111,7 +163,7 @@ migrations %>%
   labs(x = "Месяц и год", y = "Количество компаний")
 
 # By month
-migrations %>% 
+mig_by_month_plot <- migrations %>% 
   mutate(month = format(date, "%m")) %>% 
   ggplot(aes(x = month)) +
   geom_bar() +
@@ -152,7 +204,7 @@ migration_by_settlement <- migrations %>%
   rbind(migration_msk_spb)
 
 # Inter-regional vs intra-regional migrations
-migrations %>% 
+inter_intra <- migrations %>% 
   mutate(
     type = ifelse(
       region_from != region_to, 
@@ -177,7 +229,7 @@ regional_paths <- migrations %>%
 regional_paths
 
 # With direct/inverse variants aggregated
-regional_paths %>% 
+regional_paths_combined <- regional_paths %>% 
   rowwise() %>% 
   mutate(
     path = glue_collapse(sort(c(region_from, region_to)), sep = " -> "),
@@ -198,7 +250,7 @@ regional_paths %>%
     count = ifelse(count >= 0, count, -count))
 
 # Centralization/Decentralization
-regional_paths %>% 
+reg_central <- regional_paths %>% 
   mutate(type = case_when(
     region_from == "Санкт-Петербург" & region_to == "Ленинградская область" ~ "from-center",
     region_from == "Ленинградская область" & region_to == "Санкт-Петербург" ~ "to-center",
@@ -227,7 +279,7 @@ settlement_paths <- migrations %>%
 settlement_paths
 
 # With direct/inverse paths aggregated
-settlement_paths %>% 
+settlement_paths_combined <- settlement_paths %>% 
   rowwise() %>% 
   mutate(
     path = glue_collapse(sort(c(settlement_from, settlement_to)), sep = " -> "),
@@ -252,7 +304,7 @@ regional_capitals <- cities %>%
   filter(capital_marker == 2) %>% 
   mutate(is_capital = TRUE) %>% 
   select(city, is_capital)
-settlement_paths %>% 
+settl_central <- settlement_paths %>% 
   left_join(regional_capitals, by = c("settlement_from" = "city")) %>% 
   rename(from_capital = is_capital) %>% 
   left_join(regional_capitals, by = c("settlement_to" = "city")) %>% 

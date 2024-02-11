@@ -17,10 +17,10 @@ knitr::opts_chunk$set(
   fig.height = 5,
   fig.id = FALSE,
   dpi = 300)
+library(knitr)
 ```
 
 ```{r imports, include=FALSE, cache=TRUE}
-library(knitr)
 source("Script.R")
 ```
 
@@ -32,38 +32,24 @@ Perm State University, 15 Bukireva st., Perm, 614068, Russia, ntsp\@ya.ru
 
 <div custom-style="Abstract">
 
-<Аннотация>
+Migrations of Russian legal companies in 2016–23 are described and analysed. The study uses Federal Tax Service open data on small and medium-sized companies. Distributions by migration count and distance are estimated and visualized, the relationship between company size and migration decision is examined and statistically tested, net migration rates by region are mapped, and top migration paths are listed. It is found that migrations are rare, mostly short-distance (~10 km). Bigger companies tend to relocate more often. Moscow and St. Petersburg have probably lost small and inefficient businesses but gained larger and more profitable.
 
 <br>
 
-*Keywords:* companies migration, small and medium-sized businesses, legal companies, legal service, service geography, data analysis, open data, FTS of Russia
+*Keywords:* companies migration, small and medium-sized businesses, legal companies, legal service, service geography, data analysis, open data, Federal Tax Service.
 
 </div>
 
 <br>
 
-Migration of companies, also known as business relocation, is an important phenomenon of economics and geography. Its first studies date back to the middle of 20th century, starting from G. McLaughlin and S. Robock's book *Why industry moves South* that have described the migration of enterprises from the North of the US to the South and linked it to the cheaper labor and smaller activity of labor unions [@McLaughlin1949]. Business relocation may be seen from spatial, relational or decision-making point of view [@Carrincazeaux2015]. A vast amount of research is devoted to various aspects of companies migration, including factors (reasons) [@Nakosteen1987; @Wu2007], directions (places) [@Rupasingha2018; @Rossi2019], discourses [@Piotti2007], taxation effects [@Kubicova2016]. In Russia, there are few papers about migration of companies. Their authors focus mainly on the issue of relocation as an instrument of tax optimization, thus discussing only “negative” part of the problem [@Adigamova2011; @Shcherbakova2016] without diving into factors or places and mostly skipping the geographical aspects of the phenomenon. Thus, it appears that a simple spatial analysis of business relocation in Russia is important. The present study addresses this issue by describing and visualizing the migration of Russian commercial legal companies during the period from the middle of 2016 to the end of 2023. The selection of concrete area of services, i.e. legal firms, is quite a subjective choice, but looks like it is relatively representative. Moreover, it is likely that legal business is more mobile and more sensitive to non-economic factors, although it is just a hypothesis.
+Migration of companies, also known as business relocation, is an important phenomenon of economics and geography. Its first studies date back to the middle of 20th century, starting from G. McLaughlin and S. Robock's book *Why industry moves South* that have described the migration of enterprises from the North of the US to the South and linked it to the cheaper labor and smaller activity of labor unions [@McLaughlin1949]. Business relocation may be seen from spatial, relational or decision-making point of view [@Carrincazeaux2015]. A vast amount of research is devoted to various aspects of companies migration, including factors (reasons) [@Nakosteen1987; @Wu2007], directions (places) [@Rupasingha2018; @Rossi2019], discourses [@Piotti2007], taxation effects [@Kubicova2016]. In Russia, there are few papers about migration of companies. Their authors focus mainly on the issue of relocation as an instrument of tax optimization, thus discussing only “negative” part of the problem [@Adigamova2011_en; @Shcherbakova2016_en] without diving into factors or places and mostly skipping the geographical aspects of the phenomenon. Thus, it appears that a simple spatial analysis of business relocation in Russia is important. The present study addresses this issue by describing and visualizing the migration of Russian commercial legal companies during the period from the middle of 2016 to the end of 2023. The selection of concrete area of services, i.e. legal firms, is quite a subjective choice, but looks like it is relatively representative. Moreover, it is likely that legal business is more mobile and more sensitive to non-economic factors, although it is just a hypothesis.
 
-**Data.** For the analysis, a complete geo-referenced dataset of Russian small and medium-sized enterprises (SMEs) was used. It was generated from the open and freely available dumps of SME registry distributed by Federal Tax Service (FTS) of Russia [^1]. For the generation of the dataset, the author have developed an open source Python CLI application *ru-smb-companies* [^2]. To select legal companies only, the filtering by activity code 69.10 (*activity in the area of law* according to the All-Russia Activity Code Classifier) was used. The dataset covers the period from August 2016 to November 2023. It contains information about `r companies_count` businesses in tabular format. The data includes, in particular, the following fields: name of the company, its registration address, coordinates of the registration settlement, revenue, expenditure, count of employees (the three last entries are available for each year from 2019 to 2022). It is apperant that some legal companies are missing in the dataset, e.g. large firms which exceeds the limit on the revenue or number of employees for SMEs or advocacy organizations which are categorized as non-profit companies according to the Russian laws and so cannot be included to the list of SMEs. However, there are high chances that it nevertheless can be used as a relevant data source. According to the analysis by Instutite for the Rule of Law [@Moiseeva2016], by August 2016 in Russia there have been 47,000 commercial legal companies, and the dataset used here lists `r `round(companies_count_08_2016, 0)` companies for August 2016. So, we can conclude with high confidence that 3/4 of Russian commercial legal companies are present in our dataset, and this fact proves its reliability.
+**Data.** For the analysis, a complete geo-referenced dataset of Russian small and medium-sized enterprises (SMEs) was used. It was generated from the open and freely available dumps of SME registry distributed by Federal Tax Service (FTS) of Russia [^1]. For the generation of the dataset, the author have developed an open source Python CLI application *ru-smb-companies* [^2]. To select legal companies only, the filtering by activity code 69.10 (*activity in the area of law* according to the All-Russia Activity Code Classifier) was used. The dataset covers the period from August 2016 to November 2023. It contains information about `r companies_count` businesses in tabular format. The data includes, in particular, the following fields: name of the company, its registration address, coordinates of the registration settlement, revenue, expenditure, count of employees (the three last entries are available for each year from 2019 to 2022). It is apperant that some legal companies are missing in the dataset, e.g. large firms which exceeds the limit on the revenue or number of employees for SMEs or advocacy organizations which are categorized as non-profit companies according to the Russian laws and so cannot be included to the list of SMEs. However, there are high chances that it nevertheless can be used as a relevant data source. According to the analysis by Instutite for the Rule of Law [@Moiseeva2016_en], by August 2016 in Russia there have been 47,000 commercial legal companies, and the dataset used here lists `r `round(companies_count_08_2016, 0)` companies for August 2016. So, we can conclude with high confidence that 3/4 of Russian commercial legal companies are present in our dataset, and this fact proves its reliability.
 
 [^1]: https://www.nalog.gov.ru/opendata/7707329152-rsmp/
 [^2]: https://github.com/PavelSyomin/russian-smb-companies
 
-**Methods.** Here, the following definition of migration of company is used: migration is a change in address of registration [@Shcherbakova2016]. Maybe it is too narrow, because does not account for other ways of relocation, e. g. mergers or reorganization. Also, it can be criticized as formalistic, because the change of nominal address does not necessarily reflects the change of place of doing business. However, it looks the best choice for the data available, because the dataset does not contain information about mergers and reorganizations, and does not tell us anything about the actual location of business activity. The analysis itself is done by the methods of descriptive statistics, statistical tests, data visualization and mapping. The following research questions are asked:
-
-1) how are the legal companies distrubuted by the number of migrations?
-<br>
-2) is there any relationship between the migration choice and the size of company?
-<br>
-3) what is the distribution of migrations by distance?
-<br>
-4) are there any temporal patterns in migration?
-<br>
-5) what is the migration saldo by regions?
-<br>
-6) which are the typical paths of inter-regional migration?
-<br>
-7) what is the ratio of inter-regional vs intra-regional migration?
+**Methods.** Here, the following definition of migration of company is used: migration is a change in address of registration [@Shcherbakova2016_en]. Maybe it is too narrow, because does not account for other ways of relocation, e. g. mergers or reorganization. Also, it can be criticized as formalistic, because the change of nominal address does not necessarily reflects the change of place of doing business. However, it looks the best choice for the data available, because the dataset does not contain information about mergers and reorganizations, and does not tell us anything about the actual location of business activity. The analysis is done by the means of descriptive statistics, statistical tests, data visualization and mapping. It includes five elements: (1) distribution of legal companies by the count of migrations, (2) relationship between the migration decision and size of a company; (3) distribution of migration distance; (4) net migration rate by region; (5) net migration rate by inter-region migration paths.
 
 To quantitatively estimate the migration, the first or all the three of the following variables are used: count of companies, sum of revenue, sum of count of employees. Technically, the analysis was performed with R programming language (including additional packages). The source code for the analysis is stored in public repository [^3].
 
@@ -83,105 +69,46 @@ A **relationship between the migration choice and the size of company** is depic
 
 <br>
 
-```{r fig-2-mig-by-company-size, fig.cap="*Fig. 2*. Migration choice depending on company's size (category)", fig.height=3}
+```{r fig-2-mig-by-company-size, fig.cap="*Fig. 2*. Migration choice depending on company's size (category)", fig.height=2}
 mig_by_category_plot
 ```
 
 <br>
 
-A **distribution of migration distance** is shown on * Fig. 3*. The majority of businesses moves to small distance (about 10 km), but there is a significant group of long-migrating firms (the distance is about 1000 km).
+A **distribution of migration distance** is shown on *Fig. 3*. The majority of businesses moves to small distance (about 10 km), but there is a significant group of long-migrating firms (the distance is about 1000 km).
 
 <br>
 
-```{r fig-3-distance, fig.cap="*Fig. 3.* Distribution of migration distance"}
+```{r fig-3-distance, fig.cap="*Fig. 3.* Distribution of migration distance", fig.height=3}
 mig_distance_plot
 ```
 
-**Распределение миграций по времени** показано на графиках 2 и 3. Закономерности за весь рассмотренный период отсутствуют: интенсивность миграций выглядит случайной. Тем не менее, видно, что компании чаще меняют своё местонахождение летом.
+<br>
 
-**Распределение регионов по притоку (оттоку) компаний** изображено на картограмме 1. Общая закономерность отсутствует, при этом заметно, что показатели противоречат друг другу: регионы, лидирующие по сальдо исходя из числа компаний, могут проигрывать при расчёте по выручке или численности работников.
+**Net migration rate by region** is shown on map (see *Fig. 4*). Apparently, most of the regions have net migration rate close to zero. However, there are some regions with substantial growth or decline in the number of registered legal companies. For example, Moscow region is the top by growth, and the moderate positive net migration rate is also characteristic of Saint Petersburg, Krasnodar, Rostov, Novosibirsk regions (oblasts), Perm region (krai) and Udmurt republic. The desrease in the number of legal businesses is typical for Volga region, the Urals, Western Siberia and Krasnoyarsk region (krai). It is worth mentioning that Moscow itself (as a city) also shows the decline. However, it is also obvious that the absolute numbers of growth or decline are small compared to the absolute number of registered companies and do not exceed 100 in any of the regions.
 
-**Распределение населённых пунктов по притоку (оттоку) компаний** показано на картограмме 2. Здесь также сложно выявить закономерности, хотя лидируют по сальдо, измеренному как число компаний, города-спутники Москвы. Опять же, показатели противоречивые: лидерство по численному сальдо не означает лидерство по выручке или числу работников.
+<br>
 
-**Соотношение внутрирегиональной миграции и межрегиональной миграции** показано в таблице 3. Видно, что между регионами перемещается примерно треть фирм, а остальные две трети — внутри региона. При этом в пересчёте на число работников и выручку межрегиональная миграция масштабнее, чем внутрирегиональная, из чего следует, что компания, поменявшая регион, в среднем «везёт» с собой больше денег и людей, чем компания, поменявшая населённый пункт внутри региона.
+```{r fig-4-mig-by-region-plot, fig.cap="*Fig. 4.* Net migration rate of legal companies by regions", fig.height=4}
+mig_by_region_plot
+```
 
-**Пути межрегиональной миграции** отражены в таблице 4. Абсолютные числа переместившихся компаний, как правило, невелики. Лидируют миграции из Москвы и Санкт-Петербурга в прилегающие к ним области. Нет чёткой связи между числом переехавших компаний и «перевезённой» выручкой или числом работников.
+<br>
 
-**Сочетание централизации и децентрализации в межрегиональной миграции** (таблица 5) преимущественно равномерное. По числу работников и компаний преобладает центробежная тенденция, а по доходам — центростремительная. Треть потоков не может быть описани ни как центростремительные, ни как центробежные.
+**The most popular migration paths** (found by the number of migrated companies) with corresponding total revenues and employee counts are listed in the **Table**. It is important to note that the first two of them represent the moving from two largest cities of Russia (including the capital) to the surrounding regions (oblasts). However, the migration from other regions to the capital is popular too. Besides, the increase in the number of registered businesses is not necessarily associated with the increase in income or labor force, and vise versa, that is, even if a net migration rate is above zero, the total revenue and employees count may have decreased, possibly meaning that arriving businesses are profitable and large, while leaving companies are small and inefficient. This is the case, for example, of the aforementioned Moscow-to-region and Saint-Petersburg-to-region paths, where the net change of the number of firms is in favor of regions, while the net change in revenue and labor is positive for the cities.
 
-**Пути внутрирегиональной миграции** (таблица 6) ещё более неоднозначны, чем пути межрегиональной миграции, поскольку абсолютные перемещения почти во всех случаях измеряются единицами. Нет и связи между тремя показателями: число фирм, доходы, число работников.
+<br>
 
-**Сочетание централизации и децентрализации во внутрирегиональной миграции** (таблица 7) почти такое же, как и в случае с межрегиональной миграцией: перемещения к центру выигрывают по числу фирм и людей, но уступают в доходах, при этом треть релокаций не могут быть описаны ни как центростремительные, ни как центробежные.
+```{r table}
+kable(
+  head(regional_paths_combined, 10),
+  col.names = c("Region", "Count", "Revenue", "Employees"),
+  caption = "Top 10 paths of inter-regional migration of Russian legal companies in 2016–2023 and their features: net count of relocated businesses, net total revenue, net total number of employees"
+)
+```
 
+**Conclusions.** Migration of legal companies in Russia is a rare phenomenon: just about 2.5% of all businesses in this activity area have changed their nominal location in the period of 2016–23. Small companies, in comparison to micro-businesses, are more likely to relocate: the chances are 4 times higher. Short-distance (~10 km) migrations are more common than long-distance (100–1000 km) ones. Moscow and St. Petersburg regions are at the top by net migration rate estimated by the count of relocated businesses, while Moscow have lost the highest number of companies. However, it looks like that while losing small and inefficient companies, Moscow and St. Patersburg attract more profitable businesses.
 
 # Bibliographical references
 
 <div id="refs"></div>
-
-
-
-```{r table-2-mig-cats}
-kable(
-  count_by_category,
-  col.names = c("Категория фирмы", "Всего", "Из них мигрировавших"),
-  caption = "Таблица 2. Распределение юридических компаний по категории и статусу миграции"
-)
-```
-
-```{r table-3-inter-intra}
-kable(
-  inter_intra,
-  col.names = c("Тип миграции", "Число", "Доходы", "Работники"),
-  caption = "Таблица 3. Показатели межрегиональной и внутрирегиональной миграции юридических компаний: число фирм, суммарные доходы (млн рублей), суммарное число работников"
-)
-```
-
-```{r table-4-reg-paths}
-kable(
-  rbind(head(regional_paths_combined, 5), tail(regional_paths_combined, 5)),
-  col.names = c("Путь", "Количество", "Доходы, млн", "Работники"),
-  caption = "Таблица 4. Маршруты миграции юридических компаний по субъектам России и их показатели: число фирм, суммарные доходы в миллионах рублей, суммарная численность работников. Поразаны первые и последние 5 маршрутов по числу фирм"
-)
-```
-
-```{r table-5-reg-central}
-kable(
-  reg_central,
-  col.names = c("Тип миграции", "Число", "Доходы", "Работники"),
-  caption = "Таблица 5. Показатели центростремительных и центробежных межрегиональных миграций юридических компаний: число фирм, суммарные доходы в миллионах рублей, суммарная численность работников"
-)
-```
-
-```{r table-6-settl-paths}
-kable(
-  rbind(head(settlement_paths_combined, 5), tail(settlement_paths_combined, 5)),
-  col.names = c("Маршрут", "Количество", "Доходы, млн", "Работники"),
-  caption = "Таблица 6. Маршруты миграции юридических компаний по населённым пунктам и их показатели: число фирм, суммарные доходы в миллионах рублей, суммарная численность работников. Поразаны первые и последние 5 маршрутов по числу фирм"
-)
-```
-
-```{r table-7-settl-central}
-kable(
-  settl_central,
-  col.names = c("Тип миграции", "Число", "Доходы", "Работники"),
-  caption = "Таблица 7. Показатели центростремительных и центробежных внутрирегиональных миграций юридических компаний: число фирм, суммарные доходы в миллионах рублей, суммарная численность работников"
-)
-```
-
-
-
-```{r plot-2-timeline}
-mig_timeline_plot
-```
-
-```{r plot-3-monthly}
-mig_by_month_plot
-```
-
-```{r map-1-regions}
-
-```
-
-```{r map-2-settlements}
-
-```

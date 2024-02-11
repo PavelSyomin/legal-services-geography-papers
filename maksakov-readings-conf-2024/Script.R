@@ -11,7 +11,8 @@ data <- read_csv("../../ru-smb-companies/legal/smb.csv")
 revexp <- read_csv("../../ru-smb-companies/legal/revexp.csv")
 empl <- read_csv("../../ru-smb-companies/legal/empl.csv")
 cities <- read_csv("cities.csv")
-regions <- st_read("ru.geojson")
+regions_geo <- st_read("ru.geojson")
+regions <- read_csv("regions.csv")
 
 # Number of unique companies
 companies_count <- n_distinct(data[data$kind == 1, "tin"])
@@ -81,7 +82,8 @@ migrations <- data %>%
   replace_na(list(revenue = 0, expenditure = 0, employees_count = 0)) %>% 
   mutate(
     employees_count = ifelse(employees_count > 500, 0, employees_count),
-    revenue = ifelse(revenue > 1e10, 0, revenue)
+    revenue = ifelse(revenue > 1e10, 0, revenue),
+    revenue = revenue / 1e6
   ) %>% 
   select(
     tin,
@@ -182,7 +184,19 @@ migration_by_region <- migrations %>%
   mutate(change = region_to - region_from) %>% 
   select(region, var, change) %>% 
   pivot_wider(region, names_from = var, values_from = change) %>% 
-  arrange(-count)
+  arrange(-count) %>% 
+  left_join(select(regions, name, iso_code), by = c("region" = "name")) %>% 
+  right_join(select(regions_geo, shapeISO), by = c("iso_code" = "shapeISO")) %>% 
+  st_as_sf()
+
+ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
+mig_by_region_plot <- migration_by_region %>% 
+  ggplot() +
+  geom_sf(aes(fill = count), size = .1) + 
+  coord_sf(crs = ru_crs) +
+  scale_fill_gradient2(name = "Net migration rate", low = "#d01c8b", high = "#4dac26") +
+  theme_bw(base_size = 12, base_family = "Times New Roman") +
+  theme(legend.position = "bottom")
 
 migration_msk_spb <- migration_by_region %>% 
   filter(region %in% c("Москва", "Санкт-Петербург")) %>% 

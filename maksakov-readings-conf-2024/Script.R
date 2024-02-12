@@ -45,9 +45,9 @@ mig_count_distr_plot <- migration_count_distribution %>%
   geom_text(aes(label = count), vjust = -.5) + 
   scale_y_log10(limits = c(NA, 1e6), breaks = 10^(1:5), labels = ~ .x) +
   labs(
-    x = "Count of migrations by a company", 
-    y = "Count of companies (log10 scale)") +
-  theme_bw() +
+    x = "Number of migrations by a company", 
+    y = "Number of companies (log10 scale)") +
+  theme_bw(base_size = 12, base_family = "Times New Roman") +
   theme(
     panel.grid.minor.x = element_blank(), 
     panel.grid.major.x = element_blank(),
@@ -133,15 +133,13 @@ mig_by_category_plot <- count_by_category %>%
   pivot_longer(cols = mig:stay, names_to = "option", values_to = "count") %>% 
   ggplot(aes(x = category, y = count, fill = option)) +
     geom_col(width = 0.5) +
+    scale_x_discrete(labels = c("Микропредприятие"  = "Micro-business", "Малое предприятие" = "Small company")) +
     scale_y_continuous(labels = scales::label_percent()) +
     scale_fill_discrete(name = "", labels = c("Migrated", "Stayed")) +
     coord_flip() +
     labs(x = "", y = "Share of companies") +
-    theme_bw() +
-    theme(
-      legend.position = "bottom", 
-      legend.direction = "horizontal",
-      panel.grid.minor.x = element_blank())
+    theme_bw(base_size = 12, base_family = "Times New Roman") +
+    theme(panel.grid.minor.x = element_blank())
     
 # Distance of migrations
 mig_distance_plot <- migrations %>% 
@@ -194,9 +192,8 @@ mig_by_region_plot <- migration_by_region %>%
   ggplot() +
   geom_sf(aes(fill = count), size = .1) + 
   coord_sf(crs = ru_crs) +
-  scale_fill_gradient2(name = "Net migration rate", low = "#d01c8b", high = "#4dac26") +
-  theme_bw(base_size = 12, base_family = "Times New Roman") +
-  theme(legend.position = "bottom")
+  scale_fill_gradient2(name = "", low = "#d01c8b", high = "#4dac26") +
+  theme_bw(base_size = 12, base_family = "Times New Roman")
 
 migration_msk_spb <- migration_by_region %>% 
   filter(region %in% c("Москва", "Санкт-Петербург")) %>% 
@@ -246,7 +243,7 @@ regional_paths
 regional_paths_combined <- regional_paths %>% 
   rowwise() %>% 
   mutate(
-    path = glue_collapse(sort(c(region_from, region_to)), sep = " -> "),
+    path = glue_collapse(sort(c(region_from, region_to)), sep = " → "),
     direction = ifelse(
       all(sort(c(region_from, region_to)) == c(region_from, region_to)), 1, -1)) %>% 
   group_by(path) %>% 
@@ -257,11 +254,47 @@ regional_paths_combined <- regional_paths %>%
   ) %>% 
   arrange(-abs(count)) %>% 
   rowwise() %>% 
-  mutate(path = ifelse(
-    count >= 0,
-    path,
-    glue_collapse(rev(strsplit(path, " -> ", fixed = TRUE)[[1]]), sep = " -> ")),
-    count = ifelse(count >= 0, count, -count))
+  mutate(
+    reverse = count >= 0,
+    path = ifelse(
+      reverse,
+      path,
+      glue_collapse(rev(strsplit(path, " → ", fixed = TRUE)[[1]]), sep = " → ")),
+    count = ifelse(reverse, count, -count),
+    revenue = ifelse(reverse, revenue, -revenue),
+    empl = ifelse(reverse, empl, -empl)) %>% 
+  select(-reverse)
+
+regional_paths_combined_en <- regional_paths %>% 
+  left_join(select(regions, name, iso_code_from = iso_code), by = c("region_from" = "name")) %>% 
+  left_join(select(regions_geo, shapeISO, region_from_en = shapeName), by = c("iso_code_from" = "shapeISO")) %>% 
+  left_join(select(regions, name, iso_code_to = iso_code), by = c("region_to" = "name")) %>% 
+  left_join(select(regions_geo, shapeISO, region_to_en = shapeName), by = c("iso_code_to" = "shapeISO")) %>% 
+  select(region_from = region_from_en, region_to = region_to_en,
+         count, revenue, empl) %>% 
+  rowwise() %>% 
+  mutate(
+    path = glue_collapse(sort(c(region_from, region_to)), sep = " → "),
+    direction = ifelse(
+      all(sort(c(region_from, region_to)) == c(region_from, region_to)), 1, -1)) %>% 
+  group_by(path) %>% 
+  summarise(
+    count = sum(count * direction),
+    revenue = sum(revenue * direction),
+    empl = sum(empl * direction)
+  ) %>% 
+  arrange(-abs(count)) %>% 
+  rowwise() %>% 
+  mutate(
+    reverse = count >= 0,
+    path = ifelse(
+      reverse,
+      path,
+      glue_collapse(rev(strsplit(path, " → ", fixed = TRUE)[[1]]), sep = " → ")),
+    count = ifelse(reverse, count, -count),
+    revenue = ifelse(reverse, revenue, -revenue),
+    empl = ifelse(reverse, empl, -empl)) %>% 
+  select(-reverse)
 
 # Centralization/Decentralization
 reg_central <- regional_paths %>% 

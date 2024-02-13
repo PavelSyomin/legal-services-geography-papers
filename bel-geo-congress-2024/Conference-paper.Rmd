@@ -54,7 +54,7 @@ In Russia, there are few papers about the migration of companies. Existing works
 
 **Methods.** Company migration here is seen as a change in the address of registration, like in [@Shcherbakova2016_en]. This definition is narrow and does not account for other ways of relocation (e. g. mergers or reorganization). Also, it is formal, because the change of nominal address does not necessarily reflect the change of actual place of doing business. However, it looks like the best choice for the data available. Descriptive statistics, statistical tests, data visualization, and mapping are used. Technically, the analysis was performed with R programming language (including additional packages). The source code for the analysis is stored in a public repository[^3].
 
-[^3]: https://github.com/PavelSyomin/tax-service-opendata-paper/tree/main/bel-geo-congress-2024
+[^3]: https://github.com/PavelSyomin/ru-smb-companies-papers/tree/main/bel-geo-congress-2024
 
 A **distribution of companies by the number of migrations** is shown in *Fig. 1*. Almost all the companies (97%) in 2016–23 have not migrated. About 2.5% of companies have changed the location exactly once, and more frequent migrations are extremely rare. The distribution is almost log10-linear.
 

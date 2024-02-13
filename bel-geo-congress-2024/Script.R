@@ -46,7 +46,7 @@ mig_count_distr_plot <- migration_count_distribution %>%
   scale_y_log10(limits = c(NA, 1e6), breaks = 10^(1:5), labels = ~ .x) +
   labs(
     x = "Number of migrations by a company", 
-    y = "Number of companies (log10 scale)") +
+    y = "Number of companies (log10)") +
   theme_bw(base_size = 12, base_family = "Times New Roman") +
   theme(
     panel.grid.minor.x = element_blank(), 
@@ -147,8 +147,8 @@ mig_distance_plot <- migrations %>%
   ggplot(aes(x = distance)) +
   geom_freqpoly(bins = 50) +
   scale_x_continuous(trans = "log10", breaks = 10^(-1:3), labels = ~ .x) +
-  theme_bw(base_size = 14, base_family = "Times New Roman") +
-  labs(x = "Distance of migration, km", y = "Count of companies")
+  theme_bw(base_size = 12, base_family = "Times New Roman") +
+  labs(x = "Distance of migration, km (log10)", y = "Count of companies")
 
 # Date of migrations
 # Overall timeline

@@ -106,7 +106,7 @@
     </sort>
     <layout suffix=".">
       <text macro="citation-number"/>
-      <text macro="author-first" suffix=" "/>
+      <text macro="author-first" suffix=" " font-style="italic"/>
       <choose>
         <if type="book" match="any">
           <group>

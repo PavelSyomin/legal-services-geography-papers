@@ -6,6 +6,9 @@ library(tidyr)
 library(sf)
 library(units)
 
+# Base theme for plots
+theme <- theme_bw(base_size = 11, base_family = "Times New Roman")
+
 # Load the data
 data <- read_csv("../../ru-smb-companies/legal/smb.csv")
 revexp <- read_csv("../../ru-smb-companies/legal/revexp.csv")
@@ -197,10 +200,19 @@ mig_by_region_plot <- migration_by_region %>%
 
 migration_msk_spb <- migration_by_region %>% 
   filter(region %in% c("Москва", "Санкт-Петербург")) %>% 
-  rename(settlement = region)
+  rename(settlement = region) %>% 
+  select(-iso_code) %>% 
+  st_drop_geometry()
 
 # Migration by settlements
+settl_coords <- rbind(
+  select(distinct(data, settlement, .keep_all = TRUE), settlement, lat, lon),
+  select(distinct(data, region, .keep_all = TRUE), settlement = region, lat, lon)
+) %>% 
+  drop_na(lat, lon) %>% 
+  st_as_sf(coords = c("lon", "lat"), crs = "EPSG:4326")
 migration_by_settlement <- migrations %>% 
+  st_drop_geometry() %>% 
   select(settlement_from, settlement_to, revenue, empl) %>% 
   pivot_longer(settlement_from:settlement_to, names_to = "type", values_to = "settlement") %>% 
   drop_na(settlement) %>% 
@@ -212,7 +224,19 @@ migration_by_settlement <- migrations %>%
   select(settlement, var, change) %>% 
   pivot_wider(settlement, names_from = var, values_from = change) %>%
   arrange(-count) %>% 
-  rbind(migration_msk_spb)
+  rbind(migration_msk_spb) %>% 
+  left_join(settl_coords) %>% 
+  st_as_sf()
+migration_by_settlement_plot <- migration_by_settlement %>% 
+  filter(abs(count) > 1) %>% 
+  mutate(direction = count > 0, count = abs(count)) %>% 
+  ggplot() +
+  geom_sf(data = regions_geo, size = .5) +
+  geom_sf(aes(color = direction), size = 1) +
+  coord_sf(crs = ru_crs) +
+  scale_color_manual(name = "", labels = c("Отток", "Приток"), values = c("#d01c8b", "#4dac26")) +
+  theme_bw(base_size = 11, base_family = "Times New Roman")
+migration_by_settlement_plot
 
 # Inter-regional vs intra-regional migrations
 inter_intra <- migrations %>% 

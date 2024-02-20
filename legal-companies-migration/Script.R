@@ -192,9 +192,9 @@ migration_by_region <- migrations %>%
 ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
 mig_by_region_plot <- migration_by_region %>% 
   ggplot() +
-  geom_sf(aes(fill = count), size = .1) + 
+  geom_sf(aes(fill = cut(count, c(-50, -25, 0, 25, 50, 75, 100))), size = .1) + 
   coord_sf(crs = ru_crs) +
-  scale_fill_gradient2(name = "", low = "#d01c8b", high = "#4dac26") +
+  scale_fill_brewer(name = "", palette = "Greys") +
   theme_bw(base_size = 11, base_family = "Times New Roman")
 
 migration_msk_spb <- migration_by_region %>% 

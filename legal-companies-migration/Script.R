@@ -46,7 +46,7 @@ mig_count_distr_plot <- migration_count_distribution %>%
   labs(
     x = "Number of migrations by a company", 
     y = "Number of companies (log10)") +
-  theme_bw(base_size = 12, base_family = "Times New Roman") +
+  theme_bw(base_size = 11, base_family = "Times New Roman") +
   theme(
     panel.grid.minor.x = element_blank(), 
     panel.grid.major.x = element_blank(),
@@ -137,7 +137,7 @@ mig_by_category_plot <- count_by_category %>%
     scale_fill_discrete(name = "", labels = c("Migrated", "Stayed")) +
     coord_flip() +
     labs(x = "", y = "Share of companies") +
-    theme_bw(base_size = 12, base_family = "Times New Roman") +
+    theme_bw(base_size = 11, base_family = "Times New Roman") +
     theme(panel.grid.minor.x = element_blank())
     
 # Distance of migrations
@@ -146,7 +146,7 @@ mig_distance_plot <- migrations %>%
   ggplot(aes(x = distance)) +
   geom_freqpoly(bins = 50) +
   scale_x_continuous(trans = "log10", breaks = 10^(-1:3), labels = ~ .x) +
-  theme_bw(base_size = 12, base_family = "Times New Roman") +
+  theme_bw(base_size = 11, base_family = "Times New Roman") +
   labs(x = "Расстояние миграции, км (десятичный логарифм)",
        y = "Число фирм")
 
@@ -160,7 +160,7 @@ mig_timeline_plot <- migrations %>%
       date_breaks = "6 months", date_labels = "%m.%Y", 
       guide = guide_axis(angle = 90)) +
   labs(x = "Месяц и год", y = "Количество компаний") +
-  theme_bw(base_size = 12, base_family = "Times New Roman") +
+  theme_bw(base_size = 11, base_family = "Times New Roman") +
   theme(panel.grid.minor.y = element_blank())
 
 # By month
@@ -169,7 +169,7 @@ mig_by_month_plot <- migrations %>%
   ggplot(aes(x = month)) +
   geom_bar() +
   labs(x = "Месяц", y = "Количество компаний") +
-  theme_bw(base_size = 12, base_family = "Times New Roman") +
+  theme_bw(base_size = 11, base_family = "Times New Roman") +
   theme(panel.grid.minor.y = element_blank(), panel.grid.major.x = element_blank())
 
 # Migration by regions
@@ -195,7 +195,7 @@ mig_by_region_plot <- migration_by_region %>%
   geom_sf(aes(fill = count), size = .1) + 
   coord_sf(crs = ru_crs) +
   scale_fill_gradient2(name = "", low = "#d01c8b", high = "#4dac26") +
-  theme_bw(base_size = 12, base_family = "Times New Roman")
+  theme_bw(base_size = 11, base_family = "Times New Roman")
 
 migration_msk_spb <- migration_by_region %>% 
   filter(region %in% c("Москва", "Санкт-Петербург")) %>% 

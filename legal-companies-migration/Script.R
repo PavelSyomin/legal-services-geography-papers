@@ -4,10 +4,6 @@ library(glue)
 library(readr)
 library(tidyr)
 library(sf)
-library(units)
-
-# Base theme for plots
-theme <- theme_bw(base_size = 11, base_family = "Times New Roman")
 
 # Load the data
 data <- read_csv("../../ru-smb-companies/legal/smb.csv")
@@ -151,7 +147,8 @@ mig_distance_plot <- migrations %>%
   geom_freqpoly(bins = 50) +
   scale_x_continuous(trans = "log10", breaks = 10^(-1:3), labels = ~ .x) +
   theme_bw(base_size = 12, base_family = "Times New Roman") +
-  labs(x = "Distance of migration, km (log10)", y = "Count of companies")
+  labs(x = "Расстояние миграции, км (десятичный логарифм)",
+       y = "Число фирм")
 
 # Date of migrations
 # Overall timeline
@@ -162,16 +159,18 @@ mig_timeline_plot <- migrations %>%
     scale_x_date(
       date_breaks = "6 months", date_labels = "%m.%Y", 
       guide = guide_axis(angle = 90)) +
-  theme_bw() +
-  labs(x = "Месяц и год", y = "Количество компаний")
+  labs(x = "Месяц и год", y = "Количество компаний") +
+  theme_bw(base_size = 12, base_family = "Times New Roman") +
+  theme(panel.grid.minor.y = element_blank())
 
 # By month
 mig_by_month_plot <- migrations %>% 
   mutate(month = format(date, "%m")) %>% 
   ggplot(aes(x = month)) +
   geom_bar() +
-  theme_bw() +
-  labs(x = "Месяц", y = "Количество компаний")
+  labs(x = "Месяц", y = "Количество компаний") +
+  theme_bw(base_size = 12, base_family = "Times New Roman") +
+  theme(panel.grid.minor.y = element_blank(), panel.grid.major.x = element_blank())
 
 # Migration by regions
 migration_by_region <- migrations %>% 
@@ -227,15 +226,17 @@ migration_by_settlement <- migrations %>%
   rbind(migration_msk_spb) %>% 
   left_join(settl_coords) %>% 
   st_as_sf()
+
 migration_by_settlement_plot <- migration_by_settlement %>% 
   filter(abs(count) > 1) %>% 
   mutate(direction = count > 0, count = abs(count)) %>% 
   ggplot() +
-  geom_sf(data = regions_geo, size = .5) +
+  geom_sf(data = regions_geo, size = .5, fill = "white") +
   geom_sf(aes(color = direction), size = 1) +
   coord_sf(crs = ru_crs) +
-  scale_color_manual(name = "", labels = c("Отток", "Приток"), values = c("#d01c8b", "#4dac26")) +
-  theme_bw(base_size = 11, base_family = "Times New Roman")
+  scale_color_manual(name = "", labels = c("Отток", "Приток"), values = c("gray50", "gray20")) +
+  theme_bw(base_size = 11, base_family = "Times New Roman") +
+  theme(legend.position = "bottom", legend.direction = "horizontal")
 migration_by_settlement_plot
 
 # Inter-regional vs intra-regional migrations
@@ -323,13 +324,13 @@ regional_paths_combined_en <- regional_paths %>%
 # Centralization/Decentralization
 reg_central <- regional_paths %>% 
   mutate(type = case_when(
-    region_from == "Санкт-Петербург" & region_to == "Ленинградская область" ~ "from-center",
-    region_from == "Ленинградская область" & region_to == "Санкт-Петербург" ~ "to-center",
-    region_from == "Московская область" & region_to != "Москва" ~ "from-center",
-    region_to == "Московская область" & region_from != "Москва" ~ "to-center",
-    region_from == "Москва" ~ "from-center",
-    region_to == "Москва" ~ "to-center",
-    TRUE ~ "other"
+    region_from == "Санкт-Петербург" & region_to == "Ленинградская область" ~ "В центр",
+    region_from == "Ленинградская область" & region_to == "Санкт-Петербург" ~ "Из центра",
+    region_from == "Московская область" & region_to != "Москва" ~ "Из центра",
+    region_to == "Московская область" & region_from != "Москва" ~ "В центр",
+    region_from == "Москва" ~ "Из центра",
+    region_to == "Москва" ~ "В центр",
+    TRUE ~ "Прочее"
   )) %>% 
   group_by(type) %>% 
   summarise(across(count:empl, sum))
@@ -353,7 +354,7 @@ settlement_paths
 settlement_paths_combined <- settlement_paths %>% 
   rowwise() %>% 
   mutate(
-    path = glue_collapse(sort(c(settlement_from, settlement_to)), sep = " -> "),
+    path = glue_collapse(sort(c(settlement_from, settlement_to)), sep = " → "),
     direction = ifelse(
       all(sort(c(settlement_from, settlement_to)) == c(settlement_from, settlement_to)), 1, -1)) %>% 
   group_by(path) %>% 
@@ -367,7 +368,7 @@ settlement_paths_combined <- settlement_paths %>%
   mutate(path = ifelse(
     count >= 0,
     path,
-    glue_collapse(rev(strsplit(path, " -> ", fixed = TRUE)[[1]]), sep = " -> ")),
+    glue_collapse(rev(strsplit(path, " → ", fixed = TRUE)[[1]]), sep = " → ")),
     count = ifelse(count >= 0, count, -count))
 
 # Centralization/decentralization
@@ -382,9 +383,9 @@ settl_central <- settlement_paths %>%
   rename(to_capital = is_capital) %>% 
   replace_na(list(from_capital = FALSE, to_capital = FALSE)) %>% 
   mutate(type = case_when(
-    from_capital & !to_capital ~ "from-center",
-    to_capital & !from_capital ~ "to-center",
-    TRUE ~ "other"
+    from_capital & !to_capital ~ "Из центра",
+    to_capital & !from_capital ~ "В центр",
+    TRUE ~ "Прочее"
   )) %>% 
   group_by(type) %>% 
   summarise(across(count:empl, sum))

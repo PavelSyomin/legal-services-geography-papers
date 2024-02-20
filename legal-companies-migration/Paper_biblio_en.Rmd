@@ -1,0 +1,13 @@
+---
+title: ""
+output: 
+  word_document:
+    reference_docx: reference.docx
+bibliography: biblio-en.bib
+csl: "biblio-styles-ru.csl"
+nocite: "@*"
+---
+
+# Reference
+
+<div id="refs"></div>

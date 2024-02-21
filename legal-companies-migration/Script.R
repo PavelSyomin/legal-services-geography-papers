@@ -147,7 +147,7 @@ mig_distance_plot <- migrations %>%
   geom_freqpoly(bins = 50) +
   scale_x_continuous(trans = "log10", breaks = 10^(-1:3), labels = ~ .x) +
   theme_bw(base_size = 11, base_family = "Times New Roman") +
-  labs(x = "Расстояние миграции, км (десятичный логарифм)",
+  labs(x = "Расстояние миграции, км",
        y = "Число фирм")
 
 # Date of migrations
@@ -244,8 +244,8 @@ inter_intra <- migrations %>%
   mutate(
     type = ifelse(
       region_from != region_to, 
-      "inter-regional", 
-      "intra-regional"),
+      "Межрегиональная", 
+      "Внутрирегиональная"),
     count = 1) %>% 
   group_by(type) %>% 
   summarise(across(c("count", "revenue", "empl"), sum, na.rm = TRUE))

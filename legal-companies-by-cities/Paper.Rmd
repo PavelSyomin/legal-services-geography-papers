@@ -1,0 +1,56 @@
+---
+title: "UDC 911.3"
+subtitle: "Does Concentration of Legal Companies Enable Accessibility of Legal Service: Empirical Evidence from Russian Cities"
+output:
+  word_document:
+    reference: reference.docx
+bibliography: biblio.bib
+csl: biblio-style.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<div custom-style="Author">
+
+Pavel O. Syomin
+
+<br>
+
+Perm State University
+
+<br>
+
+e-mail: ntsp\@ya.ru
+
+<br>
+
+The paper is published for the first time.
+
+</div>
+
+<br>
+
+<div custom-style="Abstract">
+
+**Abstract:**
+
+**Keywords:**
+
+</div>
+
+<br>
+
+Cities are known for being the centers of business activity. This is especially true, in particular, for large cities that concentrate many people and companies and thus usually act as service providers for the surrounding areas. It is often said that urbanization improves the quality of life compared to the rural neighborhoods by enhancing people's access to a variety of goods and services. Also, the co-location of companies in cities due to agglomeration effects gives economic benefits for business, thus further increasing the concentration. However, it is doubtful whether the concentration itself necessarily leads to better provision of urban services. Moreover, it is worth studying whether the high accessibility of services may be achieved by other means rather than concentration, because the top cities by the number of businesses are typically the largest cities, and large cities often have their own problems which partially offset their positive aspects.
+
+In this paper, the relationship between the concentration of legal companies in Russian cities and people's access to legal services is empirically tested based on data about location of legal organizations if Russia. Four research questions are asked. The first one is: what is the relationship between city population and number of legal businesses and legal workers in the city? The second issue is: does the distribution of legal businesses and legal workers in Russian cities comply with well-known Zipf (rank-size) law? The third problem and the main question is: how does the accessibility of legal professionals depends on the concentration of legal companies with respect to city size by population and its relative size in the region (constituent entity) of Russia? The last, auxiliary issue is: are there any geographical patterns in the spatial distribution of cities by accessibility of legal services? This study partially continues the work by member of Institute for the Rule of Law [@Moiseeva2016] by testing whether the top of cities by count of legal businesses per population has changed over time or hot, but adds additional questions and tries to answer them.
+
+**Data.** Company-wise disaggregated geo-referenced dataset on small and medium-sized legal companies in Russia was used. It was produced with Python CLI tool *ru-smb-companies* developer by the author of this paper to extract and georeference open data from Russian state registry of small and medium-sized businesses (SMBs) distributed by Federal Tax Service. For the analysis, data on 2021 year was used. Only the businesses with the main activity code equal to 69.10 (*activity in the area of law* according to All-Russia Classifier of Economic Activity Kinds) were treated as legal companies, and that was in line with previously mentioned study by Institute for the Rule of Law. Also, sole entrepreneurs were excluded from the dataset, as well as companies who had declared zero revenue of expenditure. Organizations registered in rural area were not included in the dataset, because the aim of the research is to study relationships with respect to cities.
+
+**Methods.**
+
+## References
+
+<div id="refs"></div>
+

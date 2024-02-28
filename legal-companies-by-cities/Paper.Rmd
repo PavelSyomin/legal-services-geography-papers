@@ -9,7 +9,18 @@ csl: biblio-style.csl
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  dpi = 300,
+  fig.id = FALSE,
+  fig.width = 6.4,
+  fig.height = 5)
+```
+
+```{r imports, include=FALSE, cache = TRUE}
+source("Script.R")
 ```
 
 <div custom-style="Author">
@@ -46,9 +57,35 @@ Cities are known for being the centers of business activity. This is especially 
 
 In this paper, the relationship between the concentration of legal companies in Russian cities and people's access to legal services is empirically tested based on data about location of legal organizations if Russia. Four research questions are asked. The first one is: what is the relationship between city population and number of legal businesses and legal workers in the city? The second issue is: does the distribution of legal businesses and legal workers in Russian cities comply with well-known Zipf (rank-size) law? The third problem and the main question is: how does the accessibility of legal professionals depends on the concentration of legal companies with respect to city size by population and its relative size in the region (constituent entity) of Russia? The last, auxiliary issue is: are there any geographical patterns in the spatial distribution of cities by accessibility of legal services? This study partially continues the work by member of Institute for the Rule of Law [@Moiseeva2016] by testing whether the top of cities by count of legal businesses per population has changed over time or hot, but adds additional questions and tries to answer them.
 
-**Data.** Company-wise disaggregated geo-referenced dataset on small and medium-sized legal companies in Russia was used. It was produced with Python CLI tool *ru-smb-companies* developer by the author of this paper to extract and georeference open data from Russian state registry of small and medium-sized businesses (SMBs) distributed by Federal Tax Service. For the analysis, data on 2021 year was used. Only the businesses with the main activity code equal to 69.10 (*activity in the area of law* according to All-Russia Classifier of Economic Activity Kinds) were treated as legal companies, and that was in line with previously mentioned study by Institute for the Rule of Law. Also, sole entrepreneurs were excluded from the dataset, as well as companies who had declared zero revenue of expenditure. Organizations registered in rural area were not included in the dataset, because the aim of the research is to study relationships with respect to cities.
+**Data.** Company-wise disaggregated geo-referenced dataset on small and medium-sized legal companies in Russia was used. It was produced with Python CLI tool *ru-smb-companies* developer by the author of this paper to extract and georeference open data from Russian state registry of small and medium-sized businesses (SMBs) distributed by Federal Tax Service. For the analysis, data on 2021 year was used. Only the businesses with the main activity code equal to 69.10 (*activity in the area of law* according to All-Russia Classifier of Economic Activity Kinds) were treated as legal companies, and that was in line with previously mentioned study by Institute for the Rule of Law. Also, sole entrepreneurs were excluded from the dataset, as well as companies who had declared zero revenue of expenditure. Organizations registered in rural area were not included in the dataset, because the aim of the research is to study relationships with respect to cities. During the exploratory data analysis, four cities (namely, Innopolis, Kirovsk, Bronnytsy, Krasnoarmeisk) were marked as outliers and excluded from the data.
 
-**Methods.**
+**Methods.** Concentration of legal companies in cities was estimated as the number of employees of legal companies in a given city divided by the total number of employees in legal companies in all the cities. Accessibility of legal services was measured as the number of employees of legal companies (here, the are also called legal workers) in the city divided by the city's population. Both these metrics are quite rough, but give a basic understanding of the underlying phenomena. To categorize the cities by population, the classification of Lappo [@Lappo1997] was used.  Data visualization, including cartography, was used as the main method. In addition, the hypothesis of Zipf law distribution was tested with linear regression model. Technically, the analysis was performed with R programming language v. 4.1.2. The source code for this paper is available at the public repository: https://github.com/PavelSyomin/ru-smb-companies-papers/tree/main/legal-companies-by-cities
+
+**Results and discussion.** The main result of the study, that is, the relationship between the concentration of legal companies and accessibility of legal services, is shown on Fig. 1. Both axes of the plot are log-10 scaled to overcome the skewed distribution of underlying data. The relationship between two variables is close to linear, but the variance is high. However, if data is grouped by city size, the variance in each group decreases, and the larger the city, the smaller the variance of concentration. Also, the larger the city, the bigger the concentration. However, in terms of accessibility the picture is not as robust, because despite the general trend, the variance of accessibility in each population group is extremely high, and some small or medium cities have the better accessibility than large or even millionaire. It can be adder, though, that all the millionaire cities have relatively big number of legal workers per population, thus having the population over 1M people is always associated with high availability of legal services. Also, the largest city in every region usually have both high concentration of legal companies and high accessibility of legal services, despite the presence of several counter-examples. At the right top of the plot, there are two notable outliers, namely Moscow and St. Petersburg, that have the highest concentration and good accessibility. Their relative position (compared to the main line of the points cloud) implies that there is some sort of “accessibility saturation”, that is, the point where the marginal growth of concentration has no longer effect on accessibility. To sum it up, it may be said that high concentration and population, as well as the relative size inside the region, is somehow associated with accessibility, but at the same time there are various paths to high level of legal professionals per population, and some cities reach the high levels of accessibility without huge concentration.
+
+```{r fig-1-concentration-and-accessibility, fig.cap="", fig.height=5}
+concentration_and_accessibility_plot
+```
+
+The relationship between the count of legal companies and the population and between the count of legal workers and the population is close to linear (Fig. 2). In fact, the error is high if population and counts are small, but if population is high, the error quickly decreases.
+
+```{r fig-2-counts-and-population, fig.cap=""}
+counts_and_population_plot
+```
+
+The distribution of cities by the count of legal companies and workers mostly complies with Zipf law (Fig. 3). The relevant coefficients of determination (R-squared) are above 0.95 in both cases, and the coefficients of linear models are statistically significant with high confidence, and the slope is 0.5–0.6. There are some deviations from the rank-size log-linear trend for top-rank cities.
+
+```{r fig-3-rank-size, fig.cap=""}
+rank_size_plot
+```
+
+The spatial distribution of cities by legal services accessibility (Fig. 4) proves that regional centers have high relative number of legal workers. Moscow and its satellite cities also have high accessibility, as well as St. Petersburg. Several other point of high availability of legal services can be noted, e. g. Krasnodar and Stavropol at the South, Yekaterinburg in the Urals, Tuymen in Western Siberia. There are regions with low accessibility of legal services, for example, bordering regions in the South of Siberia, Komi and Kalmyk republics.
+
+```{r fig-4-map, fig.cap=""}
+spatial_plot
+```
+
+**Conclusion.** The number of legal companies in Russian cities and the number of employees of these companies is positively linearly related to cities population. The distribution of cities by the count of legal companies and workers of these companies follows the Zipf (rank-size) law. The largest cities of regions usually have relatively high accessibility of legal services, and the same is true for the cities with population above 1 million. The concentration of legal companies in cities has a positive linear relationship with the number of lawyers per population, but the variance of variables is big. Empirical data suggests several paths for reaching high levels of legal services availability, where increasing concentration of legal companies in a city is just one of the options, and cities with relatively small concentration can achieve the level of accessibility similar to the largest ones. The growth of legal services availability probably saturates after some level of concentration.
 
 ## References
 

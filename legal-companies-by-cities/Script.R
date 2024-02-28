@@ -57,7 +57,7 @@ data <- left_join(lcc, cp, by = c("oktmo", "city")) %>%
     is_largest_in_region = city_region_rank == 1) %>% 
   ungroup()
 
-ggplot(data, aes(
+concentration_and_accessibility_plot <- ggplot(data, aes(
     x = empl_per_100k, y = concentration, 
     color = city_size_group, shape = is_largest_in_region)) +
   geom_point(size = 2) +
@@ -75,8 +75,9 @@ ggplot(data, aes(
     legend.position = c(.01, .99),
     legend.justification = c(0, 1),
     panel.grid.minor.y = element_blank())
+concentration_and_accessibility_plot
 
-data %>% 
+counts_and_population_plot <- data %>% 
   pivot_longer(
     cols = c("count", "empl"),
     names_to = "var",
@@ -91,8 +92,9 @@ data %>%
     labeller = as_labeller(
       c("count" = "Companies", "empl" = "Employees"))) +
   theme_bw(base_size = 14, base_family = "Times New Roman")
+counts_and_population_plot
 
-data %>% 
+rank_size_plot <- data %>% 
   pivot_longer(
     cols = c("count", "empl"),
     names_to = "var",
@@ -110,6 +112,7 @@ data %>%
   facet_wrap(~var, ncol = 2, labeller = as_labeller(
     c("count" = "Companies", "empl" = "Employees"))) +
   theme_bw(base_size = 14, base_family = "Times New Roman")
+rank_size_plot
 
 rank_empl_lm <- data %>% 
   mutate(rank = row_number(-empl)) %>% 
@@ -122,7 +125,7 @@ rank_count_lm <- data %>%
 summary(rank_count_lm)
 
 ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
-data %>% 
+spatial_plot <- data %>% 
   st_as_sf(coords = c("lon", "lat"), crs = "EPSG:4326") %>% 
   ggplot() +
   geom_sf(data = regions_geo, color = "gray50", fill = "white") +
@@ -131,3 +134,4 @@ data %>%
   scale_color_binned(name = "Lawyers per 100k", n.breaks = 4, low = "#dadaeb", high = "#3f007d") +
   scale_size_discrete(name = "City size", range = c(.2, 2)) +
   theme_bw(base_size = 14, base_family = "Times New Roman")
+spatial_plot

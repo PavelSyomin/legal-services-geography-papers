@@ -1,0 +1,175 @@
+---
+output:
+  odt_document:
+    reference_odt: assets/reference.odt
+bibliography: assets/biblio_en.bib
+csl: assets/citations.csl
+link-bibliography: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE, 
+  message = FALSE, 
+  echo = FALSE, 
+  fig.width = 6.5, 
+  fig.height = 5,
+  fig.id = FALSE,
+  dpi = 300)
+options(knitr.kable.NA = "—")
+```
+
+```{r imports, cache = TRUE, include = FALSE}
+source("helpers/Plots.R")
+```
+
+УДК 911.3, 519.688
+
+<div custom-style="Author">
+
+**P. O. Syomin**
+
+Perm State University, Perm, Russia
+
+E-mail: ntsp\@ya.ru
+
+</div>
+
+<br>
+
+<div custom-style="Title">
+
+Mapping of Russian Small and Medium-Sized Businesses Using Tax Service Open Data
+
+</div>
+
+<br>
+
+<div custom-style="Abstract">
+
+
+
+**Keywords:** open data, spatial data, mapping, geocoding, small&medium business, dataset, big data, Federal Tax Service
+
+</div>
+
+<br>
+
+<div custom-style="Author">
+
+**П. О. Сёмин**
+
+Пермский государственный национальный исследовательский университет, Пермь, Россия
+
+E-mail: ntsp\@ya.ru
+
+</div>
+
+<br>
+
+<div custom-style="Title">
+
+Картографирование российских малых и средних предприятий по открытым данным налоговой службы
+
+</div>
+
+<br>
+
+<div custom-style="Abstract">
+
+В статье представлена технология для создания геопривязанного табличного набора данных о субъектах малого и среднего предпринимательства (МСП) в России на основе открытых данных Федеральной налоговой службы (ФНС России). Получаемый набор данных охватывает всю территорию России за 2016–2023 гг. Он представляет собой полный список субъектов МСП и содержит информацию о регистрационных номерах, категории, имени или наименовании, месте жительства или местонахождении, виде деятельности, доходах, расходах и численности работников. В пространственном отношении набор детализирован до населённых пунктов с указанием географических координат и кода муниципального образования (ОКТМО); во временном отношении — до месяцев или лет в зависимости от конкретного признака; в отношении вида деятельности — до отдельных кодов общероссийского классификатора (ОКВЭД). В отличие от классической data paper, статья не описывает итоговые данные как таковые, а излагает воспроизводимую методику их получения и демонстрирует её использование для получения набора данных о фирмах в сфере сельского, лесного хозяйства и рыболовства. С помощью предложенного алгоритма и его реализации на языке Python исследователь может самостоятельно обработать исходные данные и получить актуальную версию набора данных, адаптированную для его задач. Алгоритм оптимизирован так, чтобы для его выполнения было достаточно компьютера средней конфигурации, несмотря на сравнительно большой (около 2 Тб в несжатом виде) объём исходных данных. Получаемый с помощью технологии набор данных может применяться как непосредственно для пространственного анализа МСП в России, так и в качестве открытого, бесплатного и относительно репрезентативного источника сведений об экономике России в разрезе конкретных организаций, позволяя отчасти заменить коммерческие системы бизнес-аналитики наподобие Spark и Контур.Фокус. Кроме того, благодаря координатам набор данных может без дополнительной обработки использоваться для картографирования, а наличие кодов ОКТМО позволяет объединять его с официальными статистическими сведениями.
+
+**Ключевые слова:** открытые данные, пространственные данные, картографирование, геокодирование, малое и среднее предпринимательство, набор данных, большие данные, Федеральная налоговая служба.
+
+**Introduction.** Contemporary mapping solutions used for scientific and other purposes usually require well-structured easy-to-use spatial datasets. Here, “spatial” typically means “with coordinates of features provided in one of popular reference systems”. However, getting such the datasets may become a challenging task which can significantly slow down the research. The public request for high-quality spatial data has stimulated many governments to launch the state programs enabling access to it [@Jozefowicz2020]. In Russia, governmental data is sometimes distributed with coordinates, but in general, its availability is low. Despite the fact that many publicly available datasets include geographical reference of some sort, it is hard to use them in digital mapping solutions, because the spatial aspects are represented by human-readible addresses rather than by machine-readible geographical coordinates. To convert human-readible addresses into geographical coordinates, a procedure called geocoding is used. There are several geocoding service providers in Russia[^1], and their solutions have considerably good precision. However, almost all good geocoding services can be used only by calling special online application programming interfaces (APIs) which are available with a paid subscription. Thus, a researcher trying to create a map based on available datasets usually have to overcome two problems, one of them is the need to write a computer program for geocoding via online API, and another is the requirement to pay for this API. Both these issues can be solved with some effort, but nevertheless, they distract from the research itself, and anyway, a better solution is desirable.
+
+Among various govenrmental datasets which may be of high interest for the researchers, the data about small and medium-sized businesses (SMBs) attracts attention. The state SMB registry was created in the end of 2015 according to Art. 4.1 of Federal Law of July 24, 2007 No 207-FZ “On the development of small and medium-sized businesses in the Russian Federation”. It is operated by the Federal Tax Service (FTS) of Russia and contains information about all Russian SMBs. The registry is updated automatically, that is, no action from the business entity is required, thus it can be treated as the most complete list of all commercial organizations and individual entrepreneurs that meet several requirements for the number of employees and yearly income. It can not be used as a complete list of all commercial companies in the country, because the complete list of all registered organizations is contained in another state registry, namely Unified State Registry of Legal Entities. However, in comparison to the latter, the full dumps of SMB registry are distributed as open data free of charge and with no restrictions to use, while the Unified State Registry is accessible only via a paid subscription with several use restrictions or via online access to the data on particular companies. Thus, the SMB registry seems to be the most complete openly available collection of Russian commercial companies. The necessity of company-level data for geographical research has been noted by many scientists (see literature review below), and the open collection of such data seems to have high potential value. For example, it can be used to map companies with high spatial resolution (up to cities). However, the dumps of SMB registry do not contain coordinates — only human-readible addresses are included. Also, these dumps are of large size (hundreds of gigabytes if archived and some terabytes if unpacked) and have complex structure. To make them usable by a regular developer, a simplification, geocoding and transformation is required.
+
+**Objective.** In this paper, an application that helps to build a ready-to-mapping spatial dataset of Russian small and medium-sized businesses is featured and discussed. The source data is open dumps of SMB registry. A spatial dataset contains geographical coordinates of each entity with spatial resolution up to a settlement (urban or rural). Application is a Python command-line (CLI) tool with easy-to-use interface that can be run on a medium personal computer without the need to use special tools for big data processing. In the paper, the application is first briefly described, and after that, a demonstration of its use for mapping the Russian legal companies is performed.
+
+**Literature review.** A typical source of data for studies of social geography in Russia is the resources of the Federal State Statistics Service (Rosstat). These include, in particular, the data of official statistics, censuses and statistical surveys posted on the official website of this body, the database of indicators of municipalities (BDMO) and the unified interdepartmental information and statistical system (EMISS). There are many examples of their use in geography: O. V. Kuznetsova, when studying the structure of the economy of Russian regions, uses statistics of gross regional product and the volume of goods shipped [@Kuznetsova2018]; G. M. Fedorov, in his analysis of the economy of the Russian regions in the Baltic, relies on data from Rosstat and the Federal Customs Service [@Fedorov2022]; S. G. Safronov studies the tertiary sector of the Russian economy on the basis of data from Eurostat, Rosstat and the Federal Tax Service [@Safronov2021]; Yu. V. Petrov, with the help of regional, municipal statistics and data from other authorities, formulates proposals for the socio-economic development of the south of the Tyumen region [@Petrov2021]; M. A. Sarancha assesses the development of the hotel and restaurant business, using the results of Rosstat’s continuous monitoring of small and medium-sized businesses [@Sarancha2014]. Rosstat information is also used to create derived data sets, as in the work of I. Yu. Peker [@Peker2022]. Thus, most socio-geographical studies cannot do without using Rosstat data as the only source of information or as one of the sources.
+
+However, in some cases, Rosstat data is insufficient. As a result, there is a need for alternative sources of information that either complement official statistics or replace them. The reasons for this vary. In some cases, alternative sources of information are used to verify or correct Rosstat. For example, R. A. Babkin, based on data from cellular operators, proves that the official population of the Moscow agglomeration is underestimated by approximately 10% due to the error and inertia of statistical accounting and the “diocomy” of a significant part of Muscovites [@Babkin2020]. Another, more common reason is the lack of necessary information. For example, K.V. Rostislav, analyzing the impact of location on the profitability of enterprises, takes into account only organizations with fewer than 250 employees and uses open data from the Federal Tax Service of Russia to check this condition, since Rosstat does not provide such information [@Rostislav2021]. S. S. Lachininsky and co-authors estimate the spread of urban areas of St. Petersburg based on Landsat satellite images, since it is impossible to make the necessary calculations based on official statistics [@Lachininsky2023]. The advantages of alternative data sources include increased accuracy and timeliness [@Vorobyev2021], higher spatial and temporal resolution [@Babkin2021], the possibility of accurate and detailed analysis at the micro level [@Bochkaryov2017], while noting the untimeliness, incompleteness and potential unreliability of official statistics [@Kuzminov2021]. Alternative data sources provide access to the general population, as a result of which “the need for the use of selective, aggregated and indirect” sources of information is eliminated [@Blanutsa2017]. When using machine learning methods, which is also becoming relevant in modern geography, the sample size, disaggregation, and number of features in the data are important, which also encourages turning to alternative sources [@Rostislav2020]. Thus, although traditional statistical information is still important in socio-geographical research, and sometimes irreplaceable, there is a growing need for other information resources. The request from researchers is to increase the volume, speed of provision, accuracy, spatial and temporal resolution, expand the set of available indicators, as well as the possibility of validating statistical information. It manifests itself both in terms of traditional scientific methods and methods related to machine learning, although it is more relevant specifically for the latter, which are the most sensitive to the volume of data, their disaggregation, detail, and convenient presentation formats.
+
+One of the alternative sources of information for social geographers is administrative data from the Federal Tax Service of Russia. They are published on the official website of this authority or related resources. Geographical works use, in particular, information on the income of individuals [@Petrov2021], on tax revenues by federal subjects or types of economic activity [@Rostislav2020; @Safronov2021], on the average number of employees of organizations [@Rostislav2021], on the number of registered residential premises [@Lachininsky2021], on the number of small and medium-sized enterprises and measures to support them [@Gumenyuk2022]. The attention to the data published by the Federal Tax Service of Russia is apparently due to the multifunctionality of this government body, due to which it collects a huge amount of information about different aspects of the Russian economy: business entities, property, income, expenses. Typically, the Federal Tax Service of Russia, like Rosstat, publishes summary (aggregated) information. However, there are several data sets that contain disaggregated (raw) information. Among them, the most attention is drawn to the register of small and medium-sized businesses (SME register), which is regularly and completely posted on the service’s website and contains information about specific organizations and individual entrepreneurs.
+
+For some economic-geographical and related studies, information detailed down to the level of specific firms is important. Such information includes, for example, location, revenue, expenses, number of employees, name and other characteristics. The specified data can be used directly, as in the works of K. V. Rostislav [@Rostislav2021], E. A. Kolomak and A. I. Sherubneva [@Kolomak2023], who analyze agglomeration effects based on enterprise indicators. In addition, on their basis, statistics with arbitrary spatial or temporal grouping can be considered, including those that are impossible, difficult or inconvenient to extract from Rosstat data. For example, I. S. Gumenyuk operates with calculations of the absolute and relative number of small and medium-sized enterprises in the municipalities of the Kaliningrad region [@Gumenyuk2022]; M. A. Sarancha includes the number of enterprises in the integral index of the level of development of small businesses in the territory of the municipality [@Sarancha2014]; and M.A. Makushin and co-authors use data on enterprises in the cities of BAM to assess the structure of industry [@Makushin2023]. Information about specific firms acquires additional importance in city-scale studies [@Lachininsky2021; @Nikonorov2021; @Kozhevnikov2023], when studying narrow sectors of the economy that do not appear separately in statistics [@Moiseeva2016; @Pankratov2023], when analyzing a single industry [@Kuzminov2021].
+
+There is no generally accepted source of geo-referenced information about companies in Russia. Researchers and applied specialists usually rely on data from commercial [@Lachininsky2021] or open geoinformation services, business intelligence systems [@Moiseeva2016; @Kuzminov2021], as well as the above-mentioned SME register [@Gumenyuk2022]. Typically, using these methods poses two problems: the data is provided for a fee, or considerable effort is required to bring it into a format suitable for analysis. Business intelligence systems such as Spark, Kontur.Focus and Ruslana contain a lot of varied information, but are paid. Downloading data from private geographic information systems like 2GIS and Yandex.Maps also costs money, and in addition, there is no convenient interface for it. Open platforms like OpenStreetMap or the SME registry are free, but the downloads from them are large and complex, so the researcher has to spend a lot of effort on the technical side of the work, involve third-party specialists, or refuse to use such a data source. Formally, a complete list of Russian organizations and individual entrepreneurs is contained in two state registers (respectively, the Unified State Register of Legal Entities and the Unified State Register of Individual Entrepreneurs), however, neither of them is distributed in full - you can only extract individual records manually through the Federal Tax Service web service Russia or automatically for a fee through a software interface, which does not provide access to the general population of companies and is unlikely to allow constructing a representative sample without excessive costs and effort. Thus, the question of a convenient tool that would allow free and legal obtaining the most complete set of geo-referenced data on Russian companies is relevant.
+
+**Source data.** For the mapping, one main data source, two additional data sources, and two lookup tables are used. The main data source is SMB registry open data dumps[^1]. They are published with monthly interval starting from August 2016. Each dump contains the full registry for the date of publication, so a substantial portion of the data is duplicated. Technically, a dump is a ZIP archive with thousands of XML files. Each XML file contains information about 900 organizations or individuals. The data attributes of XML file include, for example, name of the business, its registration address (region, district, city, settlement), activity codes according to All-Russia Classifier of Economic Activity Kinds.
+
+Additional data sources are two FTS open datasets. The first of them is called “Information about revenue and expenditure of organizations by their accounting (financial) reporting”[^3], and the second is named “Information about average list count of employees of organizations”[^4]. Both of them are available starting from approximately 2019 and are updated irregularly, but at least once a year. Technically, they are also ZIP archives of XML files, where each archive contains data for a particular date, and each XML file lists 900 organizations. Individuals are not included in these datasets due to personal data issues.
+
+[^3]: https://www.nalog.gov.ru/opendata/7707329152-revexp/
+[^4]: https://www.nalog.gov.ru/opendata/7707329152-sshr2019/
+
+The lookup tables used for the mapping are “Settlements of Russia: population and geographic coordinates” dataset provided by “Infrastructure of the scientific data” project»[^5], and “Cities of Russia” dataset published by commercial company HFLabs[^6]. Both of them contain addresses and geographical coordinates of Russian cities and settlements. In addition, the author created a tiny supplement to the “Cities of Russia” dataset with information about missing cities extracted manually from Federal Address Information System (FIAS)[^7].
+
+[^5]: https://data.rcsi.science/data-catalog/datasets/160/
+[^6]: https://github.com/hflabs/city
+[^7]: https://fias.ru
+
+**Methods.** A Python command-line (CLI) application was developed to process the source data. Technically, it is based on Python standard library and several third-party packages, including fast XML processing library called lxml, iconic tabular data processing tool named Pandas, popular big data framework Apache Spark, and easy-to-use CLI framework Typer. This application was intended to be published as open-source tool for other researchers, so its source code with brief documentation is available at author's personal GitHub account[^8]. Readers who are familiar with Python programming language may go to the repository and look at the code thoroughly. Here, a top-level structure of the application is described, and the data processing flow for the mapping is almost the same.
+
+[^8]:
+
+*Step 1* is data download. The source ZIP archives were downloaded from FTS website and stored locally. *Step 2* is data extraction and filtering. The data was extracted from ZIP archives and stored in CSV tables, so that one ZIP archive was transformed into 1 CSV table. A lot of unused data attributes were dropped, so the resulting size of CSV tables is far smaller than the size of original archives. Also, the filtering by activity code was performed on this step to select data only about legal companies. According to the classifier, the main activity code equal to 69.10 was used as a filtering clause. The application itself allows to filter by other codes or groups of classifier or disable filtering at all, thus providing the opportunity to generate various slices of companies (e.g. agricultural, forestry, health services, heavy industries etc) with various structural detalization (i. e. up to groups or particular low-level codes of classifier). *Step 3* is data aggregation: due to the specifics of data publication, a lot of information in archives and corresponding CSV tables is duplicated, and thus duplicates have to be dropped. This step dropped the duplicates and thus reduced the volume of data even further. *Step 4* is geocoding. The addresses were converted to geographical coordinates using the look-up tables, and ≈98% of all addresses were successfully matched. Because the address in the source data is detalized up to settlements, the geographical coordinates refer to cities or settlements, and this is the lower bound of spatial resolution of the map. Optional *step 5* combines SMB registry data with data on revenue, expenditure and employees and transforms it to produce a yearly panel table. Here, it was not performed, because the geocoded dataset was sufficient for mapping. 
+
+After these preprocessing, the tabular dataset was filtered by year (2021 was chosen). The maps were plotted with a script written on R programming language with additional packages, including, in particular, ggplot2 and sf. The source code for the paper is available at the separate repository[^9].
+
+[^9]:
+
+**Results.** The spatial resolution of the dataset is up to cities or settlements, but regions and their subdivisions are also included, so the aggregation and mapping are also possible. Figure 1 shows the count of legal companies by region. Some spatial patterns are clearly seen from this visaulization, for instance, the high concentration of legal firms in the capital and the surrounding region, the “Urals-Volga-Krasnodar” belt, and small values in the Central economic region.
+
+```{r fig-1-settlements-russia, fig.cap = "Рис. 1. Число субъектов МСП по населённым пунктам России и преобладающий вид деятельности. Размер кругов соответствует числу субъектов МСП, цвет — одной из трёх групп видов деятельности по классификатору ОКВЭД (см. легенду). Показаны только населённые пункты, в которых зарегистрировано более 50 фирм"}
+regions_plot
+```
+
+Figure 2 shows the results of the mapping of legal companies by settlements. This is high-resolution map which gives a quick overview of legal business in Russia. The spatial distribution a bit resembles the region-scale map, but city-level data allows to notice other tendencies, e. g. concentration of businesses in regional centres. Also, the high concentration in Moscow and surroundings is clear, and the similar pattern for St. Petersburg is visible.
+
+```{r fig-2-settlements-russia, fig.cap = "Рис. 2. Число субъектов МСП по населённым пунктам России и преобладающий вид деятельности. Размер кругов соответствует числу субъектов МСП, цвет — одной из трёх групп видов деятельности по классификатору ОКВЭД (см. легенду). Показаны только населённые пункты, в которых зарегистрировано более 50 фирм"}
+settlements_map
+```
+
+The similar map may be drawn for a particular region, e. g. for Sverdlovsk oblast, as in the Figure 3. A pattern of high concentration is apparent again.
+
+```{r fig-3-settlements_svr, fig.cap = "Рис. 3. Число  субъектов МСП в населённых пунктах Свердловской области и их преобладающий вид деятельности. Размер кругов соответствует числу субъектов МСП, цвет — одной из трёх групп видов деятельности по классификатору ОКВЭД (см. легенду). Показаны все населённые пункты без ограничения по количеству зарегистрированных фирм"}
+settlements_map_svr
+```
+
+The presence of additional data about financial metrics and count of employees allows us to draw more maps. On Figure 4, the spatial distribution of legal companies profit is displayed, and on Figure 5, the similar distribution with respect to tne number of employees is shown. Both maps include only companies with non-zero profit or number of employees. The maps looks like the counts map (see Figure 2), but exact spatial patterns vary.
+
+```{r fig-4-profit-map, fig.cap = "Рис. 4. Распределение числа зарегистрированных субъектов МСП, их суммарной прибыли и суммарной численности работников в демонстрационном наборе в 2021 г. по регионам (субъектам федерации)"}
+settlements_map_profit
+```
+
+<br>
+
+```{r fig-5-employees-map, fig.cap = "Рис. 5. Распределение числа зарегистрированных субъектов МСП, их суммарной прибыли и суммарной численности работников в демонстрационном наборе в 2021 г. по регионам (субъектам федерации)"}
+settlements_map_empl
+```
+
+**Conclusion.**
+
+# References
+
+<div id="refs"></div>
+
+<br>
+
+# About the author
+
+Pavel Olegovich Syomin, PhD Student, Department of Social and Economic Geography, Perm State University, Perm, Russia; Software Developer, AgroSoftware LLC, Moscow, Russia.
+
+E-mail: ntsp\@ya.ru
+
+ORCID: 0000-0002-4015-9206
+
+# Сведения об авторе
+
+Сёмин Павел Олегович, аспирант кафедры социально-экономической географии Пермского государственного национального исследовательского университета, г. Пермь, Россия; разработчик в ООО «АгроСофтвер», г. Москва, Россия.
+
+E-mail: ntsp\@ya.ru
+
+ORCID: 0000-0002-4015-9206

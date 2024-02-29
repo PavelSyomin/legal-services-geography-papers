@@ -21,7 +21,7 @@ regions <- regions_boundaries %>%
 ru_svr <- st_read("assets/ru_svr.geojson")
 
 # Regional distribution
-regions_plot <- smb_data %>%
+regions_map <- smb_data %>%
   filter(
     start_date <= "2021-12-31",
     end_date >= "2021-12-31") %>% 
@@ -37,7 +37,7 @@ regions_plot <- smb_data %>%
     direction = 1) +
   theme_bw(base_size = 11, base_family = "Times New Roman") +
   theme(legend.position = "bottom")
-regions_plot
+regions_map
 
 settlements_df <- smb_data %>%
   filter(
@@ -50,7 +50,7 @@ settlements_df <- smb_data %>%
 
 settlements_map <- regions %>% ggplot() +
   geom_sf(size = .1) +
-  geom_sf(data = settlements_df, aes(color = log10(n)), size = .1) +
+  geom_sf(data = settlements_df, aes(color = log10(n)), size = .5, shape = 21) +
   coord_sf(crs = ru_crs) +
   scale_color_distiller(
     name = "Count of legal companies (log10)",
@@ -73,9 +73,13 @@ settlements_df_svr <- smb_data %>%
 settlements_map_svr <- ru_svr %>% 
   ggplot() +
   geom_sf() +
-  geom_sf(data = settlements_df_svr, aes(size = n)) +
+  geom_sf(data = settlements_df_svr, aes(color = log10(n)), size = 2) +
   coord_sf(crs = 4326) +
   scale_size_continuous() +
+  scale_color_distiller(
+    name = "Count of legal companies (log10)",
+    palette = "YlGn",
+    direction = 1) +
   theme_bw(base_size = 11, base_family = "Times New Roman")
 settlements_map_svr
 

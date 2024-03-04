@@ -1,5 +1,6 @@
 library(dplyr)
 library(ggplot2)
+library(glue)
 library(readr)
 library(sf)
 library(tidyr)
@@ -57,13 +58,50 @@ data <- left_join(lcc, cp, by = c("oktmo", "city")) %>%
     is_largest_in_region = city_region_rank == 1) %>% 
   ungroup()
 
-concentration_and_accessibility_plot <- ggplot(data, aes(
-    x = empl_per_100k, y = concentration, 
-    color = city_size_group, shape = is_largest_in_region)) +
-  geom_point(size = 2) +
-  scale_x_log10(name = "Lawyers per 100k population (log10)") +
-  scale_y_log10(name = "Concentration (log10)") +
-  scale_color_brewer(name = "City size by population", palette = "Dark2") +
+ca_model <- lm(log(empl_per_100k) ~ log(concentration), data)
+ca_model_summary <- summary(ca_model)
+ca_model_formula = glue(
+  "log10(availability) = {intercept} {sign} {slope} × log10(concentration)",
+  intercept = round(ca_model_summary$coefficients[1, 1], 2), 
+  slope = round(ca_model_summary$coefficients[2, 1], 2),
+  sign = substr(sprintf("%+ .2f", ca_model_summary$coefficients[2, 1]), 1, 1))
+ca_model_formula
+
+ca_plot <- ggplot(
+    data, 
+    aes(x = concentration, y = empl_per_100k)
+  ) +
+  geom_text(
+    aes(label = c("Msk", "SPb")),
+    data = filter(data, city %in% c("Москва", "Санкт-Петербург")),
+    vjust = -1,
+    hjust = 1,
+  ) +
+  geom_point(
+    aes(color = city_size_group, shape = is_largest_in_region), 
+    size = 2
+  ) +
+  geom_smooth(
+    aes(color = city_size_group), 
+    data = filter(data, ! (city %in% c("Москва", "Санкт-Петербург"))),
+    method = "lm", 
+    se = FALSE,
+    linetype = "dotted",
+    size = 1,
+    alpha = .75
+  ) +
+  geom_smooth(
+    data = filter(data, ! (city %in% c("Москва", "Санкт-Петербург"))),
+    method = "lm", 
+    se = FALSE,
+    color = "gray80",
+    size = 1,
+    alpha = .75
+  ) +
+  scale_x_log10(name = "Concentration (log10)") +
+  scale_y_log10(name = "Availability (log10)") +
+  scale_color_brewer(
+    name = "City size by population", palette = "Dark2") +
   scale_shape_manual(
     name = "", 
     values = c("TRUE" = 19, "FALSE" = 21),
@@ -72,57 +110,10 @@ concentration_and_accessibility_plot <- ggplot(data, aes(
       "FALSE" = "Other cities")) +
   theme_bw(base_size = 14, base_family = "Times New Roman") +
   theme(
-    legend.position = c(.01, .99),
-    legend.justification = c(0, 1),
+    legend.position = c(.99, .01),
+    legend.justification = c(1, 0),
     panel.grid.minor.y = element_blank())
-concentration_and_accessibility_plot
-
-counts_and_population_plot <- data %>% 
-  pivot_longer(
-    cols = c("count", "empl"),
-    names_to = "var",
-    values_to = "val") %>% 
-  ggplot(aes(x = population, y = val)) +
-  geom_point(shape = 21, color = "gray10") +
-  geom_smooth(method = "lm", linetype = "dashed", color = "red", se = FALSE) + 
-  scale_x_log10(name = "City population", breaks = 10 ** c(4:7), labels = c("10K", "100K", "1M", "10M")) +
-  scale_y_log10(name = "Count") +
-  facet_wrap(
-    ~var, ncol = 2, 
-    labeller = as_labeller(
-      c("count" = "Companies", "empl" = "Employees"))) +
-  theme_bw(base_size = 14, base_family = "Times New Roman")
-counts_and_population_plot
-
-rank_size_plot <- data %>% 
-  pivot_longer(
-    cols = c("count", "empl"),
-    names_to = "var",
-    values_to = "val") %>%
-  group_by(var) %>% 
-  mutate(
-    rank = row_number(-val)) %>% 
-  ungroup() %>% 
-  ggplot(aes(x = val, y = rank)) +
-  geom_line() +
-  geom_point(size = .1) +
-  geom_smooth(method = "lm", se = FALSE, linetype = "dashed", color = "red") +
-  scale_x_log10(name = "Count") +
-  scale_y_log10(name = "Rank") +
-  facet_wrap(~var, ncol = 2, labeller = as_labeller(
-    c("count" = "Companies", "empl" = "Employees"))) +
-  theme_bw(base_size = 14, base_family = "Times New Roman")
-rank_size_plot
-
-rank_empl_lm <- data %>% 
-  mutate(rank = row_number(-empl)) %>% 
-  lm(log(rank) ~ log(empl), .)
-summary(rank_empl_lm)
-
-rank_count_lm <- data %>% 
-  mutate(rank = row_number(-count)) %>% 
-  lm(log(rank) ~ log(count), .)
-summary(rank_count_lm)
+ca_plot
 
 ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
 spatial_plot <- data %>% 
@@ -131,7 +122,12 @@ spatial_plot <- data %>%
   geom_sf(data = regions_geo, color = "gray50", fill = "white") +
   geom_sf(aes(color = empl_per_100k, size = city_size_group), shape = 19) +
   coord_sf(crs = ru_crs) +
-  scale_color_binned(name = "Lawyers per 100k", n.breaks = 4, low = "#dadaeb", high = "#3f007d") +
-  scale_size_discrete(name = "City size", range = c(.2, 2)) +
-  theme_bw(base_size = 14, base_family = "Times New Roman")
+  scale_color_binned(name = "Availability", n.breaks = 4, low = "#dadaeb", high = "#3f007d") +
+  scale_size_discrete(name = "City size by population", range = c(.2, 2)) +
+  theme_bw(base_size = 14, base_family = "Times New Roman") +
+  theme(
+    legend.position = "bottom",
+    legend.box = "horizontal",
+    legend.direction = "vertical"
+  )
 spatial_plot

@@ -143,7 +143,7 @@
             <text variable="container-title" prefix=" // " suffix="."/>
             <text macro="year-date" suffix="."/>
             <group suffix=".">
-              <text variable="issue" prefix="№ "/>
+              <text variable="issue" prefix="Iss. "/>
               <text variable="volume" prefix=" (" suffix=")"/>
             </group>
             <text variable="page" prefix="P. " suffix="."/>
@@ -160,11 +160,11 @@
         <else>
           <text macro="title" prefix=" "/>
           <group delimiter=". " prefix=" " suffix=".">
-            <group prefix="// " delimiter=". ">
+            <group prefix="// " delimiter=". — ">
               <text variable="container-title"/>
               <text macro="year-date"/>
               <text variable="volume" prefix="Vol. "/>
-              <text variable="issue" prefix="№ "/>
+              <text variable="issue" prefix="Iss. "/>
             </group>
             <text variable="page" prefix="P. " suffix="."/>
           </group>

@@ -103,7 +103,7 @@ ca_plot <- ggplot(
   scale_color_brewer(
     name = "City size by population", palette = "Dark2") +
   scale_shape_manual(
-    name = "", 
+    name = NULL, 
     values = c("TRUE" = 19, "FALSE" = 21),
     labels = c(
       "TRUE" = "The largest city in a region", 
@@ -112,6 +112,7 @@ ca_plot <- ggplot(
   theme(
     legend.position = c(.99, .01),
     legend.justification = c(1, 0),
+    legend.spacing.y = unit(0, "cm"),
     panel.grid.minor.y = element_blank())
 ca_plot
 
@@ -124,10 +125,5 @@ spatial_plot <- data %>%
   coord_sf(crs = ru_crs) +
   scale_color_binned(name = "Availability", n.breaks = 4, low = "#dadaeb", high = "#3f007d") +
   scale_size_discrete(name = "City size by population", range = c(.2, 2)) +
-  theme_bw(base_size = 14, base_family = "Times New Roman") +
-  theme(
-    legend.position = "bottom",
-    legend.box = "horizontal",
-    legend.direction = "vertical"
-  )
+  theme_bw(base_size = 14, base_family = "Times New Roman")
 spatial_plot

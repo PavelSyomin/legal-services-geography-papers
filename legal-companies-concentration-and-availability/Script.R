@@ -48,7 +48,7 @@ data <- left_join(lcc, cp, by = c("oktmo", "city")) %>%
       labels = c(
         "Small (<50k)", "Medium (50–100k)", "Big (100–250k)",
         "Large (250–500k)", "Extra-large (500k–1M)", 
-        "Millionare (>1M)")
+        "Millionaire (>1M)")
     )) %>% 
   filter(
     !(city %in% c("Иннополис", "Кировск", "Бронницы", "Красноармейск"))) %>% 

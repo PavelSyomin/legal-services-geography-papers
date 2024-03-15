@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<style xmlns="http://purl.org/net/xbiblio/csl" version="1.0" class="in-text" default-locale="en-US">
+<style xmlns="http://purl.org/net/xbiblio/csl" version="1.0" class="in-text" default-locale="ru-RU">
   <info>
     <title>Russian GOST R 7.0.5-2008 (numeric, sorted alphabetically, Ру́сский)</title>
     <title-short>GOST R 7.0.5-2008 (numeric, sorted alphabetically)</title-short>
@@ -32,7 +32,7 @@
     </names>
   </macro>
   <macro name="author">
-    <names variable="author" delimiter="," prefix=" / " suffix=",">
+    <names variable="author" delimiter="," prefix=" / " suffix=".">
       <name et-al-min="6" et-al-use-first="5" initialize-with=". "/>
       <label form="short" strip-periods="true"/>
     </names>
@@ -105,7 +105,7 @@
     </sort>
     <layout suffix=".">
       <text macro="citation-number"/>
-      <text macro="author-first" suffix=" " font-style="italic"/>
+      <text macro="author-first" suffix=" "/>
       <choose>
         <if type="book" match="any">
           <group>
@@ -117,7 +117,7 @@
               <text variable="edition" suffix="-е изд.,"/>
             </group>
             <text macro="publisher" prefix=" "/>
-            <text variable="number-of-pages" prefix=" " suffix=" p."/>
+            <text variable="number-of-pages" prefix=" " suffix=" c."/>
           </group>
         </if>
         <else-if type="chapter paper-conference" match="any">
@@ -128,7 +128,7 @@
               <text macro="editor"/>
             </group>
             <text macro="publisher" prefix=" "/>
-            <text variable="page" prefix="P. " suffix="."/>
+            <text variable="page" prefix="C. " suffix="."/>
           </group>
         </else-if>
         <else-if type="webpage post-weblog" match="any">
@@ -142,10 +142,17 @@
             <text variable="container-title" prefix=" // " suffix="."/>
             <text macro="year-date" suffix="."/>
             <group suffix=".">
-              <text variable="issue" prefix="Iss. "/>
-              <text variable="volume" prefix=" (" suffix=")"/>
+              <choose>
+                <if variable="volume" match="any">
+                  <text variable="volume" prefix="Т." suffix=", "/>
+                  <text variable="issue" prefix="№ "/>
+                </if>
+                <else>
+                  <text variable="issue" prefix="№ "/>
+                </else>
+              </choose>
             </group>
-            <text variable="page" prefix="P. " suffix="."/>
+            <text variable="page" prefix="С. " suffix="."/>
           </group>
         </else-if>
         <else-if type="report">
@@ -162,8 +169,8 @@
             <group prefix="// " delimiter=". — ">
               <text variable="container-title"/>
               <text macro="year-date"/>
-              <text variable="volume" prefix="Vol. "/>
-              <text variable="issue" prefix="Iss. "/>
+              <text variable="volume" prefix="Т. "/>
+              <text variable="issue" prefix="№ "/>
             </group>
             <text variable="page" prefix="P. " suffix="."/>
           </group>

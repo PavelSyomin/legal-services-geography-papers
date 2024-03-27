@@ -1,0 +1,59 @@
+---
+title: "Legal Services Market in Russia: Specialization of Regions"
+author: "Pavel O. Syomin"
+date: "PhD Student at Perm State University"
+output:
+  word_document:
+    reference: reference.docx
+bibliography: biblio.bib
+csl: biblio-style.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  dpi = 300,
+  fig.id = FALSE,
+  fig.width = 6.6,
+  fig.height = 5)
+```
+
+```{r imports, include=FALSE, cache = TRUE}
+source("Script.R")
+```
+
+<br>
+
+<div custom-style="Abstract">
+
+Abstract: ...
+
+Keywords: ...
+
+</div>
+
+<br>
+
+**Introduction.** Analysis of spatial distribution of various sectors of economy is a typical task of a research in economical geography. In Russia, due to its federal structure, this issue often takes a form of studying a regional specialization, where each region equals the constituent entity of the state. There are diverse ways and methods of regional specialization analysis, ranging from descriptive ones to modern GIS or machine learning solutions. In particular, the quantitative methodics proposed in the recent Atlas of Economic Specialization of Russian Regions [@Atlas2021] prepared by the researchers from Higher Schools of Economics (HSE) is of high interest, because it is relatively modern, data-driven, theoretically grounded and reproducible. Unfortunately, only a subset of sectors of Russia's economy has been analyzed by the authors of the Atlas, and some important economic areas are missing. One example of such missing sectors is a legal services market. Despite the absence of research on legal services in Russia (with one notable exception of the analytical review by the members of Institute for the Rule of Law [@Moiseeva2016]), the geographical study of legal market in Russia is important, because the development of legal services, on the one hand, reflects the business development and economic activity, and on the other hand, stimulates the social and economic development by increasing the protection of citizens and business rights and freedoms. So, this short study tries to analyze the regional specialization of Russia with respect to the legal services.
+
+**Objective.** The aim of the research is twofold. First, its purpose is to detect Russia's regions with the specialization on legal services. Second, the goal is to vizualize this specialization on a tile map.
+
+**Data.** For the study, the open data on Russian small and medium-sized businesses (SMBs) distributed by the Federal Tax Service (FTS)[^1] was used. In addition, the FTS open data on the average number of employees of organizations[^2] was utilized. From these source datasets, the information about the legal firms (companies and individual entrepreneurs) that existed in 2021 was extracted, including the region of registration and the number of employees. To select legal firms only, the filter by the activity code equal to 69.10 was applied. The data processing was performed with the command-line Python tool *ru-smb-companies*[^3] developed by the author of this paper. Apart from the firms data, the official statistical information about the average yearly count of employees by region in 2021 provided by the Federal Statistics Service of Russia (Rosstat) was used[^4].
+
+**Methods.** The study follows the technique proposed in the Atlas and uses two metrics to estimate the specialization of regions. The first metric is called concentration, and it is calculated as the count of employees of legal companies in the region divided by the total number of employees of legal companies in all the regions. The second metric is called localization, and it is calculated by dividing the concentration by the ratio of the count of all employees in the region and the count of all employees in Russia. In rough terms, the concentration shows the share of the region in the total number of legal workers, while the localization shows whether this share is greater or less than the share of the region in the Russia's labor force. After the metrics are calculated, the regions are ranked by the localization, and top-16 regions (approximately 20%) are treated as regions where the legal services are the sector of regional importance. Next, the regions are ranked by the concentration, and the cumulative concentration is calculated. The regions with cumulative concentration below 0.8 are marked as the regions where the legal services is a sector of national importance. Some regions are present in both two groups. To draw the result, a tile map template by Dianov [^5] is used with a custom implementation in R programming language based on Yu. Tuckachev's code [^6]. The analysis is done with R as well, and the source code for the research and paper is published in the author's repository on GitHub[^7].
+
+**Results and discussion.** The tile map of regional specialization of Russia with respect to the legal services is shown on Figure 1. Several clusters are distinguishable, including (1) Moscow and (2) Saint Petersburg where legal services are both of national and regional importance, (3) the Western Plain South with a group of regions with national importance of legal services (Rostov, Stavropol, Voronezh, Byelgorod) and one region of joint importance (Krasnodar), (4) the Volga belt formed by a set of regions with regional (Voplgograd, Saratov, Perm) or joint (Samara, Tatarstan, Udmurtia) importance, (5) the Urals cluster with Sverdlovsk and Chelyabinsk regions forming the core and Bashkir republic on the peripheries, (6) Siberian cluster of three regions with both national and regional importance (Tuymen, Omsk, Novosibirsk) and four accompanying regions of regional importance (Altai, Keverovo, Krasnoyarsk, Irkutsk). Moscow region, Nizhniy Novgorod and Primorsky krai also may be treated as single-region clusters. Some regions with local importance of legal services only (e. g. Kaliningrad, Tver, Ivanovo, Kamchatka, Murmansk) does not belong to any of the clusters. The reasons for such a spatial distribution require further investigation. However, it is obvious the Moscow and Saint Petersburg concentrate legal services and localize them due to the top levels of economic developent and concentration. Other four main clusters (3–6) also can be hypothetically explained by the level of economic development. The same hypothesis may be true for the three single-region clusters. It is also important to mention that most of the specialized regions have at least one appeals or cassation court (both general or commercial), thus the concentration or localization of legal services in these regions may be partially explained by the presence of such courts that act as “gravitation centers” for both legal services customers and providers, though this hypothesis needs more thorough testing.
+
+```{r figure-1-map, fig.cap="Figure 1. Tile map of Russia showing the specialization of regions on legal services"}
+map
+```
+
+**Conclusion.** The specialization of regions on legal services in Russia was measured using concentration and localization metrics based on the number of employees. Six main clusters of legal services and three single-region clusters were distinguished. The result may be linked to the level of economic development of the respective regions and to the presence of appeal or cassation courts in the regions of specialization.
+
+<br>
+
+# References
+
+<div id="refs"></div>

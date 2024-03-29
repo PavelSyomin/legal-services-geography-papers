@@ -36,17 +36,18 @@ spec <- panel %>%
 map <- left_join(spec, tiles, by = c("region" = "name")) %>% 
   ggplot(aes(x = col, y = -row, fill = rank)) +
   geom_raster() +
-  geom_text(aes(label = code), family = "Times New Roman") +
+  geom_text(aes(label = code_en), family = "Times New Roman", size = 3) +
   scale_fill_brewer(
     palette = "Blues",
     na.value = "grey90",
     name = "Legal services importance",
     labels = c("Local", "National", "Both", "No")) +
   coord_equal() +
+  guides(fill = guide_legend(title.position = "top")) +
   theme_void(base_family = "Times New Roman") +
   theme(
     legend.position = c(.9, .1),
     legend.justification = c(1, 0),
     legend.direction = "horizontal"
-  )
+  ) 
 map

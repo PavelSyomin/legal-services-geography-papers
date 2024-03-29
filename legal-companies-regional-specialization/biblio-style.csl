@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<style xmlns="http://purl.org/net/xbiblio/csl" version="1.0" class="in-text" default-locale="en-US">
+<style xmlns="http://purl.org/net/xbiblio/csl" version="1.0" class="in-text" default-locale="ru-RU">
   <info>
     <title>Russian GOST R 7.0.5-2008 (numeric, sorted alphabetically, Ру́сский)</title>
     <title-short>GOST R 7.0.5-2008 (numeric, sorted alphabetically)</title-short>
@@ -18,11 +18,11 @@
   </info>
   <locale xml:lang="ru">
     <terms>
-      <term name="et-al"> [и др.].</term>
-      <term name="editor">под ред.</term>
-      <term name="accessed">дата обращения</term>
-      <term name="page" form="short">с.</term>
-      <term name="translator">перевод</term>
+      <term name="et-al"> et al.</term>
+      <term name="editor">ed. by</term>
+      <term name="accessed">accessed</term>
+      <term name="page" form="short">p.</term>
+      <term name="translator">trans. by</term>
     </terms>
   </locale>
   <macro name="editor">
@@ -32,7 +32,7 @@
     </names>
   </macro>
   <macro name="author">
-    <names variable="author" delimiter="," prefix=" / " suffix=",">
+    <names variable="author" delimiter="," prefix=" / " suffix=".">
       <name et-al-min="6" et-al-use-first="5" initialize-with=". "/>
       <label form="short" strip-periods="true"/>
     </names>
@@ -99,13 +99,14 @@
   </citation>
   <bibliography et-al-min="4" et-al-use-first="1">
     <sort>
+      <key variable="citation-number"/>
       <key macro="language-sort"/>
       <key macro="author-first"/>
       <key variable="issued"/>
     </sort>
     <layout suffix=".">
       <text macro="citation-number"/>
-      <text macro="author-first" suffix=" " font-style="italic"/>
+      <text macro="author-first" suffix=" "/>
       <choose>
         <if type="book" match="any">
           <group>
@@ -142,8 +143,15 @@
             <text variable="container-title" prefix=" // " suffix="."/>
             <text macro="year-date" suffix="."/>
             <group suffix=".">
-              <text variable="issue" prefix="Iss. "/>
-              <text variable="volume" prefix=" (" suffix=")"/>
+              <choose>
+                <if variable="volume" match="any">
+                  <text variable="volume" prefix="Vol. " suffix=", "/>
+                  <text variable="issue" prefix="iss. "/>
+                </if>
+                <else>
+                  <text variable="issue" prefix="Iss. "/>
+                </else>
+              </choose>
             </group>
             <text variable="page" prefix="P. " suffix="."/>
           </group>
@@ -163,7 +171,7 @@
               <text variable="container-title"/>
               <text macro="year-date"/>
               <text variable="volume" prefix="Vol. "/>
-              <text variable="issue" prefix="Iss. "/>
+              <text variable="issue" prefix="iss. "/>
             </group>
             <text variable="page" prefix="P. " suffix="."/>
           </group>

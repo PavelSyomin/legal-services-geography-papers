@@ -1,0 +1,32 @@
+# R-specific files
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# RMarkdown products
+*_cache
+*_files
+
+# Compiled files, source Excel tables and data archives, slides, images,
+# other stuff such as information letters for conferences
+*docx
+*doc
+*pdf
+*odt
+*zip
+*xls
+*xlsx
+*ppt
+*pptx
+*png
+*jpg
+
+# This file
+.gitignore
+
+# Referenced papers
+refs
+
+# A submission folder for the largest paper
+submission

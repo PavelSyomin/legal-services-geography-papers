@@ -12,6 +12,7 @@ empl <- read_csv("../../ru-smb-companies/legal/empl.csv")
 cities <- read_csv("cities.csv")
 regions_geo <- st_read("ru.geojson")
 regions <- read_csv("regions.csv")
+tiles <- read_csv("russia-tiles.csv")
 
 # Number of unique companies
 companies_count <- n_distinct(data[data$kind == 1, "tin"])
@@ -172,9 +173,15 @@ mig_by_month_plot <- migrations %>%
   theme_bw(base_size = 11, base_family = "Times New Roman") +
   theme(panel.grid.minor.y = element_blank(), panel.grid.major.x = element_blank())
 
-# Migration by regions
+# Migration by regions and settlements
 migration_by_region <- migrations %>% 
-  select(region_from, region_to, revenue, empl) %>% 
+  mutate(
+    settlement_from = replace(settlement_from, region_from == "Москва", "Москва"),
+    settlement_from = replace(settlement_from, region_from == "Санкт-Петербург", "Санкт-Петербург"),
+    settlement_to = replace(settlement_to, region_to == "Москва", "Москва"),
+    settlement_to = replace(settlement_to, region_to == "Санкт-Петербург", "Санкт-Петербург"),
+  ) %>% 
+  select(region_from, region_to, settlement_from, settlement_to, revenue, empl) %>% 
   pivot_longer(region_from:region_to, names_to = "type", values_to = "region") %>% 
   drop_na(region) %>% 
   group_by(region, type) %>% 
@@ -189,55 +196,144 @@ migration_by_region <- migrations %>%
   right_join(select(regions_geo, shapeISO), by = c("iso_code" = "shapeISO")) %>% 
   st_as_sf()
 
-ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
-mig_by_region_plot <- migration_by_region %>% 
-  ggplot() +
-  geom_sf(aes(fill = cut(count, c(-50, -25, 0, 25, 50, 75, 100))), size = .1) + 
-  coord_sf(crs = ru_crs) +
-  scale_fill_brewer(name = "", palette = "Greys") +
-  theme_bw(base_size = 11, base_family = "Times New Roman")
+legend_texts = data.frame(
+  label = c(
+    "Усл. обозначения по субъекту России",
+    "Мос", "+81", "81", "80",
+    "Краткое название", "Сальдо релокации (шт); нд — нет данных",
+    "Число нас. пунктов с положит. сальдо",
+    "Число нас. пунктов с отриц. сальдо"),
+  x = c(0, 2, 2, 14, 14, 26, 26, 26, 26),
+  y = c(22, 15, 2, 6, 2, 16, 12, 7, 3),
+  size = c(3.5, 3, 4, 2, 2, 3, 3, 3, 3)
+)
+legend_rects = data.frame(
+  xmin = c(0),
+  xmax = c(20),
+  ymin = c(0),
+  ymax = c(20)
+)
+legend_paths = data.frame(
+  x = c(12, 25, 6, 6, 25, 21, 25, 21, 25),
+  y = c(16, 16, 8, 12, 12, 7, 7, 3, 3),
+  group = c(2, 2, 1, 1, 1, 3, 3, 4, 4)
+)
+plt_custom_legend <- ggplot() +
+  geom_rect(
+    data = legend_rects,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), 
+    color = "gray30", 
+    fill = "white") +
+  geom_text(
+    data = legend_texts, 
+    aes(x = x, y = y, label = label, size = size), 
+    family = "Times New Roman", 
+    vjust = 0, 
+    hjust = 0) +
+  geom_path(
+    data = legend_paths, 
+    aes(x = x, y = y, group = group),
+    color = "grey60",
+    linewidth = .25) +
+  scale_x_continuous(limits = c(0, 117), expand = expansion(add = 0)) +
+  scale_y_continuous(limits = c(0, 26), expand = expansion(add = 0)) +
+  scale_size_identity() +
+  theme_void() +
+  coord_fixed()
+plt_custom_legend
 
-migration_msk_spb <- migration_by_region %>% 
-  filter(region %in% c("Москва", "Санкт-Петербург")) %>% 
-  rename(settlement = region) %>% 
-  select(-iso_code) %>% 
-  st_drop_geometry()
-
-# Migration by settlements
-settl_coords <- rbind(
-  select(distinct(data, settlement, .keep_all = TRUE), settlement, lat, lon),
-  select(distinct(data, region, .keep_all = TRUE), settlement = region, lat, lon)
-) %>% 
-  drop_na(lat, lon) %>% 
-  st_as_sf(coords = c("lon", "lat"), crs = "EPSG:4326")
-migration_by_settlement <- migrations %>% 
-  st_drop_geometry() %>% 
-  select(settlement_from, settlement_to, revenue, empl) %>% 
-  pivot_longer(settlement_from:settlement_to, names_to = "type", values_to = "settlement") %>% 
-  drop_na(settlement) %>% 
-  group_by(settlement, type) %>% 
+migration_by_region_plot <- migrations %>% 
+  mutate(
+    settlement_from = replace(settlement_from, region_from == "Москва", "Москва"),
+    settlement_from = replace(settlement_from, region_from == "Санкт-Петербург", "Санкт-Петербург"),
+    settlement_to = replace(settlement_to, region_to == "Москва", "Москва"),
+    settlement_to = replace(settlement_to, region_to == "Санкт-Петербург", "Санкт-Петербург"),
+  ) %>% 
+  select(region_from, region_to, settlement_from, settlement_to, revenue, empl) %>% 
+  mutate(id = row_number()) %>% 
+  pivot_longer(region_from:settlement_to, names_to = c("type", "dir"), names_sep = "_") %>% 
+  pivot_wider(names_from = "type", values_from = "value") %>% 
+  drop_na(region) %>% 
+  group_by(region, settlement, dir) %>% 
   summarise(count = n(), revenue = sum(revenue), empl = sum(empl)) %>% 
-  pivot_longer(count:empl, names_to = "var", values_to = "val") %>% 
-  pivot_wider(c("settlement", "var"), names_from = type, values_from = val, values_fill = 0) %>% 
-  mutate(change = settlement_to - settlement_from) %>% 
-  select(settlement, var, change) %>% 
-  pivot_wider(settlement, names_from = var, values_from = change) %>%
+  pivot_longer(count:empl, names_to = "metric", values_to = "value") %>% 
+  pivot_wider(c("region", "settlement", "metric"), names_from = dir, values_from = value, values_fill = 0) %>% 
+  mutate(change = to - from) %>% 
+  select(region, settlement, metric, change) %>% 
+  pivot_wider(names_from = metric, values_from = change) %>% 
   arrange(-count) %>% 
-  rbind(migration_msk_spb) %>% 
-  left_join(settl_coords) %>% 
-  st_as_sf()
-
-migration_by_settlement_plot <- migration_by_settlement %>% 
-  filter(abs(count) > 1) %>% 
-  mutate(direction = count > 0, count = abs(count)) %>% 
-  ggplot() +
-  geom_sf(data = regions_geo, size = .5, fill = "white") +
-  geom_sf(aes(color = direction), size = 1) +
-  coord_sf(crs = ru_crs) +
-  scale_color_manual(name = "", labels = c("Отток", "Приток"), values = c("gray50", "gray20")) +
-  theme_bw(base_size = 11, base_family = "Times New Roman") +
-  theme(legend.position = "bottom", legend.direction = "horizontal")
-migration_by_settlement_plot
+  filter(count != 0) %>% 
+  mutate(
+    settlement_up = count > 0,
+    settlement_down = count < 0) %>% 
+  group_by(region) %>% 
+  summarise(
+    s_up = sum(settlement_up),
+    s_down = sum(settlement_down),
+    count = sum(count)
+  ) %>% 
+  right_join(tiles, by = c("region" = "name")) %>% 
+  mutate(
+    code_label = format(code, width = 5, justify = "left"),
+    count_label = case_when(
+      is.na(count) ~ " нд",
+      count == 0 ~ " 0",
+      count > 0 ~ paste0("+", sprintf("%-2d", count)),
+      count < 0 ~ paste0("–", sprintf("%-2d", abs(count)))
+    ),
+    fill_var = case_when(
+      count == 0 ~ "null",
+      count > 0 ~ "pos",
+      count < 0 ~ "neg"
+    )) %>% 
+  ggplot(aes(x = col, y = -row)) +
+  geom_tile(aes(fill = fill_var), 
+            width = 1, 
+            height = 1, 
+            color = "grey80") +
+  geom_text(aes(label = code_label),
+            nudge_x = 0, 
+            nudge_y = .3, 
+            size = 2.5, 
+            family = "Times New Roman") +
+  geom_text(aes(label = count_label),
+            nudge_y = -.22, 
+            nudge_x = -.2, 
+            size = 3,
+            family = "Times New Roman") +
+  geom_text(aes(label = s_up), 
+            nudge_x = .3,
+            family = "Times New Roman",
+            size = 2) +
+  geom_text(aes(label = s_down), 
+            nudge_x = .3, 
+            nudge_y = -.25,
+            family = "Times New Roman", 
+            size = 2) +
+  scale_x_continuous(expand = expansion(add = .1)) +
+  scale_fill_manual(
+    name = "Сальдо релокации",
+    breaks = c("pos", "null", "neg"),
+    values = c("null" = "#d9d9d9", "pos" = "#f0f0f0", "neg" = "#bdbdbd"),
+    labels = c("null" = "0", "pos" = "> 0", "neg" = "< 0"),
+    na.value = "white") +
+  coord_fixed() +
+  theme_void(base_size = 9, base_family = "Times New Roman") +
+  theme(
+    plot.background = element_rect(fill = "white"),
+    legend.position = c(.5, 0.05),
+    legend.direction = "horizontal",
+    legend.justification = c(0, 0)) +
+  annotate(geom = "text",
+           x = .5, y = -11.5, 
+           hjust = 0, vjust = 0,
+           size = 3, lineheight = .8,
+           label = "¹ Часть России\n   по 6-ФКЗ 2014 г.\n² Часть России\n   по 5…8-ФКЗ 2022 г.",
+           family = "Times New Roman") + 
+  annotation_custom(
+    ggplotGrob(plt_custom_legend), 
+    xmin = 10, xmax = 19, ymin = -10, ymax = -8)
+ggsave("plt.png", migration_by_region_plot, width = 16, height = 12, units = "cm", dpi = 200)
 
 # Inter-regional vs intra-regional migrations
 inter_intra <- migrations %>% 
@@ -389,3 +485,9 @@ settl_central <- settlement_paths %>%
   )) %>% 
   group_by(type) %>% 
   summarise(across(count:empl, sum))
+
+
+# Migration by regions
+
+
+

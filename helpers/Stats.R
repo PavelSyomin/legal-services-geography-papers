@@ -28,105 +28,17 @@ labels <- data.frame(
   )
 )
 labels <- labels[[LOCALE]]
-rsmp_raw_data_path <- "../tax-service-opendata/rsmp/xml"
 
-raw_files <- list.files(rsmp_raw_data_path, pattern = "*.zip", full.names = TRUE)
-raw_files_count <- length(raw_files)
-raw_files_count
-
-raw_files_size_gb <- sum(file.size(raw_files)) / 2 ** 30
-raw_files_size_gb
-
-raw_files_uncompressed_size_tb <- sum(sapply(
-  raw_files,
-  function(path) {
-    sum(unzip(path, list = TRUE)$Length)
-})) / 2 ** 40
-raw_files_uncompressed_size_tb
-
-# Algorithm execution stats for group A demonstration
-rsmp_raw_data_path <- "../tax-service-opendata/rsmp/xml"
-revexp_raw_data_path <- "../tax-service-opendata/revexp/xml"
-sshr_raw_data_path <- "../tax-service-opendata/sshr/xml"
-rsmp_source_files <- list.files(rsmp_raw_data_path, pattern = "*.zip", full.names = TRUE)
-revexp_source_files <- list.files(revexp_raw_data_path, pattern = "*.zip", full.names = TRUE)
-sshr_source_files <- list.files(sshr_raw_data_path, pattern = "*.zip", full.names = TRUE)
-rsmp_source_files_size <- sum(file.size(rsmp_source_files))
-revexp_source_files_size <- sum(file.size(revexp_source_files))
-sshr_source_files_size <- sum(file.size(sshr_source_files))
-
-rsmp_intermediate_data_path <- "../tax-service-opendata/rsmp/reestr_group_A/"
-revexp_intermediate_data_path <- "../tax-service-opendata/revexp/csv"
-sshr_intermediate_data_path <- "../tax-service-opendata/sshr/csv"
-rsmp_intermediate_data_files <- list.files(rsmp_intermediate_data_path, pattern = "^data-", full.names = TRUE)
-revexp_intermediate_data_files <- list.files(revexp_intermediate_data_path, pattern = "^data-", full.names = TRUE)
-sshr_intermediate_data_files <- list.files(sshr_intermediate_data_path, pattern = "^data-", full.names = TRUE)
-rsmp_intermediate_data_files_size <- sum(file.size(rsmp_intermediate_data_files))
-revexp_intermediate_data_files_size <- sum(file.size(revexp_intermediate_data_files))
-sshr_intermediate_data_files_size <- sum(file.size(sshr_intermediate_data_files))
-
-rsmp_out_file <- "../tax-service-opendata/rsmp/csv/data_product.csv"
-revexp_out_file <- "../tax-service-opendata/revexp/csv/group_A.csv"
-sshr_out_file <- "../tax-service-opendata/sshr/csv/group_A.csv"
-rsmp_out_file_size <- file.size(rsmp_out_file)
-revexp_out_file_size <- file.size(revexp_out_file)
-sshr_out_file_size <- file.size(sshr_out_file)
-
-rsmp_panel_file <- "../tax-service-opendata/rsmp/reestr_group_A/panel.csv"
-rsmp_panel_file_size <- file.size(rsmp_panel_file)
-
-sizes_funnel <- data.frame(
-  rsmp = c(rsmp_source_files_size, rsmp_intermediate_data_files_size, rsmp_out_file_size, rsmp_panel_file_size),
-  revexp = c(revexp_source_files_size, revexp_intermediate_data_files_size, revexp_out_file_size, NA),
-  sshr = c(sshr_source_files_size, sshr_intermediate_data_files_size, sshr_out_file_size, NA),
-  row.names = c(labels[1], labels[2], labels[3], labels[4])
-)
-sizes_funnel$total <- rowSums(sizes_funnel, na.rm = TRUE)
-
-rsmp_source_obs_count <- sum(sapply(
-  rsmp_source_files,
-  function(path) {
-    length(unzip(path, list = TRUE)$Name) * 900
-  }))
-rsmp_intermediate_obs_count <- sum(
-  sapply(
-    rsmp_intermediate_data_files,
-    function(path) {
-      as.numeric(system(sprintf("cat %s | wc -l", path), intern = TRUE)) - 1
-    }
-  )
-)
-revexp_intermediate_obs_count <- sum(sapply(
-  revexp_intermediate_data_files,
-  function(path) {
-    as.numeric(system(sprintf("cat %s | wc -l", path), intern = TRUE)) - 1
-  }))
-sshr_intermediate_obs_count <- sum(sapply(
-  sshr_intermediate_data_files,
-  function(path) {
-    as.numeric(system(sprintf("cat %s | wc -l", path), intern = TRUE)) - 1
-  }))
-
-rsmp_out_obs_count <- as.numeric(system(sprintf("cat %s | wc -l", rsmp_out_file), intern = TRUE)) - 1
-revexp_out_obs_count <- as.numeric(system(sprintf("cat %s | wc -l", revexp_out_file), intern = TRUE)) - 1
-sshr_out_obs_count <- as.numeric(system(sprintf("cat %s | wc -l", sshr_out_file), intern = TRUE)) - 1
-
-rsmp_panel_file <- "../tax-service-opendata/rsmp/reestr_group_A/panel.csv"
-rsmp_panel_obs_count <- as.numeric(system(sprintf("cat %s | wc -l", rsmp_panel_file), intern = TRUE)) - 1
-
-counts_funnel <- data.frame(
-  rsmp = c(rsmp_source_obs_count, rsmp_intermediate_obs_count, rsmp_out_obs_count, rsmp_panel_obs_count),
-  revexp = c(revexp_intermediate_obs_count, revexp_intermediate_obs_count, revexp_out_obs_count, NA),
-  sshr = c(sshr_intermediate_obs_count, sshr_intermediate_obs_count, sshr_out_obs_count, NA),
-  row.names = c(labels[1], labels[2], labels[3], labels[4])
-)
-
-out_data <- read_csv(rsmp_out_file)
-out_org_count <- table(out_data$kind)["1"]
-out_ind_count <- table(out_data$kind)["2"]
+# Counts
+rsmp_data <- read_csv("../ru-smb-companies/group_A/smb.csv")
+counts <- rsmp_data %>% 
+  mutate(kind = replace(kind, kind == 3, 2)) %>% 
+  distinct(tin, .keep_all = TRUE) %>% 
+  count(kind) %>% 
+  pull(n)
 
 # Validation
-val_stats <- read_csv("../tax-service-opendata/Stats_for_validation.csv")
+val_stats <- read_csv("assets/validation-stats.csv")
 
 corr_by_year_all <- val_stats %>% 
   group_by(year) %>% 
@@ -166,4 +78,3 @@ corr_by_group <- val_stats %>%
   group_by(group) %>% 
   summarise(cor = cor(count_reestr, count_rosstat, method = "spearman")) %>% 
   arrange(cor)
-

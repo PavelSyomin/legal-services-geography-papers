@@ -1,0 +1,14 @@
+---
+output:
+  word_document:
+    reference_doc: assets/reference.docx
+bibliography: assets/biblio_en.bib
+csl: "assets/citations.csl"
+link-bibliography: false
+nocite: "@*"
+---
+
+# References
+
+<div id="refs"></div>
+

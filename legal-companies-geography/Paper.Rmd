@@ -1,0 +1,66 @@
+---
+output: 
+  word_document:
+    reference_doc: reference.docx
+bibliography: refs.bib
+#csl: style.csl
+link-bibliography: False
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Pavel O. Syomin[^1]**
+
+<br>
+
+<div custom-style="Title">
+
+Legal Business Geography in Russia: Regional Analysis Using Tax Service Open Data
+
+</div>
+
+<br>
+
+# Abstract
+
+Text text text.
+
+<br>
+
+<div custom-style="Block Text">
+
+**KEYWORDS:** w1, w2
+
+</div>
+
+<br>
+
+[^1]: Perm State University, Department of Social and Economic Geography; 15 Bukireva st., Perm, 614068, Russia; e-mail: ntsp\@ya.ru
+
+# Introduction
+
+Geography of services is an important branch of modern economic and social geography. In Russia, it dates back to the 1960s when the pioneering research papers in this field of studies were published [@Tkachenko2016]. In foreign countries, the spatial aspects of services were treated as a part of human geography and touched in the scholarly works about retail [@Reilly1931; @Berry1967] and cities [@Brush1953] usually based on the central places theory [@Christaller1966]. A series of review research articles published in 1985–87 directly uses the term “geography of services” and cites dozens of original papers related to this topic [@Daniels1985; @Daniels1986; @Daniels1987]. Newer foreign studies in this field focus on the processes and phenomena in peripheral or smaller economies [@Hermelin2007] or on the arising and growing sectors like FinTech [@Lai2020; @Wojcik2020]. In Russia, recent research in the geography of services covers spatial properties of banking [@Shustova2015], education [@Shulgina2019], car rental [@Zyrianova2018], food service [@Preobrazhenskiy2018], service sector in general [@Lisin2020]. However, several types of services are rarely studied, e. g. business and legal ones [@Tkachenko2016].
+
+The research on the geography of legal services in Russia is limited. To date, only an analytical review describing the legal market in Russia was published that contains a chapter on its spatial aspects [@Moiseeva2016], and yet another paper briefly addresses the role of Russia in the global legal services market without diving into the internal spatial properties of the Russian legal services itself [@Yastrebov2021]. There are also non-scientific products about Russian legal market that include its regional analysis[^2]. Despite the observed low interest to this issue from other researches, it can be argued that the geographical studies of legal services is necessary. First, legal services, as a subset of other business or producer services, play a substantial role in the development of regions and territories and in the economic growth [@Hansen1993], and sometimes act as a limiting factor, that is, the lack of professional legal advice may cause problems to entrepreneurs, especially to small ones, thus decreasing their performance [@Hitchens1997]. Next, the in-depth analysis of legal companies may give valuable insights about the business sectors they serve [@Faulconbridge2019] or increase the theoretical understanding of markets and industries in general [@Henderson2016]. Last but not least, legal services, apart from their narrow economic function, should be also treated as one of the elements of legal system in a wider sense that protect human rights and freedoms, ensure the rule of law, and act as one of the intermediaries between people, business and government that help to resolve the conflicts, increase the certainty and orderliness of social relations. This aspect of legal services is closely related to the social dimension of geography of services, and from this point of view it is not surprising that the research is also being conducted on the problem of legal services availablity [@Baxter2015].
+
+[^2]: Анализ рынка юридических услуг в России в 2019-2023 гг, прогноз на 2024-2028 гг. Web resource: https://marketing.rbc.ru/research/41683/ (accessed 14.04.2024)
+
+Legal services is quite a narrow and specific area of economy that does not reported separately in the official statistics, so for their analysis, other sources of information are necessary. Company-level georeferenced data is valuable for this task, because it can be easily filtered to leave the firms doing the business in the required activity area only and then aggregated by its spatial attributes to make a geographical overview. Researchers typically extract such the information from public GIS services [@Lachininsky2021] or business intelligence (BI) systems [@Moiseeva2016]. The disadvantage of this method, however, is the complexity of data preprocessing or the relatively high price of the data. Also, GIS and BI systems often do not enable access to historical data, providing real-time picture only, while the geographical studies may benefit from combining spatial and temporal properties. To overcome all these issues, an open administrative data may be used. In particular, the publicly available archives of Registry of Small and Medium-Sized Businesses (SMB registry) distributed by the Federal Tax Service (FTS) of Russia, in combination with a few other open data collections of the same governmental body, look valuable for the task in hand, and they have already been used by geographers [@Rostislav2021; @Gumenyuk2022]. 
+
+The purpose of this paper is twofold. On the one hand, it aims to provide an overview of geography of legal business in Russia. The scope of the research is intentionally limited due to various organizational and technical constraints: it deals with the service providers only (the supply part of the market) and contains nothing about customers (the demand part), focuses on commercial legal companies with other market participants such as notaries, advocacy firms, non-profit legal organizations left untouched, and operates with only a portion of variables and metrics indicating the characteristics of legal business. On the other hand, the paper proposes a reproducible technique of working with FTS open data for analyzing the geography of services in Russia, particularly the services that do not reported independently from the others in the official statistics (mainly specific types of business and customer services) and thus can hardly be analyzed with the traditional economic geographers' toolkit.
+
+<br>
+
+# Materials and methods
+
+# Results and discussion
+
+# Conclusion
+
+<br>
+
+## References
+
+<div id="refs"></div>

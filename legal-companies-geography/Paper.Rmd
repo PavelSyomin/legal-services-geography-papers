@@ -55,6 +55,37 @@ The purpose of this paper is twofold. On the one hand, it aims to provide an ove
 
 # Materials and methods
 
+**Data.** The research utilizes two primary data sources. All of them are published on the FTS website as open data.
+
+The first dataset is called *“Registry of small and medium-sized enterprises”*[^3]. It contains full dumps of the respective registry in zipped XML files. The first dump was published in August 2016, and since then, new dumps were published every month. Each dump contains the whole registry and includes, in particular, company's names, their taxpayer IDs, activity codes according to All-Russia Classifier of Kinds of Economic Activity, address of incorporation (up to a settlement name). According to Russian laws, the Registry includes information about all commercial organizations and individual entrepreneurs that meet several criteria, the most important of which are limit on revenue (no more than 2 billion Russian rubles) and average number of employees (no more than 250). Thus, the open dumps of this registry can be treated as the most complete publicly available data source on the Russian business entities. In addition, this source has geographical reference in the form of human-readable addresses, and historical records from 2016 to now in the form of time series of monthly dumps of the registry. 
+
+[^3]: Единый реестр субъектов малого и среднего предпринимательства. Web resource: https://www.nalog.gov.ru/opendata/7707329152-rsmp/ (accessed 15.04.2024)
+
+The second dataset is called *“Information about the average list count of employees of organisations”*[^4]. As the name suggests, it contains information about the number of company's employees. The data was initially published in 2019 and since then was updated with varied frequency, but at least yearly. As a result, the data archive includes information for the years from 2019 to 2023. For the unspecified reasons, the old versions of the dataset containing information for years from 2019 to 2021 were once deleted from the FTS website, but they had been already downloaded by the author and thus used in this research.
+
+[^4]: Сведения о среднесписочной численности работников организации. Web resource: https://www.nalog.gov.ru/opendata/7707329152-sshr2019/ (accessed 15.04.2024)
+
+In addition to the primary data sources, two lookup tables with the information on Russian cities and settlements are used to normalise and geocode raw addresses contained in the FTS data. The first table is called *“Settlement of Russia: population and geographical coordinates”*[^5]. It was prepared by the non-profit open data initiative called “Research data infrastructure” (RDI). The second table called *“Cities of Russia”*[^6] was published by commercial company DaData. Both these tables contain information that is actual for the beginning of 2022, thus there may be some inaccuracies in geocoding and normalisation, but they are likely to be negligible.
+
+[^5]: Населенные пункты России: численность населения и географические координаты. Web resource: https://data.rcsi.science/data-catalog/datasets/160/ (accessed 15.04.2024)
+[^6]: Города России. Web resource: https://github.com/hflabs/city (accessed 15.04.2024)
+
+**Methods.** A special Python command-line tool called *ru-smb-companies* was developed by the author of this paper to initially process huge and complex raw datasets from the FTS servers and transform them into a single table. The source code of this tool with a brief documentation is published in author's personal GitHub account[^7]. Here, a concise summary of the data processing workflow is provided. The data processing takes several steps.
+
+[^7]: Russian small and medium business dataset generator. Web resource: https://github.com/PavelSyomin/russian-smb-companies (accessed 15.04.2024)
+
+*First,* source datasets were downloaded from the FTS servers and stored on the local machine. In addition, their backup was uploaded to author's personal Yandex.Disk account, making it possible for other researchers to access the raw data even if FTS decides to remove it (as indeed happened with data on the number of employees).
+
+*Second,* the filter-on-extract approach was used to extract necessary information from the raw archives into intermediary CSV tables. The filter-on-extract approach means that instead of unpacking the entire archive on the disk, the program reads its contents file by file without unpacking, parses the internal XML structure, extracts necessary attributes only, filters the records by activity code to leave legal companies only, and stores the result on the disk. Thus, the runtime and disk usage are substantially reduced compared to the traditional extract-then-filter method. 
+
+*Third,* the data from the intermediary CSV tables was aggregated to remove duplicated records. The reason for the duplicates is the procedure of data publication: as it was mentioned earlier, every version of the source dataset contains the full data for the time of publication rather than updates only, leading to the huge number of repeating records.
+
+*Forth,* the addresses were normalised and geocoded to convert original administrative address format containing region, district, city and settlement name into simpler yet useful triplet of region, area and settlement, and add geographical coordinates and municipal codes (ОКТМО in Russian) for the settlements. 
+
+*Fifth,* the data on business entities was combined with the data on employees using taxpayer ID as unique identifier common to both datasets, and also converted into a panel time series table that includes yearly information for each company or individual.
+
+<br>
+
 # Results and discussion
 
 # Conclusion

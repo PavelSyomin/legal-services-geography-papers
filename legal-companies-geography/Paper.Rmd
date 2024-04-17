@@ -8,8 +8,20 @@ link-bibliography: False
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.id = FALSE,
+  fig.width = 6.7,
+  fig.height = 5,
+  dpi = 300)
 ```
+
+```{r imports, include=FALSE, cache=TRUE}
+source("Script.R")
+```
+
 
 **Pavel O. Syomin[^1]**
 
@@ -88,7 +100,7 @@ The research follows the general framework of regional analysis and uses the met
 
 The first problem is the *distribution of legal firms by regions* of Russia. To answer this question, legal firms that existed in 2021 are counted by the region, and the result is visualized on the map.
 
-The second problem is the *structure of legal business in regions* with respect to the kind of firms (either individual entrepreneurs or organisations) and the size of organisations (either micro, small, and medium). To answer this question, legal firms are counted by region, kind and type, and the result is visualized on a geofacetted plot.
+The second problem is the *structure of legal business in regions* with respect to the kind of firms (either individual entrepreneurs or organisations). To answer this question, legal firms are counted by region and king, and the result is visualized on a geofacetted plot.
 
 The third problem is the *role of legal business on the regional and national scale*, that is, either its importance within a given region or the importance of region's legal services in the Russia's legal market. To discover this issue, two calculations are made. The first one is used to better understand the role of the region in the country's legal business and is done by calculating the share of legal companies employees of a region in the total number of country's legal companies employees. The second one is aimed at estimating the relative role of legal business in region's economy and is done by dividing the number of legal companies employees in a region by the total number of employees in a region. Both two metrics are then plotted on a tile-grid map.
 
@@ -99,6 +111,18 @@ Several aspects are common to all the questions. First of all, despite the prese
 <br>
 
 # Results and discussion
+
+**Average yearly count of legal firms by region** is displayed on a tile-grid colorpleth map in Fig. 1. Several conclusions can be drawn from this visualisation. First, Moscow is the only city where the number of legal firms is above 10 thousand, and this is the highest value in Russia. Next, a set of regions also has relatively high count of legal companies and individual entrepreneurs. In spatial terms, most of these regions form several groups. One of these groups is located at the south of the European part of Russia and consists of Krasnodar and Stavropol territories with Rostov, Volgograd and Voronezh regions. Tatarstan and Bashkir republics with Samara, Sverdlovsk, Chelyabinsk regions and Perm territory make up another group that may be called Ural-Volga. Some Siberian regions, namely Tyumen, Omsk, Novosibirsk, Kemerovo, with Krasnoyarsk territory, form the third group that may be named Siberian by its location. Also, Saint Petersburg city, Nizhniy Novgorod region, and Primorie territory act as single-region groups. The majority of other regions has relatively low count of legal firms, and in some of them (several republics of North Caucas and Altai and a portion of regions from the North) there are less than a hundred of such companies. The co-loocation of regions and groups with different count of legal firms suggests that there may be a sort of central-peripheries relations between them. For example, Moscow city and region, Saint Petersburg city, and Nizhniy Novgorod region are surrounded by dozens of regions with relatively small number of legal firms, and thus may act as a centers of legal business for them. The same may be true for the pairs of South and Caucasian, as well as for Siberia and Far East. It may be hypothesized that economic development of regions is positively associated with the development of legal business. Also, the population of a region may also matter.
+
+<br>
+
+```{r fig-1-counts-map, fig.cap="Fig. 1. Median yearly count of legal firms (both organisations and individual entrepreneurs) and shares of ogranisations by regions of Russia for 2016–21. Grey is no data"}
+counts_map
+```
+
+<br>
+
+Fig. 1 also displays the median shares of organisations among all legal firms in regions. Legal firms may be either organisations or individual entrepreneurs, so for each region, the rest part of the firms consists of individuals. The share of companies among all legal firms varies from less about 25% to almost 70%. However, a substantial part of regions has from 40% to 60% of organisations, and thus many regions may be categorized either as with a small domination of companies or as with small domination of individuals on the legal market. Several southern regions (Krasnodar and Stavropol territories, Rostov region, Kalmyk republic), as well as several northern ones (Arkhangelsk region, Komi republic, Nenetz and Yamal territories), and some central regions (Moscow and Vladimir) have substantially lower shares of companies compared to the surrounding regions, thus forming the areas of predominantly individual legal business. The overall count of legal firms seems to have to connection with the share of organisation among them.
 
 # Conclusion
 

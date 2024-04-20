@@ -25,7 +25,6 @@ empl <- pivot_longer(
 counts_map <- count(data, region, year) %>% 
   group_by(region) %>% 
   summarise(n = median(n)) %>% 
-  left_join(shares) %>% 
   right_join(tiles, by = c("region" = "name")) %>% 
   ggplot(aes(x = col, y = -row, fill = n)) +
   geom_raster() +
@@ -108,7 +107,8 @@ employees_map <- data %>%
     aes(x = col - .4, y = -row - .3, label = n_courts, group = n_courts), 
     family = "Times New Roman", 
     size = 3,
-    hjust = 0) +
+    hjust = 0,
+    na.rm = TRUE) +
   geom_point(
     aes(x = col + .25, y = -row - .25, size = share_regional), 
     shape = "circle open",
@@ -127,13 +127,14 @@ employees_map <- data %>%
     legend.justification = c(1, 0),
     legend.direction = "horizontal",
     legend.title.position = "top",
-    plot.caption = element_text(size = 11)
+    plot.caption = element_text(size = 11),
+    plot.caption.position = 
   ) +
   labs(caption = "Digits are the numbers of mutli-regional courts. Grey is no data")
 employees_map
 
 # Timeline of legal companies count
-count(data, region, year) %>% 
+timeline_map <- count(data, region, year) %>% 
   group_by(region) %>% 
   arrange(year) %>% 
   summarise(
@@ -143,23 +144,43 @@ count(data, region, year) %>%
       abs(first(rel_count) - last(rel_count)) < .05 ~ 0,
       first(n) < last(n) ~ 1,
       first(n) > last(n) ~ -1
-    ), levels = -1:1, ordered = TRUE)) %>% 
+    ), levels = -1:1, ordered = TRUE),
+    change = (last(rel_count) - first(rel_count)) * 100,
+    alpha = .5) %>% 
   right_join(tiles, by = c("region" = "name")) %>% 
   ggplot(aes(x = year, y = rel_count)) + 
+  geom_text(
+    aes(
+      x = 2021,
+      y = 1.25, 
+      label = if_else(!is.na(change), sprintf("%+.0f", change), ""),
+      alpha = alpha),
+    family = "Times New Roman",
+    size = 4,
+    hjust = 1,
+    color = "gray45",
+    key_glyph = "blank") +
   geom_line(aes(color = direction)) +
   geom_text(
-    aes(x = 2016, y = 3, label = code_en),
+    data = tiles,
+    aes(x = 2016, y = 2, label = code_en),
     family = "Times New Roman",
     size = 3,
-    hjust = 0) +
+    hjust = 0,
+    vjust = 1) +
+  scale_y_continuous(limits = c(NA, 2)) +
+  scale_alpha_continuous(
+    name = NULL,
+    labels = c("Numbers show change in percent")
+  ) +
   scale_color_manual(
     name = "Overall change, 2021 to 2016",
     values = c("#d7191c", "gray45", "#1a9850"),
-    labels = c("Decline (–10% and more)", "Stability (±10%)", "Growth (+10% and more)", "No data"),
-    na.value = "gray30") +
+    labels = c("Decline (–5% and more)", "Stability (±5%)", "Growth (+5% and more)"),
+    na.translate = FALSE) +
   facet_grid(rows = vars(row), cols = vars(col)) +
   coord_fixed(expand = FALSE) +
-  guides(color = guide_legend(ncol = 2)) +
+  guides(color = guide_legend(ncol = 2, order = 1), alpha = guide_legend(order = 2)) +
   theme_void(base_family = "Times New Roman", base_size = 11) +
   theme(
     aspect.ratio = 1,
@@ -171,4 +192,4 @@ count(data, region, year) %>%
     strip.background = element_blank(),
     strip.text = element_blank()
   )
-
+timeline_map

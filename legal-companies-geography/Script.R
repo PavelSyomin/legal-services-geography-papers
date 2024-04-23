@@ -39,7 +39,7 @@ counts_map <- count(data, region, year) %>%
   coord_fixed(expand = FALSE) +
   theme_void(base_family = "Times New Roman", base_size = 11) +
   theme(
-    legend.position = c(1, .05),
+    legend.position = c(.9, .05),
     legend.justification = c(1, 0),
     legend.direction = "horizontal",
     legend.title.position = "top",
@@ -63,14 +63,16 @@ shares_map <- count(data, region, year, kind) %>%
     family = "Times New Roman", 
     size = 3,
     hjust = 0) +
-  scale_fill_binned(
-    name = "Share of organizations", transform = "log10",
-    n.breaks = 6,
-    high = "#eff3ff", low = "#2171b5") +
+  scale_fill_steps2(
+    name = "Share of organizations",
+    breaks = c(0, 0.45, 0.55),
+    low = "#c2a5cf", mid = "#f7f7f7", high = "#a6dba0",
+    midpoint = 0.5, show.limits = TRUE,
+    limits = function(x) round(x, 2)) +
   coord_fixed(expand = FALSE) +
   theme_void(base_family = "Times New Roman", base_size = 11) +
   theme(
-    legend.position = c(1, .05),
+    legend.position = c(.9, .05),
     legend.justification = c(1, 0),
     legend.direction = "horizontal",
     legend.title.position = "top",
@@ -78,6 +80,15 @@ shares_map <- count(data, region, year, kind) %>%
   ) +
   labs(caption = "Grey is no data")
 shares_map  
+
+count(data, region, year, kind) %>% 
+  group_by(region, year) %>%
+  mutate(share = n / sum(n)) %>% 
+  filter(kind == 1) %>% 
+  group_by(region) %>% 
+  summarise(share = median(share)) %>% 
+  ggplot(aes(x = share)) +
+  geom_density()
 
 # Employees calculations
 employees_map <- data %>% 

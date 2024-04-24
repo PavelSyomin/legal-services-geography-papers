@@ -33,19 +33,26 @@ counts_map <- count(data, region, year) %>%
     family = "Times New Roman", 
     size = 3,
     hjust = 0) +
+  geom_text(
+    aes(x = col - .4, y = -row - .3, label = round(n, 0)), 
+    family = "Times New Roman", 
+    size = 3,
+    color = "gray20",
+    hjust = 0,
+    na.rm = TRUE) +
   scale_fill_binned(
-    name = "Count of legal firms", transform = "log10",
-    high = "#eff3ff", low = "#2171b5") +
+    name = "Median count of law firms (2016–21)\nNumbers on the map are exact values\nGrey fill is no data",
+    transform = "log10",
+    high = "#eff3ff", low = "#2171b5"
+  ) +
   coord_fixed(expand = FALSE) +
   theme_void(base_family = "Times New Roman", base_size = 11) +
   theme(
     legend.position = c(.9, .05),
     legend.justification = c(1, 0),
     legend.direction = "horizontal",
-    legend.title.position = "top",
-    plot.caption = element_text(size = 11)
-  ) +
-  labs(caption = "Grey is no data")
+    legend.title.position = "top"
+  )
 counts_map
 
 # Shares of companies among legal firms
@@ -63,9 +70,16 @@ shares_map <- count(data, region, year, kind) %>%
     family = "Times New Roman", 
     size = 3,
     hjust = 0) +
+  geom_text(
+    aes(x = col - .4, y = -row - .3, label = round(100 * share)), 
+    family = "Times New Roman", 
+    size = 3,
+    color = "grey20",
+    hjust = 0) +
   scale_fill_steps2(
-    name = "Share of organizations",
+    name = "Median share of organizations (2016–21)\nNumbers on the map are exact values (%)\nGrey is no data",
     breaks = c(0, 0.45, 0.55),
+    labels = scales::percent,
     low = "#c2a5cf", mid = "#f7f7f7", high = "#a6dba0",
     midpoint = 0.5, show.limits = TRUE,
     limits = function(x) round(x, 2)) +
@@ -75,20 +89,9 @@ shares_map <- count(data, region, year, kind) %>%
     legend.position = c(.9, .05),
     legend.justification = c(1, 0),
     legend.direction = "horizontal",
-    legend.title.position = "top",
-    plot.caption = element_text(size = 11)
-  ) +
-  labs(caption = "Grey is no data")
+    legend.title.position = "top"
+  )
 shares_map  
-
-count(data, region, year, kind) %>% 
-  group_by(region, year) %>%
-  mutate(share = n / sum(n)) %>% 
-  filter(kind == 1) %>% 
-  group_by(region) %>% 
-  summarise(share = median(share)) %>% 
-  ggplot(aes(x = share)) +
-  geom_density()
 
 # Employees calculations
 employees_map <- data %>% 
@@ -134,14 +137,14 @@ employees_map <- data %>%
   coord_fixed(expand = FALSE) +
   theme_void(base_family = "Times New Roman", base_size = 11) +
   theme(
-    legend.position = c(.95, .05),
+    legend.position = c(.95, 0),
     legend.justification = c(1, 0),
     legend.direction = "horizontal",
     legend.title.position = "top",
     plot.caption = element_text(size = 11),
     plot.caption.position = 
   ) +
-  labs(caption = "Digits are the numbers of mutli-regional courts. Grey is no data")
+  labs(caption = "Digits are numbers of district-level courts. Grey is no data")
 employees_map
 
 # Timeline of legal companies count
@@ -199,7 +202,7 @@ timeline_map <- count(data, region, year) %>%
     legend.justification = c(1, 0),
     legend.direction = "horizontal",
     legend.title.position = "top",
-    plot.caption = element_text(size = 11),
+    legend.text = element_text(size = 11),
     strip.background = element_blank(),
     strip.text = element_blank()
   )

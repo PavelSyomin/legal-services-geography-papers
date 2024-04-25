@@ -167,10 +167,10 @@ timeline_map <- count(data, region, year) %>%
     aes(
       x = 2021,
       y = 1.25, 
-      label = if_else(!is.na(change), sprintf("%+.0f", change), ""),
+      label = ifelse(!is.na(change), sprintf("%+.0f", change), ""),
       alpha = alpha),
     family = "Times New Roman",
-    size = 4,
+    size = 3.5,
     hjust = 1,
     color = "gray45",
     key_glyph = "blank") +
@@ -179,7 +179,7 @@ timeline_map <- count(data, region, year) %>%
     data = tiles,
     aes(x = 2016, y = 2, label = code_en),
     family = "Times New Roman",
-    size = 3,
+    size = 2.5,
     hjust = 0,
     vjust = 1) +
   scale_y_continuous(limits = c(NA, 2)) +
@@ -203,6 +203,7 @@ timeline_map <- count(data, region, year) %>%
     legend.direction = "horizontal",
     legend.title.position = "top",
     legend.text = element_text(size = 11),
+    panel.spacing = unit(1, "mm"),
     strip.background = element_blank(),
     strip.text = element_blank()
   )

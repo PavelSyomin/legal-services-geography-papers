@@ -10,6 +10,7 @@ csl: biblio-style.csl
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
+  root.dir = "../",
   echo = FALSE,
   message = FALSE,
   warning = FALSE,
@@ -20,7 +21,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r imports, include=FALSE, cache = TRUE}
-source("Script.R")
+library(here)
+source(here("common", "Script.R"))
 ```
 
 <div custom-style="Author">

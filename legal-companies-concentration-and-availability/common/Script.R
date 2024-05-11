@@ -1,17 +1,18 @@
 library(dplyr)
 library(ggplot2)
 library(glue)
+library(here)
 library(readr)
 library(sf)
 library(tidyr)
 
 # Data on firms, and cities lookup table
-panel <- read_csv("../../ru-smb-companies/legal/panel.csv")
+panel <- read_csv(here("../../ru-smb-companies/legal/panel.csv"))
 cities <- rbind(
-  read_csv("cities.csv"),
-  read_csv("cities_additional.csv")
+  read_csv(here("common", "cities.csv")),
+  read_csv(here("common", "cities_additional.csv"))
 )
-regions_geo <- st_read("ru.geojson")
+regions_geo <- st_read(here("common", "ru.geojson"))
 
 lcc <- panel %>% 
   filter(

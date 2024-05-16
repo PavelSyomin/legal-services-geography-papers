@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 
 ```{r imports, include=FALSE, cache = TRUE}
 library(here)
-source(here("common", "Script.R"))
+source(here("conference-paper", "Script.R"))
 ```
 
 <div custom-style="Author">

@@ -7,6 +7,14 @@ csl: style.csl
 ---
 
 ```{r setup, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(glue)
+library(here)
+library(readr)
+library(sf)
+library(tidyr)
+
 knitr::opts_chunk$set(
   echo = FALSE,
   message = FALSE,
@@ -18,7 +26,6 @@ knitr::opts_chunk$set(
 ```
 
 ```{r imports, include=FALSE, cache = TRUE}
-library(here)
 source(here("journal-article", "Script.R"))
 ```
 
@@ -38,11 +45,11 @@ Pavel O. Syomin
 
 Perm State University, Russia, Perm
 
-<br>
-
 e-mail: ntsp\@ya.ru
 
 </div>
+
+<br>
 
 <div custom-style="Abstract">
 
@@ -66,11 +73,11 @@ e-mail: ntsp\@ya.ru
 
 Пермь мемлекеттік ұлттық зерттеу университеті, Ресей, Пермь
 
-<br>
-
 e-mail: ntsp\@ya.ru
 
 </div>
+
+<br>
 
 <div custom-style="Abstract">
 
@@ -94,11 +101,11 @@ e-mail: ntsp\@ya.ru
 
 Пермский государственный национальный исследовательский университет, Россия, Пермь
 
-<br>
-
 e-mail: ntsp\@ya.ru
 
 </div>
+
+<br>
 
 <div custom-style="Abstract">
 
@@ -127,13 +134,13 @@ This paper empirically examines the relationship between the number of law firms
 
 During the exploratory data analysis, six cities are identified as outliers subsequently excluded from the data. Two of these cities, Moscow and Saint Petersburg, are excluded due to the extremely high number of law firms employees: almost 18,866 and 5,550 respectively, while the next city has only less than 2,000 employees. The four other cities (Innopolis, Kirovsk, Bronnytsy, Krasnoarmeisk) are characterized by the very high proportion of law firms employees in city's population (from 38 per 10,000 in Krasnoarmeisk to 417 in Innopolis) compared to less than 20 per 10,000 in all the other cities.
 
-**Methods.** A linear regression is the main method of data analysis used in this study. An independent variable for the regression is the number of employees of law firms in a city denoted as *n*. Theoretically, both number of law firms or their employees may be used, but law firms in different cities may have different size, thus the number of employees seems to be more stable and consistent metric. The value for each city is calculated as a sum of numbers of employees of each law firm incorporated in this city. If a law firm reported zero count of employees, it is assumed that the number of employees is equal to one. The dependent variable in the regression is specific provision of legal services which is denoted as *p* and calculated by dividing the number of employees of law firms in the city by the city's population and multiplying the result by 100,000. In other words, it's a number of law firms employees per 100,000 of population. This formula is a modified version of the legal market saturation metric used in the analysis of the Russian legal services market conducted by the Institute for the Rule of Law [@Moiseeva2016]. In addition, a grouping variable *g* categorizing the cities by population is used to check whether the overall relationship is dependent on the city size. The grouping by population is performed on the basis of the classification system of G. M. Lappo [-@Lappo1997]. Two linear models are fitted, one without grouping and one with grouping. The results are visialized on a plot. The analysis was performed using the R programming language and additional packages. The source code for this paper can be found in the public repository[^2].
+**Methods.** A linear regression is the main method of data analysis used in this study. An independent variable for the regression is the number of employees of law firms in a city denoted as *n*. Theoretically, both number of law firms or their employees may be used, but law firms in different cities may have different size, thus the number of employees seems to be more stable and consistent metric. The value for each city is calculated as a sum of numbers of employees of each law firm incorporated in this city. If a law firm reported zero count of employees, it is assumed that the number of employees is equal to one. The dependent variable in the regression is specific provision of legal services which is denoted as *p* and calculated by dividing the number of employees of law firms in the city by the city's population and multiplying the result by 100,000. In other words, it's a number of law firms employees per 100,000 of population. This formula is a modified version of the legal market saturation metric used in the analysis of the Russian legal services market conducted by the Institute for the Rule of Law [@Moiseeva2016]. In addition, a grouping variable *g* categorizing the cities by population is used to check whether the overall relationship is dependent on the city size. The grouping by population is performed on the basis of the classification system of G. M. Lappo [-@Lappo1997]. Two linear models are fitted, one without grouping and one with grouping. The results are visialized on a plot. The analysis was performed using the R programming language and additional packages. The source code for this paper can be found in the public repository[^5].
 
-[^2]: https://github.com/PavelSyomin/ru-smb-companies-papers/tree/main/legal-companies-concentration-and-availability
+[^5]: https://github.com/PavelSyomin/ru-smb-companies-papers/tree/main/legal-companies-concentration-and-availability
 
 **Theoretical model.** Despite the perceived simplicity of the modelling described earlier, it has a theoretical mathematical background, and several possible types of outcome may be laid out right now before the analysis of the data in hand. It is known that a linear model is described by the two coefficients, intercept (a free term of the linear equation showing the relative shift of the regression line along the y axis) and slope (a coefficient before the independent variable showing the angle between the regression line and x axis). The slope can be either positive, negative, or zero. As a special edge case, it can be also infinite (i. e. regression line is vertical), even though, strictly speaking, such a dependency is not a function. Thus, the linear fit described earlier can yield a result of one of four types, each corresponding to one of the slope options and, subsequently, the pattern of relationship between the number of law firms and provision of legal services. These basic theoretical types are shown in Figure 1.
 
-```{r figure-1-theoretical-models, fig.cap="Figure 1 — Four plots showing four types of the theoretical relationship between the number of law firms employees and provision of lwgal services in cities"}
+```{r figure-1-theoretical-models, fig.cap="**Figure 1** — Four plots showing four types of the theoretical relationship between the number of law firms employees and provision of lwgal services in cities", fig.height=3}
 theoretical_models_plot
 ```
 
@@ -147,31 +154,37 @@ Type 4 is purely theoretical, but important in conjunction with the three other 
 
 # Results and discussion
 
-Figure 1 shows the relationship between the concentration of legal companies and the availability of legal services, as measured by the metrics proposed in the Materials and methods section. The overall connection between the number of law firms and provision of legal services appears to be nonlinear and corresponds to a square root formula. However, the same relationship within each city size group is fitted well with a linear models. The coefficients of these models are different, and the slope decreases when the city population increases. While the regression lines for the small and medium cities are close to Type 4 (provision is independent of the number of lawyers because of the small variation in the number of lawers), the modelled relationship in millionaire cities resembles Type 1 (another option for independence, but due to relatively uniform and equal provision regardless the number of lawyers). The cities from big to extra-large are characterized by the positive relationship between the number of lawyers and the provision of legal services and can be classified as Type 2.
+Figure 2 shows the relationship between the concentration of legal companies and the availability of legal services, as measured by the metrics proposed in the Materials and methods section. The overall connection between the number of law firms and provision of legal services appears to be nonlinear and corresponds to a square root formula. However, the same relationship within each city size group is fitted well with a linear models. The coefficients of these models are different, and the slope decreases when the city population increases. While the regression lines for the small and medium cities are close to Type 4 (provision is independent of the number of lawyers because of the small variation in the number of lawers), the modelled relationship in millionaire cities resembles Type 1 (another option for independence, but due to relatively uniform and equal provision regardless the number of lawyers). The cities from big to extra-large are characterized by the positive relationship between the number of lawyers and the provision of legal services and can be classified as Type 2.
 
 <br>
 
-```{r fig-1-concentration-and-accessibility, fig.cap="Figure 1. The relationship between the concentration of legal companies and the availability of legal services. City population group and relative city rank within the region are marked. The formulas used to calculate the metrics are described in the Methods section. Both the X and Y axes are log10-scaled. Dotted regression lines represent the linear fits within city population groups, while the solid gray line represents the overall linear fit. The regression line for the millionaire cities is fitted excluding the outliers (Moscow and Saint Petersburg)", fig.height=4}
-ca_plot
+```{r fig-2-empl-provision, fig.cap="**Figure 2** — The relationship between the number of lawyers and provision of legal services", fig.height=5}
+ep_plot
 ```
 
 In general, regional centers have relatively high number of lawyers and considerable level of legal services provision. This observation is probably explained by the centralization tendencies in the regions and the concentration of business and services in their administrative centers that situate the majority of government bodies and are also usually the most populous cities within a region.
 
 Moscow and Saint Petersburg, though excluded from the data analysis and not shown on the main figure, are two remarkable outliers with extremely high concentration of legal services and a good level of legal services availability. Moscow alone accounts for almost one-third of all legal companies' employees, and Saint Petersburg accounts for about 10%. The position of the corresponding data points relative to the main regression lines suggests that there is an “availability saturation” level, where further concentration has little effect on availability.
 
-The general tendencies observed in the Figure 1 should be supplemented by the analysis of the source data distribution shown in Figure 2 that extends the Figure 1 and displays the binned count of cities according to the number of lawyers and the provision of legal services. The overwhelming majority of cities is characterized by low level of both legal services provision and law firms development. Only a limited number (18) of cities is characterized by the high (more than 500) number of lawyers. It should be noted that high number of lawyers is good for legal services provision because all these cities are at least at the medium level of provision, and none of them has less than 5 lawyers per 10,000 people. However, cities with relatively low number of laywers can nevertheless reach top performance from the point of legal services provision that is on par with the cities with the highest number of lawyers. Moreover, it appears that such small yet well-served cities are even more typical than cities with high level of both lawyers and provision. The relative location of bin counts in the Figure 2 implies that there — besides the dominant bottom left corner — there are two main clusters of cities showing two different approaches of reaching high level of legal services provision. One approach is increase both in absolute number of law firms and relative number of lawyers per population probably charasteristic of the largest cities. Another is a relatively small yet sufficient number of lawyers typical probably for small or medium cities. Thus, apart from the general tendencies, the two-ways structure is found out.
+The general tendencies observed in the Figure 2 should be supplemented by the analysis of the source data distribution shown in Figure 3 that extends the Figure 2 and displays the binned count of cities according to the number of lawyers and the provision of legal services. The overwhelming majority of cities is characterized by low level of both legal services provision and law firms development. Only a limited number (18) of cities is characterized by the high (more than 500) number of lawyers. It should be noted that high number of lawyers is good for legal services provision because all these cities are at least at the medium level of provision, and none of them has less than 5 lawyers per 10,000 people. However, cities with relatively low number of laywers can nevertheless reach top performance from the point of legal services provision that is on par with the cities with the highest number of lawyers. Moreover, it appears that such small yet well-served cities are even more typical than cities with high level of both lawyers and provision. The relative location of bin counts in the Figure 2 implies that there — besides the dominant bottom left corner — there are two main clusters of cities showing two different approaches of reaching high level of legal services provision. One approach is increase both in absolute number of law firms and relative number of lawyers per population probably charasteristic of the largest cities. Another is a relatively small yet sufficient number of lawyers typical probably for small or medium cities. Thus, apart from the general tendencies, the two-ways structure is found out.
 
-Figure 2 displays the spatial distribution of cities based on the availability of legal services. Regional centers exhibit a high relative level of availability. The most prominent cluster of good access to legal services is formed by Moscow and its satellite cities. Other notable centers with high availability include Krasnodar and Stavropol in the southern part of Russia's West, Yekaterinburg and Chelyabinsk in the Urals, and Tuymen and Novosibirsk in Western Siberia. There are regions with limited access to legal services, such as the bordering regions in the south of Siberia, as well as the Komi and Kalmyk Republics.
+```{r figure-3-empl-provision-binned, fig.cap="**Figure 3** — Count and proportion of cities with variuos combinations of number of lawyers and level of legal services provision"}
+ep_binned_plot
+```
+
+Figure 4 is a map displaying the location of cities with relatively high (more than 5 lawyers per 10,000 people) provision of legal services. The most prominent cluster is formed by Moscow and its satellite cities. Other notable centers with high availability include Krasnodar and Stavropol in the South of Russia, Yekaterinburg and Chelyabinsk in the Urals, and Tuymen and Novosibirsk in Western Siberia. There are several regions with no cities of good legal services provision (especially on Far East, North, and Caucasus), and the majority of cities with relatively high level of legal services provision is located in the Central and Volga economic regions of the country.
 
 <br>
 
-```{r fig-2-map, fig.cap="Figure 2. Legal services availability in Russian cities on the country's map", fig.height=4}
-spatial_plot
+```{r fig-4-map, fig.cap="**Figure 4** — Legal services provision in Russian cities on the country's map. Only cities with more than 5 lawyers per 10,000 people are shown", fig.height=4}
+map
 ```
 
 # Conclusion
 
-The concentration of legal companies in cities has a positive linear relationship with the availability of legal services. This trend is observed in all the city population groups. The largest cities in regions typically have relatively high availability of legal services, as do cities with population above 1 million. Moscow and Saint Petersburg are characterized by the highest concentration and high availability, with Moscow alone accounting for almost one-third of all legal companies employees in the country. Empirical data suggests that there may be a saturation limit beyond which the increase in concentration does not have a substantial impact on availability. There are multiple paths to achieving high levels of legal services availability, with the increasing concentration of legal companies in a city being just one option. Even cities with relatively low concentration can achieve similar levels of availability as larger ones. Moscow and its region are a cluster of areas with high legal services availability. Similarly, Saint Petersburg, Krasnodar, Stavropol, Yekaterinburg, Chelyabinsk, Tyumen, and Novosibirsk also have good access to legal services.
+The provision of legal services in cities has a positive relationship with the number of lawyers. The overall trend can be fitted with a square root curve, while the relationship in distinct city size groups is close to linear with varying slope of the regression line. In small and medium cities (with population below 50,000), the increase of number of lawyers has little effect on the level of legal services provision, because the number of lawyers per 10,000 people varies greatly. In larger cities, the relationship is linear and positive. In the largest cities having the population above 1 million people, the impact of the growth of the number of lawyers on the provision of legal services decreases, because the latter in these cities is relatively high and uniform. Regional centers typically have relatively high availability of legal services. Moscow and Saint Petersburg are characterized by the highest number of law firms and high provision of legal services. Empirical data suggests that there may be a saturation limit beyond which the increase in the number of law firms does not have a substantial impact on provision of legal servicies.
+
+The overwhelming majority (about 85%) of cities is characterized both by low number of law firms and low level of legal services provision. There are two groups of cities by their way of achieving high levels of legal services provision. The first group is composed of cities with large number of law firms. The second group, on the opposite, have small yet number of law firms that nevertheless satisfy the needs of local communitues. Moscow and its region is characterized by relatively high level of legal services availability, as well as Central and Volga regions of Russia in general. Similarly, Saint Petersburg, Krasnodar, Stavropol, Yekaterinburg, Chelyabinsk, Tyumen, and Novosibirsk also have good provision to legal services. On the contrary, in many regions of Far East, North and Caucasus the level of provision of legal services is low.
 
 ## References
 

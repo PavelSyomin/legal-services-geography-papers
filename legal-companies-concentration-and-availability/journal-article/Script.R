@@ -56,20 +56,16 @@ data <- left_join(lfc, cp, by = c("oktmo", "city")) %>%
   drop_na(count, empl, population) %>% 
   mutate(
     provision = 1e4 * empl / population,
-    city_group = cut(
+    size = cut(
       population,
-      breaks = c(0, 5e4, 1e5, 2.5e5, 5e5, 1e6, 1e9),
+      breaks = c(0, 5e4, 1e5, 2.5e5, 5e5, 1e6, 1e8),
       labels = c(
         "Small (<50k)", "Medium (50–100k)", "Big (100–250k)",
         "Large (250–500k)", "Extra-large (500k–1M)", 
         "Millionaire (>1M)")
     )) %>% 
   group_by(region) %>% 
-  mutate(
-    city_region_rank = row_number(-population),
-    is_largest_in_region = city_region_rank == 1) %>% 
-  ungroup() %>% 
-  select(-city_region_rank)
+  ungroup()
 
 # Look at the regression variables extreme values
 # to identify outliers
@@ -82,26 +78,41 @@ data %>%
 outliers <- c("Иннополис", "Кировск", "Бронницы", "Красноармейск", 
               "Москва", "Санкт-Петербург")
 
+ep_with_outliers_plot <- data %>% 
+  mutate(
+    is_msk_spb = city %in% c("Москва", "Санкт-Петербург")) %>% 
+  filter(!(city %in% outliers) | is_msk_spb) %>%
+  ggplot(aes(x = empl, y = provision)) +
+  geom_point(
+    aes(color = is_msk_spb), 
+    size = 1,
+    shape = 21) +
+  geom_text(
+    data = ~ filter(.x, is_msk_spb) %>% mutate(city = if_else(city == "Москва", "Msk", "SPb")), 
+    aes(label = city),
+    vjust = "inward",
+    hjust = "inward") +
+  scale_color_manual(
+    name = NULL,
+    values = c("TRUE" = "red1", "FALSE" = "gray50"),
+    guide = guide_none()) +
+  theme_bw() +
+  theme(
+    axis.title = element_blank(),
+    panel.grid.minor = element_blank())
+ep_with_outliers_plot
 
-ca_model <- lm(log(empl_per_100k) ~ log(empl), data)
-ca_model_summary <- summary(ca_model)
-ca_model_formula = glue(
-  "log10(availability) = {intercept} {sign} {slope} × log10(concentration)",
-  intercept = round(ca_model_summary$coefficients[1, 1], 2), 
-  slope = round(ca_model_summary$coefficients[2, 1], 2),
-  sign = substr(sprintf("%+ .2f", ca_model_summary$coefficients[2, 1]), 1, 1))
-ca_model_formula
-
-ca_plot <- data %>% 
+# Make the main plot: provision ~ empl grouped by size
+ep_plot <- data %>% 
   filter(!(city %in% outliers)) %>% 
   ggplot(aes(x = empl, y = provision)) +
   geom_point(
-    aes(color = city_group, shape = is_regional_center), 
+    aes(color = size, shape = is_regional_center), 
     size = 2,
     alpha = .8
   ) +
   geom_smooth(
-    aes(color = city_group, linetype = "solid"), 
+    aes(color = size, linetype = "solid"), 
     method = "lm", 
     se = FALSE,
     linewidth = .5,
@@ -116,6 +127,10 @@ ca_plot <- data %>%
     linewidth = 1,
     alpha = .75
   ) +
+  annotation_custom(
+    ggplotGrob(ep_with_outliers_plot), 
+    xmin = 750, 
+    ymax = 5) +
   scale_shape_manual(
     name = "City type", 
     values = c("TRUE" = 8, "FALSE" = 21),
@@ -140,61 +155,54 @@ ca_plot <- data %>%
     legend.spacing.y = unit(0, "cm"),
     panel.grid.minor.y = element_blank()) +
   labs(x = "Lawyers in a city (n)", y = "Lawyers per 10,000 (p)")
-ca_plot
+ep_plot
 
-data %>% 
+# Make a binned version of the main plot
+ep_binned_plot <- data %>% 
   filter(!(city %in% outliers)) %>% 
   ggplot(aes(x = empl, y = provision)) +
   geom_bin2d(binwidth = c(250, 5)) +
-  geom_point(color = "gray80", size = .5) +
+  geom_point(color = "gray50", shape = 21, size = 2) +
   stat_bin2d(
-    aes(label = sprintf("(%.1f%%)", 100 * after_stat(density))),
-    geom = "text", size = 3, color = "gray50",
-    binwidth = c(250, 5),
-    vjust = 1,
-  ) +
-  stat_bin2d(
-    aes(label = after_stat(count)),
+    aes(label = sprintf("%.1f%%", 100 * after_stat(density))),
     geom = "text", size = 5,
-    binwidth = c(250, 5),
+    binwidth = c(250, 5)
   ) +
   scale_fill_binned(
-    name = "",
+    name = "# of cities in a bin",
     high = "#41ab5d", low = "#f7fcf5",
     transform = "log10") +
   theme_bw(base_size = 14) +
   theme(
+    legend.position = c(.99, .01),
+    legend.justification = c(1, 0),
+    legend.direction = "horizontal",
+    legend.title.position = "top",
     legend.spacing.y = unit(0, "cm"),
     panel.grid.minor.y = element_blank()) +
   labs(x = "Lawyers in a city (n)", y = "Lawyers per 10,000 (p)")
+ep_binned_plot
 
-data %>% 
-  filter(!(city %in% outliers)) %>% 
-  ggplot(aes(x = empl, y = provision)) +
-  geom_point(
-    aes(color = city_group, alpha = if_else(provision > 5, 1, .3)), 
-    size = 1,
-  ) +
-  scale_color_brewer(
-    name = "City size by population", palette = "Dark2",
-    guide = guide_legend(order = 2)) +
-  theme_bw(base_size = 14) +
-  theme(
-    legend.spacing.y = unit(0, "cm"),
-    panel.grid.minor.y = element_blank()) +
-  labs(x = "Lawyers in a city (n)", y = "Lawyers per 10,000 (p)")
-
+# Make a map with provision > 5
 ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
-spatial_plot <- data %>% 
+map <- data %>% 
+  filter(!(city %in% outliers), provision >= 5) %>% 
   st_as_sf(coords = c("lon", "lat"), crs = "EPSG:4326") %>% 
   ggplot() +
   geom_sf(data = regions_geo, color = "gray50", fill = "white") +
-  geom_sf(aes(color = empl_per_100k, size = city_size_group), shape = 19) +
+  geom_sf(aes(color = provision), shape = 19) +
   coord_sf(crs = ru_crs) +
-  scale_color_binned(name = "Availability", n.breaks = 4, low = "#dadaeb", high = "#3f007d") +
-  scale_size_discrete(name = "City size by population", range = c(.2, 2)) +
-  theme_bw(base_size = 14, base_family = "Times New Roman")
-spatial_plot
+  scale_color_binned(
+    name = "Lawers per 10,000 people",
+    n.breaks = 4,
+    low = "#74c476",
+    high = "#00441b") +
+  theme_void(base_size = 14) +
+  theme(
+    legend.position = "bottom",
+    legend.direction = "horizontal"
+  )
+map
 
 # Theoretical models
 facet_labels <- c(
@@ -234,96 +242,24 @@ data_points <- rbind(
   )
 ) %>% 
   mutate(group = factor(group, 1:4, labels = facet_labels))
+
 theoretical_models_plot <- ggplot(lines, aes(x = x, y = y)) +
   geom_path() +
   geom_point(data = data_points, size = .5, alpha = .3) +
   scale_x_continuous(
-    name = "Number of law firms (LF) employees (n)",
+    name = "Number of lawyers (n)",
     labels = function (br) br * 1000,
     limits = c(-.1, 1.1)
   ) +
   scale_y_continuous(
-    name = "LF per 100,000 (p)",
+    name = "Laywers per 100,000 (p)",
     labels = function (br) br * 10,
     limits = c(-.1, 1.1)
   ) +
   facet_wrap(vars(group), nrow = 1) +
   coord_fixed() +
-  theme_minimal(base_size = 16) +
-  labs(caption = "s means slope, dots are hypothetical data points, line is hypothetical linear fit of points")
+  theme_minimal(base_size = 14) +
+  labs(caption = "s means slope, dots are hypothetical data points,\nline is hypothetical linear fit of points")
 theoretical_models_plot
 
-# y = k * x + b -> log(y) ~ log(x) = ?
-x <- seq(1, 10001, length.out = 10000)
-k <- 5
-b <- 0
-y <- k * x + b
 
-ggplot(
-  data = rbind(
-    tibble(x = x, y = y, option = "y ~ x"),
-    tibble(x = log10(x), y = y, option = "y ~ log(x)"),
-    tibble(x = log10(x), y = log10(y), option = "log(y) ~ log(x)")
-  ),
-  mapping = aes(x = x, y = y)
-) +
-  geom_point(size = .1) +
-  facet_wrap(vars(option), ncol = 1, scales = "free")
-
-# log(y) = k * log(x) + b -> y ~ x = ?
-log_x <- seq(0, 10, length.out = 10000)
-k <- 1
-b <- 0.6
-log_y <- k * log_x + b
-
-ggplot(
-  data = rbind(
-    tibble(x = log_x, y = log_y, option = "log(y) ~ log(x)"),
-    tibble(x = 10 ** log_x, y = 10 ** log_y, option = "y ~ x")
-  ),
-  mapping = aes(x = x, y = y)
-) +
-  geom_point(size = .1) +
-  facet_wrap(vars(option), ncol = 1, scales = "free")
-
-data$city_size_group
-
-fit1 <- lm(empl_per_100k ~ empl, filter(data, city_size_group == "Small (<50k)"))
-summary(fit1)
-fit2 <- lm(empl_per_100k ~ empl, filter(data, city_size_group == "Big (100–250k)"))
-summary(fit2)
-fit1_log <- lm(log10(empl_per_100k) ~ log10(empl), filter(data, city_size_group == "Small (<50k)"))
-summary(fit1_log)
-fit2_log <- lm(log10(empl_per_100k) ~ log10(empl), filter(data, city_size_group == "Big (100–250k)"))
-summary(fit2_log)
-plot(fit1_log)
-
-fit3 <- lme(provision ~ empl, data = data, random = ~ empl | city_group)
-summary(fit3)
-
-
-data %>% 
-  filter(!(city %in% outliers)) %>%
-  right_join(tiles, by = c("region" = "name")) %>% 
-  ggplot(aes(x = empl, y = provision)) +
-  geom_point(aes(shape = is_regional_center), size = .2) +
-  geom_text(
-    data = tiles,
-    aes(x = 0, y = 20, label = code_en),
-    size = 2.5,
-    hjust = 0,
-    vjust = 1) +
-  facet_grid(rows = vars(row), cols = vars(col), scales = "free") +
-  #guides(color = guide_legend(ncol = 2, order = 1), alpha = guide_legend(order = 2)) +
-  #theme_void(base_size = 11) +
-  theme(
-    aspect.ratio = 1,
-    legend.position = c(1, .05),
-    legend.justification = c(1, 0),
-    legend.direction = "horizontal",
-    legend.title.position = "top",
-    legend.text = element_text(size = 11),
-    panel.spacing = unit(1, "mm"),
-    strip.background = element_blank(),
-    strip.text = element_blank()
-  )

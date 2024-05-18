@@ -9,7 +9,7 @@ The conference paper is published in the [Vol. 2 of conference proceedings](http
 BibTex entry is below.
 
 ```
-@inproceedings{syomin_migration_2024,
+@inproceedings{Syomin_migration_2024,
     address = {Минск},
     title = {Migration of {Russian} {Legal} {Companies} in 2016–23},
     volume = {2},

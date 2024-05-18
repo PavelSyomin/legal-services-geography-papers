@@ -186,14 +186,16 @@ ep_binned_plot
 # Make a map with provision > 5
 ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
 map <- data %>% 
-  filter(!(city %in% outliers), provision >= 5) %>% 
+  filter(
+    !(city %in% outliers) | city %in% c("Москва", "Санкт-Петербург"),
+    provision >= 5) %>% 
   st_as_sf(coords = c("lon", "lat"), crs = "EPSG:4326") %>% 
   ggplot() +
   geom_sf(data = regions_geo, color = "gray50", fill = "white") +
   geom_sf(aes(color = provision), shape = 19) +
   coord_sf(crs = ru_crs) +
   scale_color_binned(
-    name = "Lawers per 10,000 people",
+    name = "Lawyers per 10,000 people",
     n.breaks = 4,
     low = "#74c476",
     high = "#00441b") +
@@ -252,7 +254,7 @@ theoretical_models_plot <- ggplot(lines, aes(x = x, y = y)) +
     limits = c(-.1, 1.1)
   ) +
   scale_y_continuous(
-    name = "Laywers per 100,000 (p)",
+    name = "Lawyers per 100,000 (p)",
     labels = function (br) br * 10,
     limits = c(-.1, 1.1)
   ) +
@@ -262,4 +264,6 @@ theoretical_models_plot <- ggplot(lines, aes(x = x, y = y)) +
   labs(caption = "s means slope, dots are hypothetical data points,\nline is hypothetical linear fit of points")
 theoretical_models_plot
 
-
+fit1 <- lm(provision ~ empl, filter(data, size == "Millionaire (>1M)"))
+summary(fit1)
+data$size

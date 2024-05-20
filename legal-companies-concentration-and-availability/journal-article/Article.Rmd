@@ -11,6 +11,7 @@ library(dplyr)
 library(ggplot2)
 library(glue)
 library(here)
+library(knitr)
 library(readr)
 library(sf)
 library(tidyr)
@@ -53,7 +54,7 @@ e-mail: ntsp\@ya.ru
 
 <div custom-style="Abstract">
 
-**Abstract:** The article examines the relationship between the concentration of legal companies and the availability of legal services. To conduct the analysis, a dataset was created using open data from the Federal Tax Service of Russia. The dataset includes information on the location, revenue, expenditure, and number of employees of small and medium-sized legal companies. The concentration is calculated by dividing the number of employees of legal companies in the city by the total number of employees of all legal companies in Russia. Availability is measured as the number of employees of legal companies in the city per 100,000 population. Data visualization and linear regression were utilized to estimate the hypothesized relationship. The study showed a positive linear relationship between concentration and availability. However, there are multiple approaches to achieving good availability of legal services.
+**Abstract:** The article examines the relationship between the number of employees at law firms and the provision of legal services in Russian cities. It aims to identify whether the increase in the number of lawyers leads an enhanced level of legal services provision. In addition, it attempts to discern geographical patterns in the provision of legal services in Russia. To achieve these objectives, open data from the Federal Tax Service of Russia is utilized as the primary source of information. A linear regression is employed to estimate the hypothesized relationship, and data plotting and mapping are used to visualize it. The study demonstrates an overall positive square root relationship between the number of lawyers and the provision of legal services in cities, as well as a linear relationship between these variables in distinct city population size groups. It supports a widely held proposition about the pivotal role of the largest cities in the provision of services and also offers partial confirmation of the commonly accepted view about the positive impact of services concentration on their delivery. However, the study argues that there are multiple approaches to achieving high level of legal services provision, with an increase in the number of lawyers being only one of potential options. The findings of this research may serve to inform data-driven policymaking decisions of governmental bodies.
 
 **Key words:** legal services, law firms, availability, cities, market saturation, small and medium-sized businesses, open data
 
@@ -81,7 +82,7 @@ e-mail: ntsp\@ya.ru
 
 <div custom-style="Abstract">
 
-**Аннотация:** 
+**Аннотация:** Мақалада заңгерлік фирмалардың (заңгерлер) қызметкерлерінің саны мен Ресей қалаларында заңгерлік қызмет көрсету арасындағы байланыс қарастырылады. Зерттеудің мақсаты – адвокаттар санының артуы заң қызметтерін көрсету деңгейінің артуына әкелетінін анықтау. Сонымен қатар, Ресейде заң қызметтерін көрсетудің географиялық заңдылықтарын анықтау әрекеті жасалуда. Ақпараттың негізгі көзі ретінде Ресейдің Федералдық салық қызметінің ашық деректері пайдаланылады. Сызықтық регрессия болжамды қатынасты бағалау үшін қолданылады, ал графикалық және карталау бақыланатын заңдылықтарды визуализациялау үшін қолданылады. Зерттеу қалалардағы заңгерлер саны мен заң қызметтерін көрсету арасындағы оң қисық сызықты (квадрат түбір функциясына жақын) қатынасты, сондай-ақ қалаларды халық саны бойынша топтастыру кезінде осы айнымалылар арасындағы сызықтық байланысты көрсетеді. Бұл қызмет көрсетудегі ірі қалалардың шешуші рөлін кеңінен бекітумен сәйкес келеді, сонымен қатар қызметтердің шоғырлануы қызмет көрсетуге оң әсер етеді деген ойды ішінара растайды. Дегенмен, зерттеу заң қызметтерін көрсетудің жоғары деңгейіне қол жеткізудің әртүрлі тәсілдері бар екенін көрсетеді, адвокаттар санын көбейту тек бір ғана ықтимал нұсқа болып табылады. Зерттеу нәтижелері уәкілетті органдардың деректерге негізделген шешімдер қабылдауына негіз бола алады.
 
 **Кілт сөздер:** заң қызметтері, заң фирмалары, қауіпсіздік, қалалар, нарықтың қанықтығы, шағын және орта бизнес, ашық деректер
 
@@ -109,7 +110,7 @@ e-mail: ntsp\@ya.ru
 
 <div custom-style="Abstract">
 
-**Аннотация:** 
+**Аннотация:** В статье исследуется связь между числом сотрудников юридических фирм (юристов) и обеспеченностью юридическими услугами в городах России. Цель исследования — определить, приводит ли увеличение числа юристов к повышению уровня обеспеченности юридическими услугами. Кроме того, предпринимается попытка выявить географические закономерности обеспеченности юридическими услугами в России. В качестве основного источника информации используются открытые данные ФНС России. Для оценки предполагаемой взаимосвязи применяется линейная регрессия, а для визуализации обнаруженных закономерностей используются построение графиков и картографирование. Исследование показывает положительную криволинейную (близную к функции квадратного корня) связь между количеством юристов и обеспеченностью юридическими услугами в городах, а также линейную связь между этими переменными при группировке городов по численности населения. Оно согласуется с широко распространённым утверждением о ключевой роли крупнейших городов в предоставлении услуг, а также частично подтверждает представление о положительном влиянии концентрации услуг на обеспеченность ими. Тем не менее, результаты исследования говорят о том, что существуют разные подходы к достижению высокого уровня обеспеченности юридическими услугами, причём увеличение количества юристов является лишь одним из потенциальных вариантов. Результаты исследования могут послужить основой для принятия решений органами власти на основе данных.
 
 **Ключевые слова:** юридические услуги, юридические фирмы, обеспеченность, города, насыщенность рынка, малое и среднее предпринимательство, открытые данные
 
@@ -125,7 +126,7 @@ This paper empirically examines the relationship between the number of law firms
 
 # Materials and methods
 
-**Data.** This research uses a geocoded dataset on small and medium-sized law firms incorporated in Russia. The dataset is derived from FTS open data dumps (archives) of the state SMB Registry[@SMBRegistry2024] and FTS open data on the average number of employees of organizations[@FTSEmployees2024], which were processed using the Python command-line tool *ru-smb-companies* developed by the author of the paper. The dataset contains information about distinct companies, including their names, taxpayer IDs, regions and settlements of incorporation, and main activity codes.
+**Data.** This research uses a geocoded dataset on small and medium-sized law firms incorporated in Russia. The dataset is derived from FTS open data dumps (archives) of the state SMB Registry [@SMBRegistry2024] and FTS open data on the average number of employees of organizations [@FTSEmployees2024], which were processed using the Python command-line tool *ru-smb-companies* developed by the author of the paper. The dataset contains information about distinct companies, including their names, taxpayer IDs, regions and settlements of incorporation, and main activity codes.
 
 Law firms were selected based on a main activity code equal of 69.10. This selection technique was derived from the analytical paper on the Russian legal services market prepared by the members of the Institute for the Rule of Law [@Moiseeva2016]. Furthermore, the dataset was subjected to the following filters: the year was set to 2021, the company was identified as an organization rather than a sole entrepreneur, the company had declared non-zero revenue and expenditure for the target year (implying that the company was active), and the company's address of registration was in a city rather than in a rural area. In addition to the main dataset, a data on city population was utilized from a freely distributed commercial source [@HFLabs2021].
 
@@ -147,13 +148,28 @@ Type 2 is defined by the positive slope and, consequently, positive linear relat
 
 # Results and discussion
 
-Figure 2 illustrates the relationship between the number of lawyers and the provision of legal services. The overall connection between the number of law firms and the provision of legal services appears to be nonlinear, with a square root function providing an accurate fit. However, the same relationship within each population size group is well-fitted by a linear model. The coefficients of these models differ, and the slope declines as the city population increases. While the regression lines for the small and medium cities are close to Type 4 (provision is independent of the number of lawyers due to the small variation in the number of lawyers), the modeled relationship in millionaire cities resembles Type 1 (another option for independence, but due to relatively uniform and equal provision regardless of the number of lawyers). The cities from big to extra-large are characterized by a positive correlation between the number of lawyers and the provision of legal services, which can be classified as Type 2.
+Figure 2 depicts the relationship between the number of lawyers and the provision of legal services. The overall connection between the number of law firms and the provision of legal services appears to be nonlinear, with a square root function providing an accurate fit. However, the same relationship within each population size group is well-fitted by a linear model in most of the cases. As illustrated in Table 1, the coefficients of these models differ, and the slope declines as the city population increases. The regression line for small cities is close to Type 4, and the small coefficient of determination (R² = 0.11) indicates that the provision is almost independent of the number of lawyers, likely due to the low variation of the latter. The modeled relationship in millionaire cities resembles Type 1, which is another option for independence caused by relatively uniform and equal provision regardless of the number of lawyers. The coefficient of determination here is also relatively low (R² = 0.51), although greater than in the group of small cities. Cities of medium to extra-large size are characterized by a positive correlation between the number of lawyers and the provision of legal services, which can be classified as Type 2. The coefficient of determination is high (R² is approximately 0.9), indicating that nearly all the variance in the provision of legal services can be explained by the number of lawyers.
 
 <br>
 
 ```{r fig-2-empl-provision, fig.cap="**Figure 2** — The relationship between the number of lawyers and the provision of legal services in cities", fig.height=5}
 ep_plot
 ```
+
+<br>
+
+```{r}
+kable(
+  lm_res_for_table,
+  col.names = c(
+    "City size", "Intercept", "Slope", "R²", "# of cities"
+  ),
+  caption = "**Table 1** — Summary of linear models fitted for each city population size group. All models and coefficients are statistically significant (p < 0.05), except for intercepts in small and medium cities",
+  digits = c(0, 2, 4, 2, 0)
+)
+```
+
+<br>
 
 In general, regional centers have a relatively high number of lawyers and a considerable level of legal services provision. This observation is likely attributable to the phenomenon of regional centralization: economic activity and commercial services are concentrated in the administrative centers of regions, which host the governmental bodies and are often the most populous cities within a region. Moscow and Saint Petersburg, although excluded from the data analysis and shown separately on a subplot, are two notable outliers with an extremely high number of lawyers and a high level of legal services provision. Moscow accounts for approximately one-third of all employees at law firms, while Saint Petersburg accounts for approximately 10%. The position of the corresponding data points relative to the main regression lines suggests that there is a saturation point, at which further increase in the number of lawyers has little effect on the provision of legal services.
 
@@ -163,7 +179,7 @@ The general tendencies observed in Figure 2 should be supplemented by an analysi
 ep_binned_plot
 ```
 
-Figure 4 presents a map of cities with relatively high (more than 5 lawyers per 10,000 people) provision of legal services. The most prominent cluster is formed by Moscow and its satellite cities. Other notable areas with high provision include Krasnodar and Stavropol in the south of Russia, Yekaterinburg and Chelyabinsk in the Urals, and Tuymen and Novosibirsk in Western Siberia. There are several regions with no cities that provide a high level of legal services provision (in particular, the Far East, North, and Caucasus). Conversely, the majority of cities with a relatively high level of legal services provision are located in the Central and Volga economic regions of the country.
+Figure 4 presents a map of cities with relatively high (more than 5 lawyers per 10,000 people) provision of legal services. The most prominent cluster is formed by Moscow and its satellite cities. Other notable cities with high provision include Krasnodar and Stavropol in the south of Russia, Yekaterinburg and Chelyabinsk in the Urals, and Tyumen and Novosibirsk in Western Siberia, as well as Irkutsk in Eastern Siberia. There are several regions with no cities that provide a high level of legal services provision (in particular, the Far East, North, and Caucasus). Conversely, the majority of cities with a relatively high level of legal services provision are located in five economic regions of the country (as categorized by @Leyzerovich2010): Central, Central-Chernozem, Volga-Vyatka, Volga, Ural.
 
 <br>
 

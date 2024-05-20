@@ -1,9 +1,11 @@
+library(broom)
 library(dplyr)
 library(ggplot2)
 library(glue)
 library(here)
 library(readr)
 library(sf)
+library(tibble)
 library(tidyr)
 
 # Load data
@@ -12,8 +14,9 @@ cities <- rbind(
   read_csv(here("common", "cities.csv")),
   read_csv(here("common", "cities_additional.csv"))
 )
-regions_geo <- st_read(here("common", "ru.geojson"))
-tiles <- read_csv(here("journal-article", "russia-tiles.csv"))
+economic_regions <- read_csv(here("journal-article", "economic-regions.csv"))
+regions_geo <- st_read(here("common", "ru.geojson")) %>% 
+  left_join(economic_regions, by = c("shapeISO" = "iso_code"))
 
 # Build table with number of employees by city
 # lfc means Law Firms by City
@@ -189,18 +192,40 @@ map <- data %>%
   filter(
     !(city %in% outliers) | city %in% c("Москва", "Санкт-Петербург"),
     provision >= 5) %>% 
+  mutate(city_label = case_when(
+    city == "Москва" ~ "Moscow",
+    city == "Санкт-Петербург" ~ "Saint Petersburg",
+    city == "Краснодар" ~ "Krasnodar",
+    city == "Екатеринбург" ~ "Yekaterinburg",
+    city == "Новосибирск" ~ "Novosibirsk",
+    city == "Иркутск" ~ "Irkutsk",
+    TRUE ~ NA_character_
+  )) %>% 
   st_as_sf(coords = c("lon", "lat"), crs = "EPSG:4326") %>% 
   ggplot() +
-  geom_sf(data = regions_geo, color = "gray50", fill = "white") +
-  geom_sf(aes(color = provision), shape = 19) +
+  geom_sf(aes(fill = economic_region), data = regions_geo, color = "gray50") +
+  geom_sf(aes(size = provision), shape = 21) +
+  geom_sf_label(
+    aes(label = city_label),
+    hjust = "inward",
+    vjust = "inward",
+    label.size = 0,
+    label.padding = unit(0, "mm"),
+    label.r = unit(0, "mm"),
+    na.rm = TRUE) + 
   coord_sf(crs = ru_crs) +
-  scale_color_binned(
+  scale_size_binned(
     name = "Lawyers per 10,000 people",
-    n.breaks = 4,
-    low = "#74c476",
-    high = "#00441b") +
+    range = c(1, 3),
+    n.breaks = 4) +
+  scale_fill_brewer(
+    name = "Economic region",
+    palette = "Pastel1",
+    labels = function(br) replace_na(br, "Other")
+  ) +
   theme_void(base_size = 14) +
   theme(
+    legend.title.position = "top",
     legend.position = "bottom",
     legend.direction = "horizontal"
   )
@@ -264,6 +289,24 @@ theoretical_models_plot <- ggplot(lines, aes(x = x, y = y)) +
   labs(caption = "s means slope, dots are hypothetical data points,\nline is hypothetical linear fit of points")
 theoretical_models_plot
 
-fit1 <- lm(provision ~ empl, filter(data, size == "Millionaire (>1M)"))
-summary(fit1)
-data$size
+# Linear models
+model <- function(df) {
+  fit <- lm(provision ~ empl, df)
+  g <- glance(fit)[, c("adj.r.squared", "nobs", "p.value")]
+  t <- tidy(fit) %>% 
+    select(-std.error, -statistic) %>% 
+    mutate(term = if_else(term == "(Intercept)", "icpt", term)) %>% 
+    pivot_wider(
+      names_from = "term", values_from = c("estimate", "p.value"))
+  cbind(g, t)
+}
+
+lm_res <- do.call(rbind, by(data, data$size, model))
+lm_res_for_table <- lm_res %>% 
+  mutate(size = rownames(.)) %>% 
+  select(size, 
+         intercept = estimate_icpt, 
+         slope = estimate_empl,
+         rsq = adj.r.squared,
+         nobs) %>% 
+  remove_rownames()

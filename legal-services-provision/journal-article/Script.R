@@ -279,7 +279,7 @@ theoretical_models_plot <- ggplot(lines, aes(x = x, y = y)) +
     limits = c(-.1, 1.1)
   ) +
   scale_y_continuous(
-    name = "Lawyers per 100,000 (p)",
+    name = "Lawyers per 10,000 (p)",
     labels = function (br) br * 10,
     limits = c(-.1, 1.1)
   ) +

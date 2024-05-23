@@ -32,11 +32,15 @@ regions_map <- smb_data %>%
   geom_sf(aes(fill = n), size = .1) +
   coord_sf(crs = ru_crs) +
   scale_fill_distiller(
-    name = "Count of legal companies",
+    name = ifelse(exists("RU"), "Число юридических фирм", "Count of law firms"),
     palette = "YlGn",
     direction = 1) +
-  theme_bw(base_size = 11, base_family = "Times New Roman") +
-  theme(legend.position = "bottom")
+  theme_void(base_size = 11, base_family = "Times New Roman") +
+  theme(
+    legend.title.position = "top",
+    legend.position = c(.05, 0), 
+    legend.justification = c(0, 0),
+    legend.direction = "horizontal")
 regions_map
 
 settlements_df <- smb_data %>%
@@ -49,15 +53,20 @@ settlements_df <- smb_data %>%
   st_as_sf(coords = c("lon", "lat"), crs = 4326)
 
 settlements_map <- regions %>% ggplot() +
-  geom_sf(size = .1) +
-  geom_sf(data = settlements_df, aes(color = log10(n)), size = .5, shape = 21) +
+  geom_sf(fill = "white", color = "gray50") +
+  geom_sf(data = settlements_df, aes(color = n), size = .5, shape = 21) +
   coord_sf(crs = ru_crs) +
   scale_color_distiller(
-    name = "Count of legal companies (log10)",
+    name = ifelse(exists("RU"), "Число юридических фирм", "Count of law firms"),
     palette = "YlGn",
+    transform = "log10",
     direction = 1) +
-  theme_bw(base_size = 11, base_family = "Times New Roman") +
-  theme(legend.position = "bottom")
+  theme_void(base_size = 11, base_family = "Times New Roman") +
+  theme(
+    legend.title.position = "top",
+    legend.position = c(.05, 0), 
+    legend.justification = c(0, 0),
+    legend.direction = "horizontal")
 settlements_map
 
 settlements_df_svr <- smb_data %>%
@@ -72,15 +81,16 @@ settlements_df_svr <- smb_data %>%
 
 settlements_map_svr <- ru_svr %>% 
   ggplot() +
-  geom_sf() +
-  geom_sf(data = settlements_df_svr, aes(color = log10(n)), size = 2) +
+  geom_sf(fill = "white", color = "gray50") +
+  geom_sf(data = settlements_df_svr, aes(fill = n), size = 2, shape = 21) +
   coord_sf(crs = 4326) +
   scale_size_continuous() +
-  scale_color_distiller(
-    name = "Count of legal companies (log10)",
+  scale_fill_distiller(
+    name = ifelse(exists("RU"), "Число юридических фирм", "Count of law firms"),
+    transform = "log10",
     palette = "YlGn",
     direction = 1) +
-  theme_bw(base_size = 11, base_family = "Times New Roman")
+  theme_void(base_size = 11, base_family = "Times New Roman")
 settlements_map_svr
 
 profit_empl_df <- smb_data %>%
@@ -94,7 +104,7 @@ profit_empl_df <- smb_data %>%
   select(tin, region, area, settlement, lat, lon, profit, empl = employees_count) %>% 
   group_by(region, area, settlement, lat, lon) %>% 
   summarise(
-    profit = sum(profit, na.rm = TRUE) / 1e6,
+    profit = sum(profit, na.rm = TRUE) ,
     empl = sum(empl, na.rm = TRUE)
   ) %>% 
   filter(profit > 0, empl > 0) %>% 
@@ -103,26 +113,36 @@ profit_empl_df <- smb_data %>%
 
 settlements_map_profit <- profit_empl_df %>% 
   ggplot() +
-  geom_sf(data = regions, size = .1) +
-  geom_sf(aes(color = log10(profit)), size = .5, shape = 21) +
+  geom_sf(data = regions, fill = "white", color = "gray50") +
+  geom_sf(aes(color = profit), size = .5, shape = 21) +
   coord_sf(crs = ru_crs) +
   scale_color_distiller(
-    name = "Profit of legal companies, M rub. (log10)",
+    name = ifelse(exists("RU"), "Прибыль юридических фирм", "Profit of law firms"),
+    transform = "log10",
     palette = "YlGn",
     direction = 1) +
-  theme_bw(base_size = 11, base_family = "Times New Roman") +
-  theme(legend.position = "bottom")
+  theme_void(base_size = 11, base_family = "Times New Roman") +
+  theme(
+    legend.title.position = "top",
+    legend.position = c(.05, 0), 
+    legend.justification = c(0, 0),
+    legend.direction = "horizontal")
 settlements_map_profit
 
 settlements_map_empl <- profit_empl_df %>% 
   ggplot() +
-  geom_sf(data = regions, size = .1) +
-  geom_sf(aes(color = log10(empl)), size = .5, shape = 21) +
+  geom_sf(data = regions, fill = "white", color = "gray50") +
+  geom_sf(aes(color = empl), size = .5, shape = 21) +
   coord_sf(crs = ru_crs) +
   scale_color_distiller(
-    name = "Count of employees in legal companies (log10)",
+    name = ifelse(exists("RU"), "Число работников\nюридических фирм", "Count of employees\nat law firms"),
+    transform = "log10",
     palette = "YlGn",
     direction = 1) +
-  theme_bw(base_size = 11, base_family = "Times New Roman") +
-  theme(legend.position = "bottom")
+  theme_void(base_size = 11, base_family = "Times New Roman") +
+  theme(
+    legend.title.position = "top",
+    legend.position = c(.05, 0), 
+    legend.justification = c(0, 0),
+    legend.direction = "horizontal")
 settlements_map_empl

@@ -8,12 +8,20 @@ link-bibliography: false
 ---
 
 ```{r setup, include=FALSE}
+library(dplyr)
+library(forcats)
+library(ggplot2)
+library(readr)
+library(scales)
+library(sf)
+library(tidyr)
+
 knitr::opts_chunk$set(
   warning = FALSE, 
   message = FALSE, 
   echo = FALSE, 
   fig.width = 5.7, 
-  fig.height = 4,
+  fig.height = 3,
   fig.id = FALSE,
   dpi = 300)
 ```
@@ -83,7 +91,7 @@ In Russia, official data is occasionally published in machine-readable formats w
 
 [^1]: Examples are Yandex or Google geocoders, DaData geocoding service, and OpenStreetMap Nominatim tool.
 
-The data from the small and medium-sized businesses (SMB) registry, among various official datasets published by Russian state bodies, is of high value for researchers in economic geography. The state SMB registry was created at the end of 2015 in accordance with Art. 4.1 of Federal Law of July 24, 2007 No 207-FZ “On the development of small and medium-sized businesses in the Russian Federation”. The SMB registry is operated by the Federal Tax Service (FTS) of Russia and includes information about all Russian SMBs that meet the inclusion criteria. These criteria include limits on revenue and the number of employees, and all eligible organizations and individual entrepreneurs are automatically included in the registry without any action required on their part.
+The data from the small and medium-sized businesses (SMB) registry, among various official datasets published by Russian state bodies, is of high value for researchers in economic geography. The state SMB registry was created at the end of 2015 in accordance with Art. 4.1 of Federal Law of July 24, 2007 No 209-FZ “On the development of small and medium-sized businesses in the Russian Federation”. The SMB registry is operated by the Federal Tax Service (FTS) of Russia and includes information about all Russian SMBs that meet the inclusion criteria. These criteria include limits on revenue and the number of employees, and all eligible organizations and individual entrepreneurs are automatically included in the registry without any action required on their part.
 
 The SMB registry seems to be the most comprehensive openly available collection of Russian commercial companies. Other sources of such data, e. g. business intelligence systems or the web portal of the Unified State Registry of Legal Entities, are either paid or have usage restrictions. The full dumps of the SMB registry are published as open data free of charge, making them a valuable data source for detailed high-resolution mapping of Russian business entities. However, the distributed data only contain human-readable location information and do not include geographical coordinates. Another problem is that these dumps have a large volume, reaching hundreds of gigabytes when archived and several terabytes when unpacked. Additionally, their structure is complex.
 

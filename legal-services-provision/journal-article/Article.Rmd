@@ -34,7 +34,7 @@ IRSTI 06.61.53
 
 <div custom-style="Title">
 
-Provision of Commercial Legal Services in Russian Cities
+Spatial and Regression Analysis of Provision of Commercial Legal Services in Russian Cities
 
 </div>
 
@@ -48,6 +48,8 @@ Perm State University, Russia, Perm
 
 e-mail: ntsp\@ya.ru
 
+ORCID: 0000-0002-4015-9206
+
 </div>
 
 <br>
@@ -56,13 +58,13 @@ e-mail: ntsp\@ya.ru
 
 **Abstract:** The article examines the relationship between the number of employees at law firms, or lawyers, and the provision of legal services in Russian cities. It aims to identify whether the increase in the number of lawyers leads to an enhanced level of legal services provision. In addition, it attempts to discern geographical patterns in the provision of legal services in Russia. To achieve these objectives, open data from the Federal Tax Service of Russia is utilized as the primary source of information. Linear regression is employed to estimate the hypothesized relationship, and data plotting and mapping are used to visualize it. The study demonstrates an overall positive square root relationship between the number of lawyers and the provision of legal services in cities, as well as a linear relationship between these variables in distinct city population size groups. It supports a widely held proposition about the pivotal role of the largest cities in the provision of services and also offers partial confirmation of the commonly accepted view about the positive impact of service concentration on their delivery. However, the study argues that there are multiple approaches to achieving a high level of legal services provision, with an increase in the number of lawyers being only one of the potential options. The findings of this research may serve to inform data-driven policymaking decisions of governmental bodies.
 
-**Key words:** legal services, law firms, availability, cities, market saturation, small and medium-sized businesses, open data
+**Key words:** legal services, law firms, availability, cities, spatial analysis, regression analysis, small and medium-sized businesses, open data
 
 </div>
 
 <div custom-style="Title">
 
-Ресей қалаларында коммерциялық заң қызметтерін көрсету
+Ресей қалаларында коммерциялық заң қызметтерін көрсетудің кеңістіктік және регрессиялық талдауы
 
 </div>
 
@@ -76,6 +78,8 @@ e-mail: ntsp\@ya.ru
 
 e-mail: ntsp\@ya.ru
 
+ORCID: 0000-0002-4015-9206
+
 </div>
 
 <br>
@@ -84,13 +88,13 @@ e-mail: ntsp\@ya.ru
 
 **Аннотация:** Мақалада заңгерлік фирмалардың (заңгерлер) қызметкерлерінің саны мен Ресей қалаларында заңгерлік қызмет көрсету арасындағы байланыс қарастырылады. Зерттеудің мақсаты – адвокаттар санының артуы заң қызметтерін көрсету деңгейінің артуына әкелетінін анықтау. Сонымен қатар, Ресейде заң қызметтерін көрсетудің географиялық заңдылықтарын анықтау әрекеті жасалуда. Ақпараттың негізгі көзі ретінде Ресейдің Федералдық салық қызметінің ашық деректері пайдаланылады. Сызықтық регрессия болжамды қатынасты бағалау үшін қолданылады, ал графикалық және карталау бақыланатын заңдылықтарды визуализациялау үшін қолданылады. Зерттеу қалалардағы заңгерлер саны мен заң қызметтерін көрсету арасындағы оң қисық сызықты (квадрат түбір функциясына жақын) қатынасты, сондай-ақ қалаларды халық саны бойынша топтастыру кезінде осы айнымалылар арасындағы сызықтық байланысты көрсетеді. Бұл қызмет көрсетудегі ірі қалалардың шешуші рөлін кеңінен бекітумен сәйкес келеді, сонымен қатар қызметтердің шоғырлануы қызмет көрсетуге оң әсер етеді деген ойды ішінара растайды. Дегенмен, зерттеу заң қызметтерін көрсетудің жоғары деңгейіне қол жеткізудің әртүрлі тәсілдері бар екенін көрсетеді, адвокаттар санын көбейту тек бір ғана ықтимал нұсқа болып табылады. Зерттеу нәтижелері уәкілетті органдардың деректерге негізделген шешімдер қабылдауына негіз бола алады.
 
-**Кілт сөздер:** заң қызметтері, заң фирмалары, қауіпсіздік, қалалар, нарықтың қанықтығы, шағын және орта бизнес, ашық деректер
+**Кілт сөздер:** заң қызметтері, заң фирмалары, қауіпсіздік, қалалар, кеңістіктік талдау, регрессиялық талдау, шағын және орта бизнес, ашық деректер
 
 </div>
 
 <div custom-style="Title">
 
-Обеспеченность коммерческими юридическими услугами в городах России
+Географический и регрессионный анализ обеспеченности коммерческими юридическими услугами в городах России
 
 </div>
 
@@ -104,6 +108,8 @@ e-mail: ntsp\@ya.ru
 
 e-mail: ntsp\@ya.ru
 
+ORCID: 0000-0002-4015-9206
+
 </div>
 
 <br>
@@ -112,7 +118,7 @@ e-mail: ntsp\@ya.ru
 
 **Аннотация:** В статье исследуется связь между числом сотрудников юридических фирм (юристов) и обеспеченностью юридическими услугами в городах России. Цель исследования — определить, приводит ли увеличение числа юристов к повышению уровня обеспеченности юридическими услугами. Кроме того, предпринимается попытка выявить географические закономерности обеспеченности юридическими услугами в России. В качестве основного источника информации используются открытые данные ФНС России. Для оценки предполагаемой взаимосвязи применяется линейная регрессия, а для визуализации обнаруженных закономерностей используются построение графиков и картографирование. Исследование показывает положительную криволинейную (близную к функции квадратного корня) связь между количеством юристов и обеспеченностью юридическими услугами в городах, а также линейную связь между этими переменными при группировке городов по численности населения. Оно согласуется с широко распространённым утверждением о ключевой роли крупнейших городов в предоставлении услуг, а также частично подтверждает представление о положительном влиянии концентрации услуг на обеспеченность ими. Тем не менее, результаты исследования говорят о том, что существуют разные подходы к достижению высокого уровня обеспеченности юридическими услугами, причём увеличение количества юристов является лишь одним из потенциальных вариантов. Результаты исследования могут послужить основой для принятия решений органами власти на основе данных.
 
-**Ключевые слова:** юридические услуги, юридические фирмы, обеспеченность, города, насыщенность рынка, малое и среднее предпринимательство, открытые данные
+**Ключевые слова:** юридические услуги, юридические фирмы, обеспеченность, города, пространственный анализ, регрессионный анализ, малое и среднее предпринимательство, открытые данные
 
 </div>
 
@@ -134,7 +140,7 @@ During the exploratory data analysis, six cities were identified as outliers and
 
 **Methods.** The primary analytical technique employed in this study is linear regression. The independent variable in the regression is the number of lawyers (employees at law firms) in a city, which is denoted as *n*. In theory, either the number of law firms or their employees may be used as the independent variable, but law firms in different cities may have different sizes, and thus the number of employees seems to be a more stable and consistent metric. The value for each city is calculated as the sum of the number of employees of each law firm incorporated in that city. If a law firm reports a zero count of employees, it is assumed that the number of employees is equal to one. The dependent variable in the regression is the specific provision of legal services which is denoted as *p* and calculated by dividing the number of employees at law firms in the city by the city's population and multiplying the result by 10,000. In other words, it is the number of lawyers per 10,000 people. This formula represents a modified version of the legal market saturation metric used in the analysis of the Russian legal services market conducted by the Institute for the Rule of Law [@Moiseeva2016].
 
-Cities were classified according to their population size. The population-based categorization is conducted following the classification system proposed by @Lappo1997. This is done to ascertain whether the hypothesized relationship is dependent on the city size. Linear models were constructed for the entire dataset, without accounting for the groups, or within each group separately. If necessary, the variables were log10-transformed.  The results are then presented in graphical form on the plots. The analysis was conducted in the R programming language in conjunction with additional packages. The source code for this paper can be accessed via the public repository: https://github.com/PavelSyomin/ru-smb-companies-papers/tree/main/legal-companies-concentration-and-availability.
+Cities were classified according to their population size. The population-based categorization is conducted following the classification system proposed by @Lappo1997. This is done to ascertain whether the hypothesized relationship is dependent on the city size. Linear models were constructed for the entire dataset, without accounting for the groups, or within each group separately. If necessary, the variables were log10-transformed.  The results are then presented in graphical form on the plots. The analysis was conducted in the R programming language in conjunction with additional packages. The source code for this paper can be accessed via the public repository: https://github.com/PavelSyomin/ru-smb-companies-papers/tree/main/legal-services-provision.
 
 **Theoretical model.** Although the modeling described earlier appears straightforward, it is based on a theoretical mathematical framework, and several potential outcomes can be identified before analyzing the data. It is known that a simple linear model is described by the two coefficients: the intercept, which is a term of the linear equation showing the relative shift of the regression line along the y-axis, and the slope, which is a coefficient of the independent variable showing the angle between the regression line and the x-axis. The slope can be either positive, negative, or zero. As a special edge case, it can be also infinite (that is, the regression line is vertical), although, strictly speaking, such a dependency is not a mathematical function. Consequently, the linear fit previously described can yield a result of one of four types, each corresponding to one of the slope options and, subsequently, the pattern of relationship between the number of lawyers and the provision of legal services. These types are illustrated in Figure 1.
 
@@ -202,6 +208,8 @@ map
 The provision of legal services in cities has a positive relationship with the number of lawyers. The overall trend can be approximated by a square root curve, while the relationship in distinct population size groups is close to linear with varying slopes of the regression line. In small cities, the increase in the number of lawyers has a minimal impact on the level of legal services provision. In larger cities, the relationship is linear and positive. In cities with a population above one million, the impact of the growth of the number of lawyers on the provision of legal services is less pronounced, as the latter is already high and uniform in these cities. Regional centers typically have a relatively high provision of legal services. Moscow and Saint Petersburg are distinguished by the highest number of lawyers and the high provision of legal services. Empirical data indicates that there may be a saturation limit beyond which the increase in the number of employees at law firms does not have a substantial impact on the provision of legal services
 
 The majority of cities (approximately 85%) are characterized by a paucity of lawyers and a correspondingly limited level of legal services provision. Two distinct groups of cities can be identified based on their approach to achieving a high level of legal services provision. The first group is comprised of cities with a large number of lawyers. The second group, in contrast, has a small number of lawyers that nevertheless meet the needs of local communities. Moscow and its surrounding region exhibit a relatively high level of legal services provision. Similarly, Saint Petersburg, Krasnodar, Stavropol, Yekaterinburg, Chelyabinsk, Tyumen, Novosibirsk, and Irkutsk also have a satisfactory provision of legal services. Most of the cities with high levels of legal services provision are situated within five economic regions of the country: Central, Central-Chernozem, Volga-Vyatka, Volga, and Ural. Conversely, in numerous regions of the Far East, North, and Caucasus the provision of legal services is notably limited.
+
+The findings of this study can serve as a scientific foundation for data-driven decision-making by federal and regional government bodies, local authorities, and private actors. The federal government can use the results to develop a policy framework for supporting the establishment of small and medium-sized law firms, particularly in the regions and cities where the availability of legal services is limited, or for stimulating the export of legal services from cities with a high level of provision to the peripheries. This could be achieved, for instance, by creating local offices of central law firms or providing online consultations. Regional and local authorities may utilize the findings to make informed decisions about the actions required for the development of local law business, taking into account the city population size and the identified strategies for achieving a high level of legal services provision. It is important to note, however, that in certain instances, a “do nothing” approach may be optimal, because it has been found that some cities with a small number of law firms nevertheless provide a high level of legal services, and therefore no government intervention is necessary. Private actors, such as law firms, may use the results of this study to inform their spatial expansion plans. For consumers, the results of this study may provide knowledge about the spatial patterns of legal services provision, enabling them to make decisions about where to seek legal advice. Finally, the data acquisition technique described in this study can be used to re-obtain information about the individual law firms and perform its additional analysis aligned with specific objectives.
 
 ## References
 

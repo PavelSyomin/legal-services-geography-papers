@@ -1,38 +1,84 @@
-region,economic_region,iso_code
-Брянская область,Central,RU-BRY
-Владимирская область,Central,RU-VLA
-Ивановская область,Central,RU-IVA
-Калужская область,Central,RU-KLU
-Костромская область,Central,RU-KOS
-Московская область,Central,RU-MOS
-Орловская область,Central,RU-ORL
-Смоленская область,Central,RU-SMO
-Тверская область,Central,RU-TVE
-Тульская область,Central,RU-TUL
-Рязанская область,Central,RU-RYA
-Ярославская область,Central,RU-YAR
-Нижегородская область,Volga-Vyatka,RU-NIZ
-Республика Марий Эл,Volga-Vyatka,RU-ME
-Кировская область,Volga-Vyatka,RU-KIR
-Республика Мордовия,Volga-Vyatka,RU-MO
-Чувашская республика - Чувашия,Volga-Vyatka,RU-CU
-Курганская область,Ural,RU-KGN
-Свердловская область,Ural,RU-SVE
-Челябинская область,Ural,RU-CHE
-Пермский край,Ural,RU-PER
-Оренбургская область,Ural,RU-ORE
-Республика Башкортостан,Ural,RU-BA
-Удмуртская республика,Ural,RU-UD
-Астраханская область,Volga,RU-AST
-Волгоградская область,Volga,RU-VGG
-Саратовская область,Volga,RU-SAR
-Самарская область,Volga,RU-SAM
-Ульяновская область,Volga,RU-ULY
-Пензенская область,Volga,RU-PNZ
-Республика Калмыкия,Volga,RU-KL
-Республика Татарстан,Volga,RU-TA
-Белгородская область,Central-Chernozem,RU-BEL
-Воронежская область,Central-Chernozem,RU-VOR
-Курская область,Central-Chernozem,RU-KRS
-Липецкая область,Central-Chernozem,RU-LIP
-Тамбовская область,Central-Chernozem,RU-TAM
+"region","economic_region","iso_code"
+"Брянская область","Central","RU-BRY"
+"Владимирская область","Central","RU-VLA"
+"Ивановская область","Central","RU-IVA"
+"Калужская область","Central","RU-KLU"
+"Костромская область","Central","RU-KOS"
+"Москва","Central",
+"Московская область","Central","RU-MOS"
+"Орловская область","Central","RU-ORL"
+"Смоленская область","Central","RU-SMO"
+"Тверская область","Central","RU-TVE"
+"Тульская область","Central","RU-TUL"
+"Рязанская область","Central","RU-RYA"
+"Ярославская область","Central","RU-YAR"
+"Нижегородская область","Volga-Vyatka","RU-NIZ"
+"Республика Марий Эл","Volga-Vyatka","RU-ME"
+"Кировская область","Volga-Vyatka","RU-KIR"
+"Республика Мордовия","Volga-Vyatka","RU-MO"
+"Чувашская республика - Чувашия","Volga-Vyatka","RU-CU"
+"Курганская область","Ural","RU-KGN"
+"Свердловская область","Ural","RU-SVE"
+"Челябинская область","Ural","RU-CHE"
+"Пермский край","Ural","RU-PER"
+"Оренбургская область","Ural","RU-ORE"
+"Республика Башкортостан","Ural","RU-BA"
+"Удмуртская республика","Ural","RU-UD"
+"Астраханская область","Volga","RU-AST"
+"Волгоградская область","Volga","RU-VGG"
+"Саратовская область","Volga","RU-SAR"
+"Самарская область","Volga","RU-SAM"
+"Ульяновская область","Volga","RU-ULY"
+"Пензенская область","Volga","RU-PNZ"
+"Республика Калмыкия","Volga","RU-KL"
+"Республика Татарстан","Volga","RU-TA"
+"Белгородская область","Central-Chernozem","RU-BEL"
+"Воронежская область","Central-Chernozem","RU-VOR"
+"Курская область","Central-Chernozem","RU-KRS"
+"Липецкая область","Central-Chernozem","RU-LIP"
+"Тамбовская область","Central-Chernozem","RU-TAM"
+"Архангельская область","North",
+"Мурманская область","North",
+"Вологодская область","North",
+"Республика Карелия","North",
+"Республика Коми","North",
+"Ненецкий автономный округ","North",
+"Ленинградская область","Northwest",
+"Калининградская область","Northwest",
+"Новгородская область","Northwest",
+"Псковская область","Northwest",
+"Санкт-Петербург","Northwest",
+"Краснодарский край","North Caucasus",
+"Ставропольский край","North Caucasus",
+"Ростовская область","North Caucasus",
+"Республика Адыгея","North Caucasus",
+"Республика Дагестан","North Caucasus",
+"Республика Ингушетия","North Caucasus",
+"Карачаево-Черкесская республика","North Caucasus",
+"Кабардино-Балкарская республика","North Caucasus",
+"Республика Северная Осетия - Алания","North Caucasus",
+"Чеченская республика","North Caucasus",
+"Алтайский край","West Siberia",
+"Кемеровская область - Кузбасс","West Siberia",
+"Новосибирская область","West Siberia",
+"Омская область","West Siberia",
+"Томская область","West Siberia",
+"Тюменская область","West Siberia",
+"Республика Алтай","West Siberia",
+"Ханты-Мансийский автономный округ - Югра","West Siberia",
+"Ямало-Ненецкий автономный округ","West Siberia",
+"Красноярский край","East Siberia",
+"Иркутская область","East Siberia",
+"Забайкальский край","East Siberia",
+"Республика Бурятия","East Siberia",
+"Республика Тыва","East Siberia",
+"Республика Хакасия","East Siberia",
+"Приморский край","Far East",
+"Хабаровский край","Far East",
+"Еврейская автономная область","Far East",
+"Амурская область","Far East",
+"Камчатский край","Far East",
+"Магаданская область","Far East",
+"Чукотский автономный округ","Far East",
+"Сахалинская область","Far East",
+"Республика Саха (Якутия)","Far East",

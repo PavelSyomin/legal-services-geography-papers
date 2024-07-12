@@ -9,6 +9,7 @@ library(stringr)
 library(tidyr)
 
 data <- read_csv(here("../../ru-smb-companies/legal/panel.csv"))
+er <- read_csv(here("journal-article", "economic-regions.csv"))
 tiles <- read_csv(here("common", "russia-tiles.csv"))
 ru <- st_read(here("common", "ru.geojson"))
 ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
@@ -102,6 +103,53 @@ clustered <- vectors %>%
     cluster, keywords, tag, group, strategy, western) %>% 
   drop_na(name, tin, region, settlement, lat, lon, year) %>% 
   distinct(name, tin, .keep_all = TRUE)
+
+# Distance between regions
+regions_cnt <- vectors %>% 
+  right_join(firms) %>% 
+  right_join(firms_lifetime) %>% 
+  filter(name != "", lifetime >= 3) %>% 
+  drop_na(region) %>% 
+  distinct(name, tin, .keep_all = TRUE) %>% 
+  count(region, sort = TRUE)
+quantile(regions_cnt$n, .05)
+region_vectors <- vectors %>% 
+  right_join(firms) %>% 
+  right_join(firms_lifetime) %>% 
+  filter(name != "", lifetime >= 3) %>% 
+  distinct(name, tin, .keep_all = TRUE) %>% 
+  drop_na(region) %>% 
+  group_by(region) %>% 
+  summarise(across(dim_0:dim_255, mean), cnt = n()) %>% 
+  filter(cnt > quantile(cnt, .05)) %>% 
+  select(-cnt)
+region_distances <- as_tibble(cbind(
+  select(region_vectors, region),
+  as.matrix(dist(select(region_vectors, -region), diag = FALSE))
+))
+region_distances[upper.tri(region_distances, diag = FALSE)] <- NA 
+colnames(region_distances) <- c("region", pull(select(region_vectors, region)))
+region_distances <- region_distances %>% 
+  pivot_longer(-region, names_to = "region_2", values_to = "dist") %>% 
+  left_join(select(er, region, economic_region)) %>% 
+  left_join(select(
+    er, 
+    region_2 = region, 
+    economic_region_2 = economic_region
+  )) %>% 
+  drop_na(dist) %>% 
+  mutate(within = economic_region == economic_region_2)
+region_distances_stat <- region_distances %>% 
+  group_by(economic_region, within) %>% 
+  summarise(dist = median(dist))
+region_distances %>% 
+  ggplot(aes(x = economic_region, y = dist, color = within)) +
+  geom_violin(draw_quantiles = c(.5)) +
+  geom_jitter(width = .1, size = .2)
+arrange(region_distances, -dist)
+region_distances %>% 
+  ggplot(aes(x = dist)) +
+  geom_freqpoly()
 
 # Look at distribution by various classes
 count(clustered, tag, sort = TRUE)

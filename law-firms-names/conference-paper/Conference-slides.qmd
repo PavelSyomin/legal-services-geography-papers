@@ -1,0 +1,188 @@
+---
+title: "География названий юридических фирм в России"
+author: "Сёмин Павел Олегович, Пермский государственный национальный исследовательский университет"
+format: 
+  revealjs:
+    scrollable: true
+---
+
+```{r}
+#| label: imports
+#| include: false
+
+library(dplyr)
+library(ggplot2)
+library(here)
+library(knitr)
+library(readr)
+library(sf)
+library(spatstat)
+library(stringr)
+library(tidyr)
+```
+
+```{r}
+#| label: data-preparation
+#| cache: true
+#| include: false
+
+# load the data
+data <- read_csv(here("../../ru-smb-companies/legal/panel.csv"))
+cluster_labels <- read_csv(
+  here("conference-paper", "cluster-labels-conf.csv"))
+vectors <- read_csv(here("common", "names-vectors.csv"))
+ru <- st_read(here("common", "ru.geojson"))
+
+# additional variables
+ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
+org_forms <- c(
+  "общество с ограниченной ответственностью",
+  "общество с дополнительной ответственностью",
+  "акционерное общество",
+  "открытое акционерное общество",
+  "закрытое акционерное общество",
+  "публичное акционерное общество",
+  "непубличное акционерное общество",
+  "хозяйственное партнерство",
+  "полное товарищество",
+  "товарищество на вере"
+)
+
+# prepare firm names
+firm_names <- data %>% 
+  filter(
+    kind == 1, # companies only
+    year <= 2021, # 2016–2021
+  ) %>% 
+  mutate(
+    name_id = row_number(),
+    settlement = case_when(
+      region == "Москва" ~ "Москва",
+      region == "Санкт-Петербург" ~ "Санкт-Петербург",
+      TRUE ~ settlement)
+  ) %>% 
+  select(name_id, name = org_name, region, settlement, lat, lon, year) %>% 
+  mutate(
+    name = str_to_lower(name),
+    name = str_remove(name, paste0(org_forms, collapse = "|")),
+    name = str_remove_all(name, fixed("\"")),
+    name = str_trim(name))
+unique_firm_names <- distinct(firm_names, name) %>% 
+  left_join(vectors) %>% 
+  drop_na(dim_0)
+
+# cluster firm names
+set.seed(42)
+fit <- kmeans(select(unique_firm_names, dim_0:dim_255), 
+              centers = 20)
+unique_firm_names$cluster <- fit$cluster
+
+# add cluster groups
+firm_names_clusters <- firm_names %>% 
+  left_join(unique_firm_names, by = "name") %>% 
+  left_join(cluster_labels) %>% 
+  select(name_id, name, region, settlement, lat, lon, year, group) %>% 
+  drop_na() %>% 
+  mutate(group = factor(group))
+```
+
+# Задача
+
+Выявить географические различия в именовании юридических фирм в России
+
+# Данные
+
+Реестр МСП с сайта ФНС России (2021 год)
+
+# Обработка данных
+
+## Реестр → таблица
+
+Извлечение и геокодирование сведений о фирмах с помощью специально разработанного консольного приложения на Python
+
+## Пример данных из таблицы {.smaller}
+
+```{r}
+kable(
+  select(firm_names, name, region, settlement, lat, lon) %>% 
+    slice_head(n = 10)
+)
+```
+
+## Названия → векторы
+
+Векторизация названий с помощью YandexGPT Embeddings API
+
+## Пример вектора
+
+```{r}
+vectors[1, -1] %>% as.numeric() %>% round(2)
+```
+
+## Кластеризация названий
+
+KMeans на векторах, 20 кластеров
+
+## Примеры кластеров
+
+```{r}
+#| label: clusters-sample
+
+nc_sample <- unique_firm_names %>% 
+  group_by(cluster) %>% 
+  slice_sample(n = 3) %>% 
+  select(name)
+  
+kable(nc_sample)
+```
+
+## Группировка кластеров
+
+Ручной выборочный анализ названий в каждом кластере, присвоение описательной метки каждому кластеру, группировка кластеров
+
+## Ход группировки
+
+```{r}
+#| label: groups
+
+kable(cluster_labels)
+```
+
+## Результат группировки
+
+Выделено 4 типа именования:
+
+* сфера деятельности — право, юриспруденция (field);
+* характер услуг — экспертиза, консультация, посредничество (service);
+* организационная форма — группа, партнёрство (form);
+* всё остальное (misc)
+
+## Построение карт плотности по группам
+
+Оценка функции плотности на основе набора точек, соответствующих названиям, и картографирование результата
+
+# Результат
+
+---
+
+```{r}
+#| label: density-map
+#| cache: true
+
+ppp_data <- firm_names_clusters %>% 
+  st_as_sf(coords = c("lon", "lat"), crs = 4326) %>% 
+  st_transform(n, crs = ru_crs) %>% 
+  filter(year == 2021, region != "Москва", region != "Санкт-Петербург")
+firm_names_ppp <- as.ppp(
+  ppp_data$geometry, W = as.owin(st_transform(ru, ru_crs)))
+firm_names_ppp$marks <- ppp_data$group
+firm_names_spp <- split(firm_names_ppp, marks(firm_names_ppp))
+plot(density(firm_names_spp, sigma = 125000))
+```
+
+# Выводы
+
+1. Распространение разных типов именования юридических фирм в целом похоже.
+2. Тип «сфера деятельности» наиболее широко распространён и ярко выражен. 
+3. Тип «организационная форма» преобладает в Центральной России и отчасти на Урале.
+4. Тип «характер услуг» наиболее выражен на юге России, а также образует второстепенный «пояс» от Москвы до Урала.

@@ -7,6 +7,7 @@ library(readxl)
 library(sf)
 library(stringr)
 library(tidyr)
+library(units)
 
 data <- read_csv(here("../../ru-smb-companies/legal/panel.csv"))
 er <- read_csv(here("journal-article", "economic-regions.csv"))
@@ -105,14 +106,6 @@ clustered <- vectors %>%
   distinct(name, tin, .keep_all = TRUE)
 
 # Distance between regions
-regions_cnt <- vectors %>% 
-  right_join(firms) %>% 
-  right_join(firms_lifetime) %>% 
-  filter(name != "", lifetime >= 3) %>% 
-  drop_na(region) %>% 
-  distinct(name, tin, .keep_all = TRUE) %>% 
-  count(region, sort = TRUE)
-quantile(regions_cnt$n, .05)
 region_vectors <- vectors %>% 
   right_join(firms) %>% 
   right_join(firms_lifetime) %>% 
@@ -123,22 +116,51 @@ region_vectors <- vectors %>%
   summarise(across(dim_0:dim_255, mean), cnt = n()) %>% 
   filter(cnt > quantile(cnt, .05)) %>% 
   select(-cnt)
-region_distances <- as_tibble(cbind(
+
+sf_use_s2(FALSE)
+neighboring_regions <- as_tibble(cbind(
+  iso = ru$shapeISO,
+  as.data.frame(st_intersects(ru, ru, sparse = FALSE, remove_self = TRUE))
+))
+colnames(neighboring_regions) <- c("iso", ru$shapeISO)
+neighboring_regions <- pivot_longer(
+  neighboring_regions,
+  -iso,
+  names_to = "iso_2",
+  values_to = "is_neighbor"
+)
+
+centroids <- st_centroid(ru) %>% select(iso = shapeISO)
+distances <- st_distance(centroids)
+units(distances) <- "km"
+colnames(distances) <- centroids$iso
+geo_distances <- pivot_longer(
+  cbind(iso = centroids$iso, as.data.frame(distances)),
+  cols = -iso, 
+  names_to = "iso_2", 
+  values_to = "geo_distance"
+)
+
+region_names_distances <- as_tibble(cbind(
   select(region_vectors, region),
   as.matrix(dist(select(region_vectors, -region), diag = FALSE))
 ))
-region_distances[upper.tri(region_distances, diag = FALSE)] <- NA 
-colnames(region_distances) <- c("region", pull(select(region_vectors, region)))
-region_distances <- region_distances %>% 
-  pivot_longer(-region, names_to = "region_2", values_to = "dist") %>% 
-  left_join(select(er, region, economic_region)) %>% 
+region_names_distances[upper.tri(region_names_distances, diag = FALSE)] <- NA 
+colnames(region_names_distances) <- c("region", pull(select(region_names_distances, region)))
+region_names_distances <- region_names_distances %>% 
+  pivot_longer(-region, names_to = "region_2", values_to = "namedist") %>% 
+  left_join(er) %>% 
   left_join(select(
     er, 
     region_2 = region, 
-    economic_region_2 = economic_region
+    economic_region_2 = economic_region,
+    iso_code_2 = iso_code
   )) %>% 
-  drop_na(dist) %>% 
-  mutate(within = economic_region == economic_region_2)
+  drop_na(namedist) %>% 
+  mutate(within = economic_region == economic_region_2) %>% 
+  left_join(neighboring_regions, by = c("iso_code" = "iso", "iso_code_2" = "iso_2")) %>% 
+  left_join(geo_distances, by = c("iso_code" = "iso", "iso_code_2" = "iso_2"))
+
 region_distances_stat <- region_distances %>% 
   group_by(economic_region, within) %>% 
   summarise(dist = median(dist))
@@ -151,42 +173,62 @@ region_distances %>%
   ggplot(aes(x = dist)) +
   geom_freqpoly()
 
+ggplot(region_names_distances, aes(x = is_neighbor, y = namedist)) +
+  geom_boxplot()
+
+t.test(namedist ~ is_neighbor, data = region_names_distances)
+wilcox.test(namedist ~ is_neighbor, data = region_names_distances)
+region_names_distances %>% group_by(is_neighbor) %>% summarise(m = median(namedist))
+
+ggplot(region_names_distances, aes(x = geo_distance, y = namedist)) +
+  geom_point()
+
+cor.test(~namedist+geo_distance, data = filter(region_names_distances, namedist < .18))
+
 # Look at distribution by various classes
 count(clustered, tag, sort = TRUE)
 count(clustered, group, sort = TRUE)
 count(clustered, strategy, sort = TRUE)
 count(clustered, western, sort = TRUE)
 
-count(clustered, region, tag) %>% 
-  group_by(tag) %>% 
-  summarise(prop = n / sum(n), region = region) %>% 
-  filter(tag != "Misc") %>% 
-  ungroup() %>%
-  complete(region, tag) %>% 
-  right_join(tiles, by = c("region" = "name")) %>% 
-  #drop_na() %>% 
-  ggplot(aes(x = col, y = -row, fill = prop)) +
-  geom_raster(na.rm = FALSE) +
-  scale_fill_binned(transform = "log10") +
-  facet_wrap(vars(tag), ncol = 5) +
-  coord_fixed()
-
-count(clustered, region, western) %>% 
+# Tile grid map of regions by naming group
+count(clustered, region, group) %>% 
+  filter(group != "Misc") %>% 
   group_by(region) %>% 
-  summarise(prop = n / sum(n), western = western) %>% 
-  filter(western == 1) %>%
+  summarise(group = group, share = n / sum(n)) %>% 
   right_join(tiles, by = c("region" = "name")) %>% 
-  ggplot(aes(x = col, y = -row, fill = prop)) +
-  geom_raster(na.rm = FALSE) +
-  geom_text(aes(label = code_en), color = "grey80") +
-  scale_fill_binned() +
-  coord_fixed()
+  drop_na(share) %>% 
+  ggplot(aes(x = col, y = -row)) +
+  geom_raster(aes(fill = share)) +
+  geom_text(aes(label = code_en), size = 3) +
+  coord_fixed() +
+  facet_wrap(vars(group), ncol = 2)
 
-count(clustered, region, western) %>% 
+# Field-based vs service-based names
+count(clustered, region, group) %>% 
+  filter(group != "Misc") %>% 
   group_by(region) %>% 
-  summarise(prop = n / sum(n), western = western) %>% 
-  filter(western == 1) %>% 
-  arrange(-prop)
-
-tail(count(clustered, region, sort = TRUE), 10)
-clustered[clustered$region == "Чеченская республика", "name"]
+  arrange(-n) %>% 
+  summarise(
+    group = group, 
+    share = round(100 * n / sum(n)),
+    main_group = first(group)
+  ) %>% 
+  pivot_wider(
+    id_cols = c("region", "main_group"), 
+    names_from = group,
+    values_from = share
+  ) %>% 
+  right_join(tiles, by = c("region" = "name")) %>% 
+  right_join(er) %>% 
+  drop_na(main_group) %>% 
+  ggplot(aes(x = col, y = -row)) +
+  geom_tile(aes(fill = economic_region, width = 1, height = 1, color = main_group), linewidth = 2) +
+  geom_text(aes(x = col - .25, y = -row + .25, label = code_en), size = 3, hjust = 0) +
+  geom_text(aes(x = col - .3, y = -row, label = Law), shape = 21) +
+  geom_text(aes(x = col - .3, y = -row - .3, label = Service), shape = 21) +
+  geom_text(aes(x = col + .3, y = -row - .3, label = Form), shape = 21) +
+  geom_point(aes(x = col, y = -row, fill = main_group), shape = 21) +
+  #scale_fill_manual(values = c("black", "white")) +
+  scale_fill_brewer(palette = "Set3") +
+  coord_fixed()

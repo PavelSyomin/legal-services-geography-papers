@@ -1,0 +1,49 @@
+---
+title: "Spatial Analysis of Russian Law Firms Naming"
+author: "Pavel Syomin¹"
+output:
+  word_document:
+    reference_doc: journal-article/reference.docx
+#bibliography: refs.bib
+#csl: style.csl
+link-bibliography: False  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<div custom-style="Affiliation">
+
+¹Perm State University, Geographical faculty, Department of social and economic geography, Perm, Russia; e-mail: ntsp\@ya.ru
+
+</div>
+
+<div custom-style="Abstract">
+
+**Abstract:** text.
+
+</div>
+
+<div custom-style="Keywords">
+
+**Keywords:** naming; law firms; text embeddings; economic regions. 
+</div>
+
+# 1. Introduction
+
+# 2. Materials and methods
+
+## 2.1. Data
+
+## 2.2. Methods
+
+# 3. Results and discussion
+
+# 4. Conclusion
+
+<div custom-style="References-title">References</div>
+
+<div id="refs"></div>
+
+

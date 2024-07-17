@@ -3,9 +3,9 @@ title: "Spatial Analysis of Russian Law Firms Naming"
 author: "Pavel Syomin¹"
 output:
   word_document:
-    reference_doc: journal-article/reference.docx
-#bibliography: refs.bib
-#csl: style.csl
+    reference_doc: "journal-article/reference.docx"
+bibliography: "journal-article/refs.bib"
+csl: "journal-article/apa.csl"
 link-bibliography: False  
 ---
 
@@ -31,6 +31,8 @@ knitr::opts_chunk$set(echo = TRUE)
 </div>
 
 # 1. Introduction
+
+Geography of services, sometimes referred to as geography of service sector, is one of the essential parts of socio-economic geographical studies in Russia. Its history spans for several decades starting from the 1960s. Geography of services has economic and social dimensions, where the former is concentrated on the business aspects of the services, while the latter is focused on the issues of human well-being arising from the spatial structure of the relevant services [@Tkachenko2016]. Existing scientific literature on the geography of services in Russia covers a broad range of topics, e.g. education [@Shulgina2019], car rental [@Zyrianova2018], catering [@Preobrazhenskiy2018], medical care [@Kazantcev2022; @Panin2023; @Nikoloski2024], internet access [@Nagirnaya2015; @Zemtsov2022]. However, research on some problems is limited, with legal services being one of the notable examples of such a problem [@Tkachenko2016; @Moiseeva2016]. Despite the lack of attention from geographers, spatial aspects of law firms activity worth investigating for the several reasons. First, legal services can be categorized as business and producer services, acting as a representative case, and this category of services is important for the economic development in general, both in national or regional scale [@Hansen1993; @Faulconbridge2019]. Next, despite their relatively small direct economic impact, they have a great indirect importance as the intermediaries and helpers that contribute to the rule of law, social order, stability and predictability of social relations. Third, for regular citizens access to legal aid is important for the protection of human rights and ensuring the social justice, and in this context, the spatial aspects of law services are on par with the spatial issues of medical care [@Blacksell1988; @Blacksell1990].
 
 # 2. Materials and methods
 

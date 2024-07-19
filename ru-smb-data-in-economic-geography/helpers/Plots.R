@@ -1,6 +1,7 @@
 library(dplyr)
 library(forcats)
 library(ggplot2)
+library(here)
 library(readr)
 library(scales)
 library(sf)
@@ -49,17 +50,18 @@ labels <- data.frame(
 labels <- labels[["ru"]]
 
 # Data
-rsmp_data_path <- "../ru-smb-companies/group_A/smb.csv"
+rsmp_data_path <- here("../../ru-smb-companies/group_A/smb.csv")
 rsmp_data <- read_csv(rsmp_data_path)
 
 # Maps
-regions_boundaries <- st_read("assets/ru.geojson")
+regions_boundaries <- st_read(here("assets", "ru.geojson"))
+municipal_boundaries <- st_read(here("assets", "ru-mun-gadm.geojson"))
 ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
-regions <- read_csv("assets/regions.csv")
+regions <- read_csv(here("assets", "regions.csv"))
 regions <- regions_boundaries %>% 
   left_join(regions, by = c("shapeISO" = "iso_code")) %>% 
   select(name, name_en = shapeName)
-ru_svr <- st_read("assets/ru_svr.geojson")
+ru_svr <- st_read(here("assets", "ru_svr.geojson"))
 
 # Regional distribution
 ac_code_mapping <- c("01" = labels[4], "02" = labels[5])
@@ -132,6 +134,56 @@ activity_by_settlements_df <- rsmp_data %>%
   group_by(region, area, settlement, lat, lon) %>% 
   slice_max(n) %>% 
   st_as_sf(coords = c("lon", "lat"), crs = 4326)
+
+sf_use_s2(FALSE)
+
+activity_by_municipalities <- rsmp_data %>%
+  mutate(
+    ac_type = substr(activity_code_main, 2, 4),
+    ac_type = case_when(
+      substr(ac_type, 1, 1) == "3" ~ "Рыболовство и рыбоводство",
+      substr(ac_type, 1, 1) == "2" ~ "Лесоводство и лесозаготовки",
+      ac_type == "1.4" ~ "Животноводство",
+      ac_type == "1.7" ~ "Охота",
+      ac_type %in% c("1.1", "1.2", "1.3") ~ "Растениеводство",
+      TRUE ~ "Прочее с/х"
+    )
+  ) %>% 
+  filter(
+    start_date <= "2021-12-31",
+    end_date >= "2021-12-31"
+  ) %>% 
+  count(region, area, settlement, lat, lon, ac_type) %>% 
+  drop_na(lat, lon) %>% 
+  mutate(lon = if_else(lon < 0, -(180 - lon), lon)) %>% 
+  st_as_sf(coords = c("lon", "lat"), crs = 4326) %>% 
+  st_join(municipal_boundaries) %>% 
+  st_drop_geometry() %>% 
+  group_by(NAME_1, NAME_2, ac_type) %>% 
+  summarise(n = sum(n)) %>% 
+  group_by(NAME_1, NAME_2) %>% 
+  slice_max(n) %>% 
+  right_join(municipal_boundaries) %>% 
+  st_as_sf() %>% 
+  replace_na(list(ac_type = "Нет данных")) %>% 
+  mutate(
+    ac_type = factor(
+      ac_type, 
+      levels = c(
+        "Растениеводство", "Животноводство", "Охота", 
+        "Прочее с/х", "Лесоводство и лесозаготовки",
+        "Рыболовство и рыбоводство", "Нет данных"
+      )
+    )
+  ) %>% 
+  ggplot(aes(fill = ac_type)) +
+  geom_sf(linewidth = .05) +
+  coord_sf(crs = ru_crs) +
+  scale_fill_manual(
+    name = "Вид деятельности",
+    values = c("yellow3", "pink2", "red3", "yellow4", "green4", "dodgerblue", "grey70")
+  ) +
+  theme_bw(base_size = 11, base_family = "Times New Roman")
 
 activity_by_settlements <- regions %>%
   ggplot() +

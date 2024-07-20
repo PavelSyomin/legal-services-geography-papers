@@ -74,48 +74,42 @@ regions_plot_agri_forestry <- rsmp_data %>%
     end_date >= "2021-12-31",
     !is.na(ac_type)) %>% 
   count(region, ac_type) %>% 
-  group_by(ac_type) %>% 
-  mutate(n = rescale(n)) %>% 
   left_join(regions, by = c("region" = "name")) %>% 
   st_as_sf() %>% 
   ggplot() +
-  geom_sf(aes(fill = n), size = .1) +
+  geom_sf(aes(fill = n / 1000), linewidth = .05) +
   coord_sf(crs = ru_crs) +
   scale_fill_distiller(
-    name = NULL,
-    labels = function(breaks) c("Min", rep("", length(breaks) - 2), "Max"),
+    name = "Количество субъектов МСП, тыс.",
+    breaks = seq(3, 12, 3),
     palette = "YlGn",
     direction = 1) +
   facet_wrap(~ac_type) +
-  theme_bw(base_size = 12, base_family = "Times New Roman") +
+  theme_void(base_size = 12, base_family = "Times New Roman") +
   theme(legend.position = "bottom")
 regions_plot_agri_forestry
 
 ac_code_mapping_wr <- c("01.11.1" = labels[6], "01.12" = labels[7])
 regions_plot_wheat_rice <- rsmp_data %>%
-  mutate(
-    ac_type = ac_code_mapping_wr[activity_code_main]) %>% 
+  mutate(ac_type = ac_code_mapping_wr[activity_code_main]) %>% 
   filter(
     start_date <= "2021-12-31",
     end_date >= "2021-12-31",
     !is.na(ac_type)) %>% 
   count(region, ac_type) %>% 
-  group_by(ac_type) %>% 
-  mutate(n = rescale(n)) %>% 
-  pivot_wider(names_from = ac_type, values_from = n) %>% 
   right_join(regions, by = c("region" = "name")) %>% 
+  pivot_wider(names_from = ac_type, values_from = n) %>% 
   pivot_longer(cols = c(labels[6], labels[7]), names_to = "ac_type", values_to = "n") %>% 
   st_as_sf() %>% 
   ggplot() +
-  geom_sf(aes(fill = n), size = .1) +
+  geom_sf(aes(fill = n / 1000), linewidth = .05) +
   coord_sf(crs = ru_crs) +
   scale_fill_distiller(
-    name = NULL,
-    labels = function(breaks) c("Min", rep("", length(breaks) - 2), "Max"),
+    name = "Количество субъектов МСП, тыс.",
     palette = "YlGn",
     direction = 1) +
   facet_wrap(~ac_type) +
-  theme_bw(base_size = 12, base_family = "Times New Roman") + 
+  theme_void(base_size = 12, base_family = "Times New Roman") + 
   theme(legend.position = "bottom")
 regions_plot_wheat_rice
 
@@ -183,7 +177,12 @@ activity_by_municipalities <- rsmp_data %>%
     name = "Вид деятельности",
     values = c("yellow3", "pink2", "red3", "yellow4", "green4", "dodgerblue", "grey70")
   ) +
-  theme_bw(base_size = 11, base_family = "Times New Roman")
+  theme_void(base_size = 11, base_family = "Times New Roman") +
+  theme(
+    legend.position = "bottom",
+    legend.direction = "horizontal",
+    legend.title.position = "top"
+  )
 
 activity_by_settlements <- regions %>%
   ggplot() +
@@ -221,6 +220,6 @@ migrations_plot <- region_changes %>% ungroup() %>%
   geom_sf(aes(fill = change), size = .1) + 
   coord_sf(crs = ru_crs) +
   scale_fill_gradient2(name = labels[13], low = "#d01c8b", high = "#4dac26") +
-  theme_bw(base_size = 12, base_family = "Times New Roman") +
+  theme_void(base_size = 12, base_family = "Times New Roman") +
   theme(legend.position = "bottom")
 migrations_plot

@@ -1,6 +1,6 @@
 ---
-title: "Spatial Analysis of Russian Law Firms Naming"
-author: "Pavel Syomin¹"
+title: "Application of large language models to a geographical analysis of business practices: a case of law firms naming in Russia"
+author: "Pavel Syomin"
 output:
   word_document:
     reference_doc: "journal-article/reference.docx"
@@ -39,7 +39,11 @@ source(here("journal-article", "Script.R"))
 
 <div custom-style="Affiliation">
 
-¹Perm State University, Geographical faculty, Department of social and economic geography, Perm, Russia; e-mail: ntsp\@ya.ru
+Perm State University, Geographical faculty, Department of social and economic geography, Perm, Russia
+
+E-mail: ntsp\@ya.ru
+
+ORCID: 0000-0002-4015-9206
 
 </div>
 
@@ -54,6 +58,12 @@ source(here("journal-article", "Script.R"))
 **Keywords:** firm names; law firms; text embeddings; economic regions, text similarity.
 
 </div>
+
+# Statements and Declarations
+
+**Competing Interests.** No funding was received for conducting this study. The author has no financial or proprietary interests in any material discussed in this article.
+
+\newpage
 
 # 1. Introduction
 
@@ -123,39 +133,39 @@ A dominant naming strategy is ascribed to each region, defined as the naming str
 
 ## 3.1. Law firm names in neighboring regions are more similar 
 
-The semantic distance between neighboring regions in comparison to the semantic distance between regions that do not have a common border is illustrated in Figure 1. Although the difference in medians is relatively minor, it is nevertheless present, and the overall distribution of distances between non-neighboring regions is shifted towards the area of higher values. Therefore, neighboring regions have more similar names of law firms than regions that do not border one another.
+The semantic distance between neighboring regions in comparison to the semantic distance between regions that do not have a common border is illustrated in Fig. 1. Although the difference in medians is relatively minor, it is nevertheless present, and the overall distribution of distances between non-neighboring regions is shifted towards the area of higher values. Therefore, neighboring regions have more similar names of law firms than regions that do not border one another.
 
-```{r fig-1-neighbors, fig.cap="**Figure 1.** Semantic distances between neighboring and non-neighboring regions", fig.height=3}
+```{r fig-1-neighbors, fig.cap="**Fig 1.** Semantic distances between neighboring and non-neighboring regions", fig.height=3}
 neighbors_plot
 ```
 
 ## 3.2. Greater geographical distance reduces the similarity of law firm names
 
-The relationship between geographical and semantic distances is shown in Figure 2. The correlation coefficient is relatively low but positive. Thus, regions that are situated close to each other tend to have a bit more similar names of law firms even in the absence of a common border between them.
+The relationship between geographical and semantic distances is shown in Fig. 2. The correlation coefficient is relatively low but positive. Thus, regions that are situated close to each other tend to have a bit more similar names of law firms even in the absence of a common border between them.
 
-```{r fig-2-distance-plot, fig.cap="**Figure 2.** Relationship between geographical and semantic distances between regions", fig.height=3}
+```{r fig-2-distance-plot, fig.cap="**Fig. 2.** Relationship between geographical and semantic distances between regions", fig.height=3}
 distance_plot
 ```
 
 ## 3.3. Law firm names inside an economic region are more homogeneous
 
-Within-distances and outside-distances by economic regions, as outlined in the methods section, are depicted in Figure 3. In some instances, the semantic distance between regions that are part of the same economic region is slightly less than the semantic distance between these regions and regions of other economic regions. However, this pattern does not apply to at least three economic regions: in Volga, North, and North Caucasus, median within-distance is equal to or greater than median outside-distance. Consequently, the results of this test are mixed: while links between regions constituting an economic region usually slightly increase the similarity of law firm names, there are several exceptions to this rule. A greater within-distance compared to outside-distance may indicate internal heterogeneity within an economic region, thereby suggesting the need for a classification update.
+Within-distances and outside-distances by economic regions, as outlined in the methods section, are depicted in Fig. 3. In some instances, the semantic distance between regions that are part of the same economic region is slightly less than the semantic distance between these regions and regions of other economic regions. However, this pattern does not apply to at least three economic regions: in Volga, North, and North Caucasus, median within-distance is equal to or greater than median outside-distance. Consequently, the results of this test are mixed: while links between regions constituting an economic region usually slightly increase the similarity of law firm names, there are several exceptions to this rule. A greater within-distance compared to outside-distance may indicate internal heterogeneity within an economic region, thereby suggesting the need for a classification update.
 
-```{r fig-3-economic-regions-distance, fig.cap="**Figure 3.** Semantic distances between regions within and outside economic regions", fig.height=5}
+```{r fig-3-economic-regions-distance, fig.cap="**Fig. 3.** Semantic distances between regions within and outside economic regions", fig.height=5}
 economic_regions_distances
 ```
 
 ## 3.4. Geographical patterns of naming strategies are unclear
 
-The map in Figure 4 depicts a dominant naming strategy in regions of Russia. As “Form” naming is used by a minority of law firms across all regions, it is not shown. European South of Russia and Povolzhye are characterized by a prevalence of the “Service” strategy. In other parts of the country, an irregular mixture of both “Law” and “Service” naming strategies is observed.
+The map in Fig. 4 depicts a dominant naming strategy in regions of Russia. As “Form” naming is used by a minority of law firms across all regions, it is not shown. European South of Russia and Povolzhye are characterized by a prevalence of the “Service” strategy. In other parts of the country, an irregular mixture of both “Law” and “Service” naming strategies is observed.
 
-```{r fig-4-naming-strategies, fig.cap="**Figure 4.** Map of naming strategies"}
+```{r fig-4-naming-strategies, fig.cap="**Fig. 4.** Map of naming strategies"}
 naming_strategies
 ```
 
 ## 3.5. Naming strategies within economic regions are inconsistent
 
-As seen from Figure 4, few economic regions are characterized by a uniform naming strategy. In the Volga-Vyatka economic region, the “Law” strategy is the most prevalent among all the regions, with the exception of the Republic of Mari El. In Volga and North Caucasus economic regions, service-based strategy is the prevailing approach in the majority of regions. The remaining economic regions exhibit a combination of law firms naming strategies. 
+As seen from Fig. 4, few economic regions are characterized by a uniform naming strategy. In the Volga-Vyatka economic region, the “Law” strategy is the most prevalent among all the regions, with the exception of the Republic of Mari El. In Volga and North Caucasus economic regions, service-based strategy is the prevailing approach in the majority of regions. The remaining economic regions exhibit a combination of law firms naming strategies. 
 
 # 4. Conclusion
 
@@ -163,8 +173,12 @@ The findings of the study are somewhat contradictory. On the one hand, several h
 
 The three principal strategies for naming law firms are as follows: “Form”, “Law”, and “Service”. The first of these represents a minority approach, while the remaining majority is divided between two other strategies. In the European South of Russia and in the Volga economic region, “Service” is a dominant strategy. However, no other spatial patterns in law firms naming have been identified. Economic regions are typically characterized by a mixture of naming strategies, except for Volga-Vyatka, where the “Law” strategy prevails, and Volga and North Caucasus, where the “Service” strategy is dominant.
 
-The contribution of this study is primarily theoretical and methodological in nature. It underscores the significance of firm names as a source of information for business- and economy-related research. It also proposes a technique for comprehensive analysis of branding in a geographical context through the use of modern natural language processing (NLP) solutions based on artificial neural networks. Additionally, it advocates for the utilization of disaggregated administrative open data for a spatial analysis. The findings demonstrate the effect of geographical proximity, neighboring, and economic relations on the similarity of the economic and, to a certain extent, cultural properties of the territories represented in firm names. The results generally align with the widely accepted classification of economic regions in Russia, although they highlight a few instances where a theoretically undesired internal heterogeneity within an economic region is observed. Finally, the study provides an illustration of a semi-automated brand classification within a specific economic sector and discovers a geographical variation in naming strategies that could be further investigated. 
+The contribution of this study is primarily theoretical and methodological in nature. It underscores the significance of firm names as a source of information for business- and economy-related research. It also proposes a technique for comprehensive analysis of branding in a geographical context through the use of modern natural language processing (NLP) solutions based on artificial neural networks. Additionally, it advocates for the utilization of disaggregated administrative open data for a spatial analysis. The findings demonstrate the effect of geographical proximity, neighboring, and economic relations on the similarity of the economic and, to a certain extent, cultural properties of the territories represented in firm names. The results generally align with the widely accepted classification of economic regions in Russia, although they highlight a few instances where a theoretically undesired internal heterogeneity within an economic region is observed. Finally, the study provides an illustration of a semi-automated brand classification within a specific economic sector and discovers a geographical variation in naming strategies that could be further investigated.
 
-<div custom-style="References-title">References</div>
+# Data availability
+
+# Code availability
+
+# References
 
 <div id="refs"></div>

@@ -55,7 +55,7 @@ ORCID: 0000-0002-4015-9206
 
 <div custom-style="Keywords">
 
-**Keywords:** firm names; law firms; text embeddings; economic regions, text similarity.
+**Keywords:** firm names; law firms; text embeddings; economic regions, text similarity; large language models.
 
 </div>
 
@@ -177,7 +177,7 @@ The contribution of this study is primarily theoretical and methodological in na
 
 # Data availability
 
-# Code availability
+A dataset about Russian law firms, vectors of law firm names obtained from Yandex Foundation models, results of manual labelling, additional files used for mapping, as well as all the code used to conduct the study and generate the paper file are available at Zenodo: https://doi.org/10.5281/zenodo.13691418.
 
 # References
 

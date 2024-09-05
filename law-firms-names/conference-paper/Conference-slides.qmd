@@ -27,7 +27,7 @@ library(tidyr)
 #| include: false
 
 # load the data
-data <- read_csv(here("../../ru-smb-companies/legal/panel.csv"))
+data <- read_csv(here("common", "panel.csv"))
 cluster_labels <- read_csv(
   here("conference-paper", "cluster-labels-conf.csv"))
 vectors <- read_csv(here("common", "names-vectors.csv"))

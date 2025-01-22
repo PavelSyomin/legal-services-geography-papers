@@ -1,12 +1,18 @@
+library(dbscan)
 library(dplyr)
 library(ggplot2)
 library(glue)
 library(here)
 library(readr)
 library(readxl)
+library(rjson)
+library(rulexicon)
 library(sf)
+library(stopwords)
 library(stringr)
 library(tidyr)
+library(tidytext)
+library(umap)
 library(units)
 
 sf_use_s2(FALSE) # disable to avoid errors in distances and intersections
@@ -32,6 +38,12 @@ org_forms <- c(
 )
 ru <- st_read(here("common", "ru.geojson"))
 ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
+stopwords <- data.frame(
+  word = c(
+    stopwords("ru", "stopwords-iso"),
+    c("общество", "ограниченный", "ответственность", "акционерный")
+  )
+)
 
 # Preprocess the data
 firms <- data %>%
@@ -67,37 +79,50 @@ unique_names <- distinct(firms, name)
 # Save unique names to a file for processing with YandexGPT API
 if (!get0("IS_PAPER", ifnotfound = FALSE)) {
   write_csv(
-  unique_names,
-  glue("names-{strftime(Sys.time(), '%Y-%m-%d-%H-%M-%S')}.csv")
-)
+    unique_names,
+    glue("names-{strftime(Sys.time(), '%Y-%m-%d-%H-%M-%S')}.csv"),
+    col_names = FALSE,
+    eol = ". "
+  )
 }
 
 # Load vectors obtained from YandexGPT API
 vectors <- read_csv(here("common", "names-vectors.csv"))
 
 # Clustering
-## Find optimal number of clusters
-if (!get0("IS_PAPER", ifnotfound = FALSE)) {
-  n_clusters <- 2:100
-  scores <- sapply(
-    n_clusters,
-    function(x) kmeans(
-      slice_sample(select(vectors, dim_0:dim_255), n = 1000),
-      centers = x)$tot.withins
-  )
-  ggplot(tibble(x = n_clusters, y = scores), aes(x = x, y = y)) +
-    geom_line()
-}
+## Reduce to 2D with UMAP
+vectors_umap_res <- vectors %>% 
+  select(-name) %>% 
+  umap(n_components = 2, random_state = 42)
+vectors_2d <- data.frame(umap_res["layout"]) %>%
+  rename(pc1 = layout.1, pc2 = layout.2)
 
-# Cluster names and save a sample for manual analysis
-set.seed(42)
-fit <- kmeans(select(vectors, dim_0:dim_255), centers = 50)
-vectors$cluster <- fit$cluster
+## Cluster with dbscan
+dbscan_res <- dbscan(vectors_2d, eps = 3)
+clustered_names <- data.frame(
+  name = vectors$name, 
+  cluster = vectors_2d$cluster
+)
+count(clustered_names, cluster, sort = TRUE)
+
+# Visualize clusters
+vectors_2d %>% 
+  ggplot(aes(x = pc1, y = pc2)) +
+  geom_point()
+
+# Visualize cluster centers with numbers
+clustered_names %>% 
+  group_by(cluster) %>% 
+  summarise(pc1 = mean(pc1), pc2 = mean(pc2)) %>% 
+  ggplot(aes(x = pc1, y = pc2, label = cluster)) +
+  geom_text()
+
+# Save a sample for manual analysis
 if (!get0("IS_PAPER", ifnotfound = FALSE)) {
-  vectors %>%
+  clustered_names %>%
     group_by(cluster) %>%
     slice_sample(n = 20) %>%
-    select(name) %>%
+    select(cluster, name) %>%
     write_csv(
       glue("names-sample-{strftime(Sys.time(), '%Y-%m-%d-%H-%M-%S')}.csv")
     )
@@ -176,6 +201,9 @@ region_names_distances <- region_names_distances %>%
   mutate(within = economic_region == economic_region_2) %>%
   left_join(neighboring_regions, by = c("iso_code" = "iso", "iso_code_2" = "iso_2")) %>%
   left_join(geo_distances, by = c("iso_code" = "iso", "iso_code_2" = "iso_2"))
+
+fit1 <- lm(namedist ~ within + is_neighbor + geo_distance, region_names_distances)
+summary(fit1)
 
 # Plot about neighborhood (Figure 1)
 neighbors_plot <- region_names_distances %>%
@@ -333,3 +361,77 @@ naming_strategies <- clustered %>%
     legend.justification = c(0.1, 1)
   )
 naming_strategies
+
+
+
+
+library(arrow)
+rfsd2023 <- read_parquet("common/part-0.parquet", as_data_frame = FALSE)
+
+rfsd2023df <- rfsd2023 %>% 
+  filter(okved == "69.10" | okved == "69.1") %>% 
+  select(inn, region, eligible, okved, okopf) %>% 
+  collect() %>% 
+  filter(substr(okopf, 1, 1) == "1")
+
+match <- full_join(
+  rfsd2023df, 
+  filter(data, year == 2023, kind == 1) %>% distinct(tin, .keep_all = TRUE) %>% select(tin, region),
+  by = c("inn" = "tin")
+)
+colSums(is.na.data.frame(match))
+count(match, region.x, is.na(region.y)) %>% 
+  group_by(region.x) %>% 
+  summarise(share = last(n) / sum(n))
+
+
+tvygpt <- read_csv("common/tokens-vectors.csv")
+set.seed(42)
+## Dimensions reduction with umap
+tv_umap <- umap(tvygpt %>% select(-1), n_components = 2, random_state = 42)
+tv_pc <- data.frame(tv_umap["layout"]) %>% rename(pc1 = layout.1, pc2 =layout.2)
+
+## Cluster with dbscan
+dbscan_tv <- dbscan(tv_pc, eps = .05)
+tv_pc$cluster <- dbscan_tv$cluster
+clustered_tokens <- cbind(select(tvygpt, name), tv_pc)
+count(clustered_tokens, cluster, sort = TRUE)
+
+tv_pc %>% 
+  ggplot(aes(x = pc1, y = pc2)) +
+  geom_point()
+
+clustered_tokens %>% 
+  ggplot(aes(x = pc1, y = pc2, col = factor(cluster))) +
+  geom_point(show.legend = FALSE)
+
+filter(clustered_tokens, cluster == 8) %>% pull(name)
+
+clustered_tokens %>% arrange(cluster) %>% select(cluster, word = name) %>% group_by(cluster) %>% slice_head(n = 10) %>% write_csv("token_clusters.csv")
+
+as.numeric(filter(tvygpt, name == "налоговый")[1, -1])
+
+s <- apply(vectors[1:10000, -1], 1, function (x){
+  A <- x[2:length(x)]
+  B <- as.numeric(filter(tvygpt, name == "налоговый")[1, -1])
+  sum(A*B)/sqrt(sum(A^2)*sum(B^2))
+})
+
+cbind(vectors[1:1000, 1], s) %>% arrange(-s) %>% slice_head(n = 10)
+
+tv_more3 <- tvygpt %>% 
+  left_join(count(names_2021, word, sort = TRUE), by = c("name" = "word")) %>% 
+  filter(n > 3)
+tv_more3_umap <- tv_more3 %>% 
+  select(-name, -n) %>% 
+  umap(n_components = 2, random_state = 42)
+tv_more3_pc <- data.frame(tv_more3_umap["layout"]) %>% rename(pc1 = layout.1, pc2 =layout.2)
+dbscan_tv_more3 <- dbscan(tv_more3_pc, eps = .1)
+tv_more3_pc$cluster <- dbscan_tv_more3$cluster
+clustered_tokens_more3 <- cbind(select(tv_more3, name), tv_more3_pc)
+count(clustered_tokens_more3, cluster, sort = TRUE)
+filter(clustered_tokens_more3, cluster == 7) %>% pull(name)
+
+tv_more3_pc %>% 
+  ggplot(aes(x = pc1, y = pc2)) +
+  geom_point()

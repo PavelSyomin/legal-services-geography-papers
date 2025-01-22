@@ -6,6 +6,7 @@ library(lightgbm)
 library(plotly)
 library(readr)
 library(rjson)
+library(rulexicon)
 library(spatstat)
 library(stopwords)
 library(stringr)
@@ -27,11 +28,32 @@ names_2021 <- data %>%
     kind == 1,
     year == 2021) %>% 
   select(region, area, settlement, settlement_type, name = org_name) %>% 
-  unnest_tokens(word, name) %>% 
+  unnest_tokens(word, name, drop = FALSE) %>% 
   left_join(hash_lemmas_opencorpora, by = c("word" = "token")) %>% 
   select(-word, word = lemma) %>% 
   anti_join(stopwords) %>% 
   drop_na(region, word)
+
+count(names_2021, word, sort = TRUE) %>% write_csv("words.csv")
+
+names_2021 %>% 
+  filter(word == "земельный") %>% 
+  pull(name)
+
+names_2021 %>% select(word) %>% distinct(word) %>% write_csv("tokens.csv", col_names = FALSE)
+tvectors <- read_delim("token_vectors.csv", delim = " ") %>% select(1:101)
+tokens_umap <- umap(tvectors %>% select(-1), n_components = 2, random_state = 42)
+tvectors_pc <- data.frame(tokens_umap["layout"]) %>% rename(pc1 = layout.1, pc2 =layout.2)
+
+## Cluster with dbscan
+dbscan_res2 <- dbscan(vectors_pc2, eps = 1)
+vectors_pc2$cluster <- dbscan_res2$cluster
+clustered_names2 <- cbind(select(vectors, name), vectors_pc2)
+count(clustered_names2, cluster, sort = TRUE)
+
+tvectors_pc %>% 
+  ggplot(aes(x = pc1, y = pc2)) +
+  geom_point()
 
 top_tokens_by_region <- names_2021 %>% 
   count(region, word) %>% 
@@ -566,3 +588,120 @@ firm_names_ppp_ivd <- as.ppp(
 firm_names_ppp_ivd$marks <- factor(ppp_data$individual)
 firm_names_spp_ivd <- split(firm_names_ppp_ivd, marks(firm_names_ppp_ivd))
 plot(density(firm_names_spp_ivd, sigma = 125000))
+
+
+
+
+
+excluded_clusters <- c(
+  1, 2, 3, 5, 14, 15, 18, 21, 24, 26, 27, 30, 34, 35, 39,
+  42, 45, 46, 47, 49, 51 
+)
+
+tokenized_names <- clustered_names %>% 
+  filter(!(cluster %in% excluded_clusters)) %>% 
+  unnest_tokens(word, name, drop = FALSE)
+
+tokens <- unique(tokenized_names$word)
+mystem_res <- fromJSON(system(
+  "./mystem --format=json",
+  intern = TRUE, 
+  input = toString(tokens)))
+lemmas <- data.frame(
+  word = sapply(
+    mystem_res, 
+    function(item) item$text[1]),
+  lemma = sapply(
+    mystem_res, 
+    function(item) ifelse(
+      length(item$analysis) > 0, 
+      item$analysis[[1]]$lex[1],
+      NA))) %>% 
+  distinct(word, lemma)
+
+tokenized_names <- tokenized_names %>% 
+  left_join(lemmas) %>% 
+  anti_join(stopwords, by = c("lemma" = "word"))
+
+tokenized_names %>%
+  select(name = lemma) %>%
+  distinct() %>% 
+  drop_na() %>% 
+  write_csv("lemmas.csv")
+
+lemmas_vectors <- read_csv("common/lemmas-vectors.csv")
+lemmas_vectors_umap_res <- lemmas_vectors %>% 
+  select(-name) %>% 
+  umap(n_components = 2, random_state = 42)
+lemmas_vectors_2d <- data.frame(lemmas_vectors_umap_res["layout"]) %>% 
+  rename(pc1 = layout.1, pc2 =layout.2)
+lemmas_vectors_2d %>% 
+  ggplot(aes(x = pc1, y = pc2)) +
+  geom_point()
+lemmas_hdbscan_res <- hdbscan(lemmas_vectors_2d, minPts = 10)
+lemmas_clusters <- cbind(
+  lemmas_vectors %>% select(name),
+  lemma_cluster = lemmas_hdbscan_res$cluster
+)
+count(lemmas_clusters, lemma_cluster, sort = TRUE)
+
+filter(lemmas_clusters, lemma_cluster == 51)
+
+lemmas_clusters %>% arrange(lemma_cluster) %>% write_csv("lemmas_clusters.csv")
+
+tokenized_names %>% 
+  left_join(lemmas_clusters, by = c("lemma" = "name")) %>% 
+  filter(lemma_cluster == 13) %>% 
+  distinct(name)
+
+colSums(is.na.data.frame(tokenized_names))
+
+vectors2 <- read_delim("vectors2.csv", delim = " ") %>% select(1:100)
+
+set.seed(42)
+## Dimensions reduction with umap
+umap_res2 <- umap(vectors2, n_components = 2, random_state = 42)
+vectors_pc2 <- data.frame(umap_res2["layout"]) %>% rename(pc1 = layout.1, pc2 =layout.2)
+
+## Cluster with dbscan
+dbscan_res2 <- dbscan(vectors_pc2, eps = 1)
+vectors_pc2$cluster <- dbscan_res2$cluster
+clustered_names2 <- cbind(select(vectors, name), vectors_pc2)
+count(clustered_names2, cluster, sort = TRUE)
+
+vectors_pc2 %>% 
+  ggplot(aes(x = pc1, y = pc2)) +
+  geom_point()
+
+clustered_names2 %>% 
+  group_by(cluster) %>% 
+  summarise(pc1 = mean(pc1), pc2 = mean(pc2)) %>% 
+  ggplot(aes(x = pc1, y = pc2, label = cluster)) +
+  geom_text()
+
+filter(clustered_names2, cluster == 5) %>% pull(name)
+
+vectors3 <- read_delim("vectors3.csv", delim = " ") %>% select(1:100)
+
+set.seed(42)
+## Dimensions reduction with umap
+umap_res3 <- umap(vectors3, n_components = 2, random_state = 42)
+vectors_pc3 <- data.frame(umap_res3["layout"]) %>% rename(pc1 = layout.1, pc2 =layout.2)
+
+## Cluster with dbscan
+dbscan_res3 <- dbscan(vectors_pc3, eps = 1)
+vectors_pc2$cluster <- dbscan_res2$cluster
+clustered_names2 <- cbind(select(vectors, name), vectors_pc2)
+count(clustered_names2, cluster, sort = TRUE)
+
+vectors_pc3 %>% 
+  ggplot(aes(x = pc1, y = pc2)) +
+  geom_point()
+
+clustered_names2 %>% 
+  group_by(cluster) %>% 
+  summarise(pc1 = mean(pc1), pc2 = mean(pc2)) %>% 
+  ggplot(aes(x = pc1, y = pc2, label = cluster)) +
+  geom_text()
+
+filter(clustered_names2, cluster == 5) %>% pull(name)

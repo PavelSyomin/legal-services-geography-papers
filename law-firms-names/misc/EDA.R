@@ -649,9 +649,9 @@ filter(lemmas_clusters, lemma_cluster == 51)
 
 lemmas_clusters %>% arrange(lemma_cluster) %>% write_csv("lemmas_clusters.csv")
 
-tokenized_names %>% 
+geonames <- tokenized_names %>% 
   left_join(lemmas_clusters, by = c("lemma" = "name")) %>% 
-  filter(lemma_cluster == 13) %>% 
+  filter(lemma_cluster %in% c(130, 131)) %>% 
   distinct(name)
 
 colSums(is.na.data.frame(tokenized_names))

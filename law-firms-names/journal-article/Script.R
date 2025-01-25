@@ -3,6 +3,8 @@ library(dplyr)
 library(ggplot2)
 library(glue)
 library(here)
+library(igraph)
+library(RColorBrewer)
 library(readr)
 library(readxl)
 library(rjson)
@@ -110,21 +112,27 @@ vectors_2d <- data.frame(umap_res["layout"]) %>%
 dbscan_res <- dbscan(vectors_2d, eps = 3)
 clustered_names <- data.frame(
   name = vectors$name, 
-  cluster = dbscan_res$cluster
+  cluster = dbscan_res$cluster,
+  vectors_2d
 )
 count(clustered_names, cluster, sort = TRUE)
 
-# Visualize clusters
-vectors_2d %>% 
-  ggplot(aes(x = pc1, y = pc2)) +
-  geom_point()
-
-# Visualize cluster centers with numbers
-clustered_names %>% 
+## Visualize cluster centers with numbers
+clusters_plot <- clustered_names %>% 
   group_by(cluster) %>% 
   summarise(pc1 = mean(pc1), pc2 = mean(pc2)) %>% 
-  ggplot(aes(x = pc1, y = pc2, label = cluster)) +
-  geom_text()
+  ggplot(aes(
+    x = pc1, y = pc2,
+    label = str_pad(cluster, 2, "right")
+  )) +
+  geom_point(
+    data = clustered_names, 
+    aes(x = pc1, y = pc2),
+    size = .5,
+  ) +
+  geom_text(hjust = -.5) +
+  labs(x = "Component # 1", y = "Component #2") +
+  theme_minimal()
 
 # Save a sample for manual analysis
 if (!get0("IS_PAPER", ifnotfound = FALSE)) {
@@ -151,6 +159,40 @@ clustered <- clustered_names %>%
     cluster, strategy) %>%
   drop_na(name, tin, region, settlement, lat, lon, year) %>%
   distinct(name, tin, .keep_all = TRUE)
+
+# Table with clusters info
+clusters_info_table <- count(clustered_names, cluster) %>% 
+  left_join(cluster_labels)
+
+cluster_labels %>% filter(strategy == "Uniqueness")
+
+strategy_counts <- count(clusters_info_table, strategy, wt = n, sort = TRUE) %>% 
+  mutate(share = 100 * n / sum(n))
+
+count(clustered, region, strategy) %>% 
+  complete(region, strategy, fill = list(n = 0)) %>% 
+  group_by(region) %>% 
+  summarise(
+    x = (nth(n, 2) - nth(n, 3)) / sum(nth(n, 2), nth(n, 3)),
+    y = (last(n) - first(n)) / sum(last(n), first(n))) %>% 
+  arrange(-y) %>% print(n = 30)
+  ggplot(aes(x = x, y = y)) +
+  geom_point()
+
+nodes <- tibble(
+  label = unique(c(cluster_labels$cluster, cluster_labels$category, cluster_labels$strategy))
+) %>% 
+  mutate(id = row_number())
+nodes <- create_node_df(n = 77, label = unique(c(cluster_labels$cluster, cluster_labels$category, cluster_labels$strategy)))
+df <- cluster_labels %>% 
+  left_join(nodes, by = c("category" = "label")) %>% 
+  left_join(nodes, by = c("strategy" = "label")) 
+edges1 <- create_edge_df(from = df$id.x, to = df$id.y)
+edges2 <- create_edge_df(from = df$cluster, to = df$id.x)
+g <- create_graph(nodes_df = nodes, edges = combine_edfs(edges1, edges2)) %>% 
+  add_global_graph_attrs("rankdir", "LR", "graph")
+get_global_graph_attr_info(g)
+render_graph(g)
 
 # Spatial autocorrelation
 regions_w <- poly2nb(regions) %>% 

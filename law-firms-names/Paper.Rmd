@@ -25,6 +25,7 @@ library(dplyr)
 library(ggplot2)
 library(glue)
 library(here)
+library(knitr)
 library(readr)
 library(readxl)
 library(sf)
@@ -103,7 +104,9 @@ The Yandex Foundation Models cloud service [@Yandex2024] is used to transform th
 
 ### 2.2.4. Naming strategies identification
 
-The dimension of law firm names vectors is reduced from 256 to 2 with the UMAP method, and the resulting 2D vectors are clustered using the DBSCAN technique and plotted to illustrate the results. The clusters are subsequently subjected to manual analysis. A random sample of 20 names is selected from each cluster. The names samples are carefully examined, and each cluster is attached a concise description (e.g. “Consulting companies”), a subcategory, and a category. The mapping of clusters and their respective subcategories and categories (e.g. cluster N — “Legal bureau” / “Lawyers”) is employed to link all the firm names to the appropriate groups. The concept of naming strategies is derived from the works of @Arora2015 and @BassolsiGardella2023. However, the specific groups differ from those used in their respective papers and are drawn from the data-driven analysis. The specific descriptions, subcategories and categories are provided, explained and analysed in the results section below.
+The dimension of law firm names vectors is reduced from 256 to 2 with the UMAP method, and the resulting 2D vectors are clustered using the DBSCAN technique and plotted to illustrate the results. The clusters are subsequently subjected to manual analysis. A random sample of 20 names is selected from each cluster. The names samples are carefully examined, and each cluster is attached a concise description (e.g. “Consulting companies”), a category, and a strategy. Clusters with descriptions, categories and strategies form a tree-like hierarchy where clusters make up categories, and categories belong to strategies.
+
+The concept of naming strategies is derived from the works of @Arora2015 and @BassolsiGardella2023. The latter paper proposes a strategic naming model with four broad naming strategies, namely “Uniqueness”, “Belonging”, “Market”, and “No-strategy”. Thee strategies form a 2×2 matrix, where two pairs of “Uniqueness vs Belonging” and “Market vs No-strategy” are axes, and strategies in the pairs are opposite to each other. Though invented for classification of names of companies in tourism, this naming framework fits well for the purpose of law firm names grouping. The specific descriptions and their mapping to the categories and strategies are provided, explained and analysed in the results section below.
 
 ### 2.2.5. Spatial regularities identification
 
@@ -121,15 +124,39 @@ For the clusters with statistically significant global Moran's I, a local Moran'
 
 Law firm names clusters resulted from UMAP → DBSCAN pipeline are illustrated using scatterplot in Fig. 1. The visual quality of clusterisation is high: all the clusters are compact, round, and separated by considerable gaps. There are no noise points, and all the names have been easily assigned to clusters. 
 
-Table 1 shows cluster sizes and sample names from the clusters with manually assigned short cluster descriptions, categories and strategies. The quantity of clusters (52) is relatively big, and their size is not even: while the largest group of names consists of items, the smallest one includes just 22 objects. A substantial number of clusters (...) is comprised of a mixture of short (a single word) names that cannot be given a reasonable description. Their strategy is marked as “Misc” and excluded from further analysis. “Misc” strategy encompasses ... law firm names. All the other names are split between three primary strategies: “Helpers”, “Lawyers”, “Service providers”. “Helpers” are law firms that articulate aid, protection, guarantee, advise, agency in their brands. Such names may either directly contain words related to legal aid or protection (“Aid” and “Protection” categories) or indirectly cause safety-related connotations by using the words associated with professionals or communities that do not leave a person alone (“Guarantor”, “Expert”, “Agent”, “Partner”, “Association” categories). In contrast to “Helpers”, “Lawyers” make a strong emphasis on their belonging to the legal services market by using the words “law”, “lawyer” or various Russian equivalents of “law firm” phrase. A distinct category of law firms with this strategy is formed by organisations that use a personal branding that follow the broad pattern “(law firm) <last name of a person> with partners” where (law firm) is an optional part, and <last name of a person> is a pointer to a featured lawyer of this organisation. Even if “law firm” subpart of the firm name is optional, the entire pattern is strongly associated in Russia with lawyers, thus this group of names is assigned the “Lawyers” strategy. Finally, “Services” strategy encompasses companies with a mention of a target audience (e.g. “Business”) or industry (e.g. “Construction”), a particular kind of services (e.g. “Consulting”, “Expertise”, “Audit” or “Finance&Investment”) or services in general. Compared to two other primary strategies, this one usually do not directly mentions law and legal services market. It is likely that some of companies following this strategy, in fact, do not provide legal services, focusing instead on paralegal activity or using standard law firms NACE code by a mistake or as a false flag. It should be noted that in some cases, a category of names within the “Services” strategy point to a law firm specialization (e.g. consulting or real estate), so the further analysis of names may be used to distinguish between full service and specialized law firms and between particular specializations.
+```{r fig-1-clusters, fig.cap="**Fig 1.** Law firm names clusters resulting from UMAP → DBSCAN processing of law firm names embeddings. Numbers are assigned automatically by DBSCAN", fig.height=4}
+clusters_plot
+```
+
+```{r table-1-clusters}
+kable(
+  clusters_info_table,
+  col.names = c(
+    "# of cluster", "# of names", "Description",
+    "Category", "Strategy"
+  )
+)
+```
+
+Table 1 shows cluster sizes and sample names from the clusters with manually assigned short cluster descriptions, categories and strategies. The quantity of clusters (52) is relatively big, and their size is not even: while the largest group of names consists of items, the smallest one includes just 12 objects. Almost 1/3 of clusters (17) is comprised of a mixture of short (usually a single-word) names that cannot be given a reasonable description. They are marked as “Misc” and classified as “No-strategy”. 
+
+All the other names are split between three primary strategies. “Market” strategy is comprised of firms with names having generally positive connotations in Russian language that help to pursue a potential client in a high quality of legal aid and thus act as a some sort of advertisement (“Guarantor”, “Expert”, “Partnership”, “Helper”, "Center” categories and some others). “Belonging” strategy, as its name suggests, make a strong emphasis on their belonging to the legal services market by using the words “law”, “lawyer”, “legal” or various Russian equivalents of “law firm” phrase. A distinct category of law firms with this strategy is formed by organisations that use a personal branding that follow the broad pattern “(law firm) <last name of a person> with partners” where (law firm) is an optional part, and <last name of a person> is a pointer to a featured lawyer of this organisation. Even if “law firm” subpart of the firm name is optional, the entire pattern is strongly associated in Russia with lawyers, thus this type of firm naming marks the belonging to the legal services sphere. Finally, “Uniqueness” strategy encompasses companies with names mentioning a particular kind of legal services (e.g. “Consulting”), or a target customers group (e.g. “Business”), or a related area of specialization (real estate, finance, audit, development), or a specific geographic location.
+
+```{r table-2-strategies-summary}
+kable(
+  strategy_counts,
+  digits = c(NA, 0, 0),
+  col.names = c("Strategy", "# of names", "%")
+)
+```
+
+Among the strategies, “No-strategy” (i.e. the absence of a clear strategy) is the most popular (see Table 2). It encompasses more than 1/3 of all the studied names. Belonging strategy is the second by the popularity holding 30% of law firms. Uniqueness strategy is employed by approximately 20% of companies, and the least typical one, market strategy, is used by slightly more than 10% of law firms.
 
 ## 3.1. Law firm names in neighboring regions are more similar 
 
 The semantic distance between neighboring regions in comparison to the semantic distance between regions that do not have a common border is illustrated in Fig. 1. Although the difference in medians is relatively minor, it is nevertheless present, and the overall distribution of distances between non-neighboring regions is shifted towards the area of higher values. Therefore, neighboring regions have more similar names of law firms than regions that do not border one another.
 
-```{r fig-1-neighbors, fig.cap="**Fig 1.** Semantic distances between neighboring and non-neighboring regions", fig.height=3}
-neighbors_plot
-```
+
 
 ## 3.2. Greater geographical distance reduces the similarity of law firm names
 

@@ -23,10 +23,7 @@ sf_use_s2(FALSE) # disable to avoid errors in distances and intersections
 # Load the data
 data <- read_csv(here("common", "panel.csv"))
 er <- read_csv(here("journal-article", "economic-regions.csv"))
-er_short_labels <- tibble(
-  economic_region = sort(unique(er$economic_region)),
-  label = c("C", "CC", "ES", "FE", "N", "NC", "NW", "U", "V", "VV", "WS")
-)
+fd <- read_csv(here("journal-article/federal-districts.csv"))
 org_forms <- c(
   "общество с ограниченной ответственностью",
   "общество с дополнительной ответственностью",
@@ -164,8 +161,6 @@ clustered <- clustered_names %>%
 clusters_info_table <- count(clustered_names, cluster) %>% 
   left_join(cluster_labels)
 
-cluster_labels %>% filter(strategy == "Uniqueness")
-
 strategy_counts <- count(clusters_info_table, strategy, wt = n, sort = TRUE) %>% 
   mutate(share = 100 * n / sum(n))
 
@@ -194,35 +189,49 @@ g <- create_graph(nodes_df = nodes, edges = combine_edfs(edges1, edges2)) %>%
 get_global_graph_attr_info(g)
 render_graph(g)
 
+library(ggraph)
+g <- rbind(
+  count(clusters_info_table, strategy, wt = n) %>% mutate(from = "Parent") %>% select(from, to = strategy, n),
+  count(clusters_info_table, category, strategy, wt = n) %>% select(from = strategy, to = category, n),
+  select(clusters_info_table, from = category, to = cluster, n)
+) %>% 
+  #select(-n) %>% 
+  graph_from_data_frame()
+ggraph(g, layout = 'dendrogram') + 
+  geom_edge_diagonal(aes(color = n)) +
+  geom_node_text(aes(label = name), repel = TRUE) +
+  geom_node_point() +
+  scale_edge_color_stepsn() +
+  theme_void() +
+  coord_flip()
+
 # Spatial autocorrelation
-regions_w <- poly2nb(regions) %>% 
+## Various neighbours identification techniques
+## and corresponding weight matrices
+### By geometry intersection
+regions_nw <- poly2nb(regions) %>% 
   addlinks1(39, c(32, 47, 60, 67, 78)) %>% # Kaliningrad
   addlinks1(65, c(25, 27, 41, 49)) %>% # Sakhalin
   nb2listw()
 
-clusters_share_by_regions <- clustered %>% 
-  count(region, cluster) %>% 
-  complete(region, cluster, fill = list(n = 0)) %>% 
-  group_by(region) %>% 
-  mutate(share = n / sum(n)) %>%
-  right_join(st_drop_geometry(regions), by = c("region" = "name")) %>% 
-  arrange(code)
+### By 3, 4, 6 closest neighbours
+regions_k3w <- st_centroid(regions) %>% 
+  knearneigh(k = 3) %>% 
+  knn2nb() %>% 
+  nb2listw()
 
-moran_test_by_regions <- data.frame(t(sapply(1:52, function(x) {
-  mt <- clusters_share_by_regions %>% 
-    filter(cluster == x) %>% 
-    pull(share) %>% 
-    moran.test(regions_w)
-  unname(c(x, mt$estimate[1], mt$p.value))
-}))) %>%
-  rename(cluster = 1, moran_i = 2, p = 3) %>% 
-  mutate(
-    p_adj = p.adjust(p, method = "holm"),
-    signif = p_adj < .05
-  ) %>%
-  arrange(-signif, p_adj)
+regions_k4w <- st_centroid(regions) %>% 
+  knearneigh(k = 4) %>% 
+  knn2nb() %>% 
+  nb2listw()
 
-er_w <- er %>% 
+regions_k6w <- st_centroid(regions) %>% 
+  knearneigh(k = 6) %>% 
+  knn2nb() %>% 
+  nb2listw()
+
+# By economic regions
+regions_erw <- er %>% 
   left_join(
     st_drop_geometry(regions), 
     by = c("region" = "name") # to sort by codes
@@ -236,26 +245,183 @@ er_w <- er %>%
   dnearneigh(d1 = 0, d2 = .1, longlat = FALSE) %>% # 0 within an economic region
   nb2listw()
 
-moran_test_by_er <- data.frame(t(sapply(1:52, function(x) {
+# By federal districts
+regions_fdw <- fd %>% 
+  left_join(
+    st_drop_geometry(regions), 
+    by = c("region" = "name") # to sort by codes
+  ) %>% 
+  mutate(
+    x = as.numeric(factor(federal_district)),
+    y = x # pseudo-coords to use out-of-the-box distance neighbours
+  ) %>% 
+  arrange(code) %>% 
+  select(x, y) %>% 
+  dnearneigh(d1 = 0, d2 = .1, longlat = FALSE) %>% # 0 within an economic region
+  nb2listw()
+
+clusters_share_by_regions <- clustered %>% 
+  count(region, cluster) %>% 
+  complete(region, cluster, fill = list(n = 0)) %>% 
+  group_by(region) %>% 
+  mutate(share = n / sum(n)) %>%
+  right_join(st_drop_geometry(regions), by = c("region" = "name")) %>% 
+  arrange(code)
+
+moran_test_nw <- data.frame(t(sapply(1:52, function(x) {
   mt <- clusters_share_by_regions %>% 
     filter(cluster == x) %>% 
     pull(share) %>% 
-    moran.test(er_w)
-  unname(c(x, mt$estimate[1], mt$p.value))
-}))) %>%
-  rename(cluster = 1, moran_i = 2, p = 3) %>% 
+    moran.test(regions_nw)
+  unname(c(x, mt$estimate[1], mt$p.value, 1))
+}))) 
+
+moran_test_k3w <- data.frame(t(sapply(1:52, function(x) {
+  mt <- clusters_share_by_regions %>% 
+    filter(cluster == x) %>% 
+    pull(share) %>% 
+    moran.test(regions_k3w)
+  unname(c(x, mt$estimate[1], mt$p.value, 2))
+})))
+
+moran_test_k4w <- data.frame(t(sapply(1:52, function(x) {
+  mt <- clusters_share_by_regions %>% 
+    filter(cluster == x) %>% 
+    pull(share) %>% 
+    moran.test(regions_k4w)
+  unname(c(x, mt$estimate[1], mt$p.value, 3))
+})))
+
+moran_test_k6w <- data.frame(t(sapply(1:52, function(x) {
+  mt <- clusters_share_by_regions %>% 
+    filter(cluster == x) %>% 
+    pull(share) %>% 
+    moran.test(regions_k6w)
+  unname(c(x, mt$estimate[1], mt$p.value, 4))
+})))
+
+moran_test_erw <- data.frame(t(sapply(1:52, function(x) {
+  mt <- clusters_share_by_regions %>% 
+    filter(cluster == x) %>% 
+    pull(share) %>% 
+    moran.test(regions_erw)
+  unname(c(x, mt$estimate[1], mt$p.value, 5))
+})))
+
+moran_test_fdw <- data.frame(t(sapply(1:52, function(x) {
+  mt <- clusters_share_by_regions %>% 
+    filter(cluster == x) %>% 
+    pull(share) %>% 
+    moran.test(regions_fdw)
+  unname(c(x, mt$estimate[1], mt$p.value, 6))
+})))
+
+moran_test_global_res <- rbind(
+  moran_test_nw, moran_test_k3w, moran_test_k4w,
+  moran_test_k6w, moran_test_erw, moran_test_fdw
+) %>% 
+  rename(cluster = 1, moran_i = 2, p = 3, weights_type = 4) %>% 
+  mutate(
+    weights_type = factor(
+      weights_type, 
+      1:6, 
+      c("Neighboring polygons", "3 nearest", "4 nearest",
+        "6 nearest", "Economic region", "Federal district")
+    )
+  ) %>% 
   mutate(
     p_adj = p.adjust(p, method = "holm"),
     signif = p_adj < .05
   ) %>%
-  arrange(-signif, p_adj)
+  filter(signif) %>% 
+  left_join(select(cluster_labels, cluster, description)) %>% 
+  arrange(p_adj, weights_type) %>% 
+  select(cluster, description, moran_i, p_adj, weights_type)
 
-mloc <- clusters_share_by_regions %>% 
-  filter(cluster == 28) %>% 
+moran_test_global_res_plot <- moran_test_global_res %>% 
+  complete(weights_type, description) %>% 
+  mutate(
+    p_adj_mark = cut(
+      p_adj, 
+      c(0, 1e-3, 1e-2, 5e-2, 1), 
+      labels = c("p < 0.001", "p < 0.01", "p < 0.05", "insig.")
+    )
+  ) %>% 
+  ggplot(aes(x = weights_type, y = description, fill = p_adj_mark)) +
+  geom_raster() +
+  geom_text(aes(label = round(moran_i, 2))) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  scale_fill_brewer(
+    name = "Statistical\nsignificance",
+    na.translate = F
+  ) +
+  coord_fixed() +
+  theme_minimal() +
+  labs(x = "Type of weights matrix", y = "Law firm names cluster")
+
+localmoran_c40_regions_w <- clusters_share_by_regions %>% 
+  filter(cluster == 13) %>% 
+  pull(share) %>% 
+  localmoran(regions_w) %>% 
+  hotspot(Prname="Pr(z != E(Ii))", cutoff = 0.05, 
+          p.adjust = "holm",
+          droplevels=FALSE) %>% 
+  cbind(group = ., regions, branch = "reg")
+
+localmoran_c40_er_w <- clusters_share_by_regions %>% 
+  filter(cluster == 40) %>% 
   pull(share) %>% 
   localmoran(er_w) %>% 
-  hotspot(Prname="Pr(z != E(Ii))", cutoff = 0.005, 
-          droplevels=FALSE)
+  hotspot(Prname="Pr(z != E(Ii))", cutoff = 0.05, 
+          p.adjust = "holm",
+          droplevels=FALSE) %>% 
+  cbind(group = ., regions, branch = "er")
+
+localmoran_c40_plot <- rbind(
+  localmoran_c40_regions_w,
+  localmoran_c40_er_w
+) %>% 
+  ggplot(aes(fill = group)) +
+  geom_sf() +
+  coord_sf(crs = ru_crs) +
+  facet_wrap(vars(branch), ncol = 1)
+
+localmoran_c28_plot <- clusters_share_by_regions %>% 
+  filter(cluster == 28) %>% 
+  pull(share) %>% 
+  localmoran(regions_kw) %>% 
+  hotspot(Prname="Pr(z != E(Ii))", cutoff = 0.05, 
+          p.adjust = "holm",
+          droplevels=FALSE) %>% 
+  cbind(group = ., regions) %>% 
+  ggplot(aes(fill = group)) +
+  geom_sf() +
+  coord_sf(crs = ru_crs)
+
+localmoran_c13_plot <- clusters_share_by_regions %>% 
+  filter(cluster == 13) %>% 
+  pull(share) %>% 
+  localmoran(regions_w) %>% 
+  hotspot(Prname="Pr(z != E(Ii))", cutoff = 0.05, 
+          p.adjust = "holm",
+          droplevels=FALSE) %>% 
+  cbind(group = ., regions) %>% 
+  ggplot(aes(fill = group)) +
+  geom_sf() +
+  coord_sf(crs = ru_crs)
+
+localmoran_c37_plot <- clusters_share_by_regions %>% 
+  filter(cluster == 37) %>% 
+  pull(share) %>% 
+  localmoran(regions_w) %>% 
+  hotspot(Prname="Pr(z != E(Ii))", cutoff = 0.05, 
+          p.adjust = "holm",
+          droplevels=FALSE) %>% 
+  cbind(group = ., regions) %>% 
+  ggplot(aes(fill = group)) +
+  geom_sf() +
+  coord_sf(crs = ru_crs)
+
 
 er_nb <- er %>% 
   left_join(

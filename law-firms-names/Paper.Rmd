@@ -1,5 +1,5 @@
 ---
-title: "Identification and Spatial Analysis of Russian Law Firms Naming Using Text Embeddings"
+title: "Identification and Spatial Analysis of Russian Law Firms Naming Patterns Using Text Embeddings"
 author: "Pavel Syomin"
 output:
   word_document:
@@ -74,7 +74,9 @@ Despite the lack of interest from geographers, the spatial aspects of the activi
 
 The study of firm names — which are sometimes also referred to as company names, brand names, or simply “brands” — is a relatively uncommon yet potentially fruitful approach to the geographical analysis of services and related problems. A firm name is designed to distinguish the business from competitors, to highlight the sector or geographical area in which it operates, and to convey information about the services offered by a provider and the associated benefits. A brand is therefore capable of transferring a substantial amount of information in a brief textual format. Such information may prove useful in uncovering the city's business landscape and consumer perceptions of a particular city with its distinctive services [@Raento2001]. It may also help to analyze trends common to a specific sector in a geographic region [@Marjavaara2022]. The incorporation of place names (toponyms) in brands influences the business development and consumer attitudes [@Peluso2012; @Zhang2014; @Erdogan2016; @Noorda2019]. Company names encapsulate a multitude of intertwined properties relevant to the economy and culture of a given location. This synthesis makes them suitable for the identification of regions, especially in the case of vernacular regions [@Reed1976; @Liesch2015; @Vukosav2016; @Holtkamp2018].
 
-It seems reasonable to posit that (1) several law firms naming strategies may be identified in Russia and (2) there is a spatial heterogeneity in the distribution of the firms with different naming strategies. Law firms naming strategy here is defined as a typical model, or pattern, of brand construction identified by usage of identical or semantically similar words or phrases. The potential viability of these two statements cannot be directly conducted from the existing research, but it relies on a common-sense observations about the similarities and differences of law firm names in and between various regions of the country. Law firm names are likely to reflect some economic and, to a lesser extent, cultural characteristics of the territories where these firms are located. Thus, given the vast area and a material heterogeneity of economical and cultural landscape of Russia, these names should not have a uniform spatial distribution either. The primary objective of this paper is to discover these hypothesized naming strategies and their spatial heterogeneity (if any). In addition, it aims to test whether the variation of law firms naming between settlements in Russia is contingent upon the geographical proximity of settlements and economic links between them. Building upon the Tobler's First Law of Geography (“near things are more related than distant things”) [@Tobler1970], it can be hypothesized that both these factors have a positive impact on the similarity of law firm names, because small geographic distance directly makes settlements “near”, as well as economic links make them to be “near” in economical meaning. Finally, due to quite a pilot nature of this paper, it also tries to handle all intriguing side observations about the law firms naming strategies and their spatial distribution in Russia that may arise from the exploratory analysis of the data, even if no robust testing can be performed.
+Law firm names may follow a number of patterns. A pattern can be defined as as a typical model, or pattern, of brand construction identified by usage of identical or semantically similar words or phrases. For example, names with the words “law firm” or “law company” follow one pattern, and names with the words “legal aid” are an example of another pattern. Patterns may be grouped multiple times forming a tree-like classification [@Anora2015]. 
+
+It seems reasonable to posit that (1) several law firms naming strategies may be identified in Russia and (2) there is a spatial heterogeneity in the distribution of the firms with different naming strategies. Law firms naming strategy here is defined . The potential viability of these two statements cannot be directly conducted from the existing research, but it relies on a common-sense observations about the similarities and differences of law firm names in and between various regions of the country. Law firm names are likely to reflect some economic and, to a lesser extent, cultural characteristics of the territories where these firms are located. Thus, given the vast area and a material heterogeneity of economical and cultural landscape of Russia, these names should not have a uniform spatial distribution either. The primary objective of this paper is to discover these hypothesized naming strategies and their spatial heterogeneity (if any). In addition, it aims to test whether the variation of law firms naming between settlements in Russia is contingent upon the geographical proximity of settlements and economic links between them. Building upon the Tobler's First Law of Geography (“near things are more related than distant things”) [@Tobler1970], it can be hypothesized that both these factors have a positive impact on the similarity of law firm names, because small geographic distance directly makes settlements “near”, as well as economic links make them to be “near” in economical meaning. Finally, due to quite a pilot nature of this paper, it also tries to handle all intriguing side observations about the law firms naming strategies and their spatial distribution in Russia that may arise from the exploratory analysis of the data, even if no robust testing can be performed.
 
 # 2. Materials and methods
 
@@ -152,39 +154,31 @@ kable(
 
 Among the strategies, “No-strategy” (i.e. the absence of a clear strategy) is the most popular (see Table 2). It encompasses more than 1/3 of all the studied names. Belonging strategy is the second by the popularity holding 30% of law firms. Uniqueness strategy is employed by approximately 20% of companies, and the least typical one, market strategy, is used by slightly more than 10% of law firms.
 
-## 3.1. Law firm names in neighboring regions are more similar 
+## 3.2. Spatial regularities in law firms naming 
 
-The semantic distance between neighboring regions in comparison to the semantic distance between regions that do not have a common border is illustrated in Fig. 1. Although the difference in medians is relatively minor, it is nevertheless present, and the overall distribution of distances between non-neighboring regions is shifted towards the area of higher values. Therefore, neighboring regions have more similar names of law firms than regions that do not border one another.
+As Tables 3 and 4 demonstrate, there are few law firm names clusters with some regularities in the spatial distribution of law firm names. These two tables display results only for the clusters where global Moran's I coefficient is statistically significant. The values of Moran's I metric for all the other clusters are close to zero, and their adjusted p-value is above the selected threshold of 0.05, so the results for these clusters are not shown for brevity.
 
-
-
-## 3.2. Greater geographical distance reduces the similarity of law firm names
-
-The relationship between geographical and semantic distances is shown in Fig. 2. The correlation coefficient is relatively low but positive. Thus, regions that are situated close to each other tend to have a bit more similar names of law firms even in the absence of a common border between them.
-
-```{r fig-2-distance-plot, fig.cap="**Fig. 2.** Relationship between geographical and semantic distances between regions", fig.height=3}
-distance_plot
+```{r table-3-moran-i-by-neighborhood}
+moran_test_by_regions %>% 
+  filter(p_adj < 0.05) %>% 
+  kable(
+    digits = c(0, NA, 2, 3),
+    col.names = c("# of cluster", "Description", "Moran's I", "Adj. p-value")
+  )
 ```
 
-## 3.3. Law firm names inside an economic region are more homogeneous
-
-Within-distances and outside-distances by economic regions, as outlined in the methods section, are depicted in Fig. 3. In some instances, the semantic distance between regions that are part of the same economic region is slightly less than the semantic distance between these regions and regions of other economic regions. However, this pattern does not apply to at least three economic regions: in Volga, North, and North Caucasus, median within-distance is equal to or greater than median outside-distance. Consequently, the results of this test are mixed: while links between regions constituting an economic region usually slightly increase the similarity of law firm names, there are several exceptions to this rule. A greater within-distance compared to outside-distance may indicate internal heterogeneity within an economic region, thereby suggesting the need for a classification update.
-
-```{r fig-3-economic-regions-distance, fig.cap="**Fig. 3.** Semantic distances between regions within and outside economic regions", fig.height=5}
-economic_regions_distances
+```{r table-4-moran-i-by-economic-regions}
+moran_test_by_er %>% 
+  filter(p_adj < 0.05) %>% 
+  kable(
+    digits = c(0, NA, 2, 3),
+    col.names = c("# of cluster", "Description", "Moran's I", "Adj. p-value")
+  )
 ```
 
-## 3.4. Geographical patterns of naming strategies are unclear
+According to the autocorrelation analysis results in both branches, there are in total four law firm names clusters where the spatial distribution is different from the random. One of these clusters, “Center or company with geographical location”, is present in both tables and is characterized by the highest value of Moran's I, that is about 0.66. Thus, it is likely that law firms with names mentioning a geographical location of the country are not distributed randomly within the country, but situated in a number of neighbouring regions. Two maps on the Fig. 2, despite several differences, demonstrate that it is the regions in Eastern and Western Siberia that are characterized by the highest concentration of “geographically referenced” law firm names. A brief manual investigation uncovers that such names usually reference a particular region (e.g. Altai), or a specific city (e.g. Krasnoyarsk), or entire geographical area as a whole (Siberia). This argues for the presence of some sort of local or regional identity which is of highest expression in Siberia. It is possible that similar geo-based naming is present in other parts of the country, but the automatic clusterisation of law firm names using their embeddings cannot handle them properly — either because the quantity of geolocated names in other parts of the country is substantially smaller or because the text vectors do not reflect the similarity between the Siberian geographical mentions and geographical mentions in the other parts of Russia. Overall, an issue of geolocated law firm names is intriguing and requires further investigation.
 
-The map in Fig. 4 depicts a dominant naming strategy in regions of Russia. As “Form” naming is used by a minority of law firms across all regions, it is not shown. European South of Russia and Povolzhye are characterized by a prevalence of the “Service” strategy. In other parts of the country, an irregular mixture of both “Law” and “Service” naming strategies is observed.
-
-```{r fig-4-naming-strategies, fig.cap="**Fig. 4.** Map of naming strategies"}
-naming_strategies
-```
-
-## 3.5. Naming strategies within economic regions are inconsistent
-
-As seen from Fig. 4, few economic regions are characterized by a uniform naming strategy. In the Volga-Vyatka economic region, the “Law” strategy is the most prevalent among all the regions, with the exception of the Republic of Mari El. In Volga and North Caucasus economic regions, service-based strategy is the prevailing approach in the majority of regions. The remaining economic regions exhibit a combination of law firms naming strategies. 
+As for other clusters with statistically significant global Moran's I (“Forensic” names, “Experts and advisors”, and personal-branding pattern), the hotspots are situated in the European South of Russia. In the case of “Forensic” names, it is likely to be attributed to a tiny set of national republics of North Caucasus that are probably outliers, because their overall number of law firms and the distribution of naming strategies is substantially different from the one in the majority of regions. “Experts and advisors” cluster demonstrates hotspots in Rostov, Volgograd and Astrakhan regions. They are characterized by a relatively high number of law firms and thus cannot be left to as just outliers. However, the exact reasons for the spatial concentration of this naming pattern in these regions remains unclear. Finally, a personal branding cluster represents a drastic split of the European South into two groups of regions: the first one comprising of several national republics with high level of personal branding names and the second one consisting of some other national republics and all the regular regions with small share of such names. This may be seen as a slight argument for a position that European South of Russia is a conglomerate of two quite distinct groups of regions.
 
 # 4. Conclusion
 

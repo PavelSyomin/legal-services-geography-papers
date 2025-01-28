@@ -8,6 +8,7 @@ library(readr)
 library(readxl)
 library(sf)
 library(spdep)
+library(stopwords)
 library(tidyr)
 
 sf_use_s2(FALSE) # disable to avoid errors in distances and intersections
@@ -169,7 +170,7 @@ names_classification_plot <- ggraph(g, layout = "dendrogram") +
     angle_calc = "along", label_dodge = unit(3, "mm")
   ) +
   geom_node_label(aes(label = name)) +
-  scale_y_continuous(expand = expansion(mult = .1)) +
+  scale_y_continuous(expand = expansion(mult = .25)) +
   scale_edge_width_continuous(
     name = "# of names",
     breaks = c(500, 1000, 2500, 5000, 10000), 
@@ -389,7 +390,17 @@ localmoran_res <- rbind(
   right_join(regions %>% select(code) %>% st_drop_geometry()) %>% 
   complete(category, code) %>% 
   drop_na(category) %>% 
-  mutate(category = factor(category, labels = levels(clustered$category)[categories_for_localmoran])) %>% 
+  mutate(
+    category = factor(
+      category, 
+      labels = paste0(
+        "(", 
+        letters[1:3], 
+        ") ",
+        levels(clustered$category)[categories_for_localmoran]
+      )
+    )
+  ) %>% 
   right_join(regions) %>% 
   st_as_sf()
 

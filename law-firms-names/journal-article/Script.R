@@ -305,7 +305,9 @@ moran_test_global_res <- rbind(
   select(category, moran_i, p_adj, weights_type, signif)
 
 moran_test_global_res_plot <- moran_test_global_res %>% 
-  complete(weights_type, category) %>% 
+  filter(signif) %>% 
+  mutate(category = as.character(category)) %>% 
+  complete(weights_type, category, fill = list(p_adj = 1)) %>% 
   mutate(
     p_adj_mark = cut(
       p_adj, 
@@ -318,16 +320,14 @@ moran_test_global_res_plot <- moran_test_global_res %>%
   geom_text(aes(label = round(moran_i, 1))) +
   scale_x_discrete(guide = guide_axis(angle = 45)) +
   scale_fill_brewer(
-    name = "Statistical significance",
-    na.translate = FALSE
+    name = "Statistical\nsignificance"
   ) +
   coord_fixed() +
   labs(
     x = "Law firm names category",
     y = "Type of weights matrix"
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme_minimal()
 moran_test_global_res_plot
 
 ## Local Moran's I
@@ -393,12 +393,7 @@ localmoran_res <- rbind(
   mutate(
     category = factor(
       category, 
-      labels = paste0(
-        "(", 
-        letters[1:3], 
-        ") ",
-        levels(clustered$category)[categories_for_localmoran]
-      )
+      labels = paste0("(", letters[1:3], ")")
     )
   ) %>% 
   right_join(regions) %>% 
@@ -409,18 +404,16 @@ localmoran_maps <- localmoran_res %>%
   geom_sf() +
   coord_sf(crs = ru_crs) +
   scale_alpha_continuous(
-    name = "Number of significant results"
+    name = "Confidence level"
   ) +
   scale_fill_discrete(
     name = "Region group",
+    labels = c("Low-High", "High-High", "Insignificant"),
     na.value = "gray90"
   ) +
-  facet_wrap(vars(category), ncol = 2) +
+  facet_wrap(vars(category), ncol = 1) +
   theme_void() +
   theme(
-    legend.direction = "horizontal",
-    legend.justification = c(0, 0),
-    legend.position = "inside",
-    legend.position.inside = c(.6, .1),
-    legend.title.position = "top"
-  )
+    strip.text = element_text(hjust = 0)
+  ) +
+  labs(caption = "Boundaries source: www.geoboundaries.org (CC BY 4.0)")

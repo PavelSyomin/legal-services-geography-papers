@@ -1,5 +1,5 @@
 ---
-title: "Identification and Spatial Analysis of Law Firms Naming Patterns in Russia Using Text Embeddings"
+title: "Identification and spatial analysis of law firms naming patterns in Russia using text embeddings"
 author: "Pavel Syomin"
 output:
   word_document:
@@ -122,7 +122,7 @@ Spatial autocorrelation analysis is used to check whether the spatial distributi
 
 Six spatial weight matrices are utilized to ensure the robustness of the results. Three of these matrices are constructed using the K-nearest neighbors technique, where K is 3, 4 or 6. Another matrix relies on the existence of common boundaries or points to detect neighboring regions. The Sakhalin and Kaliningrad regions, which are enclaves, are manually linked to a few nearest regions. Two remaining matrices treat regions belonging to the same upper-level macro-region as neighbors, and all other regions as non-neighbors. One of these matrices uses economic regions act as macro-regions, and the other uses federal districts. Economic regions are defined according to the classification that has been widely used by economic geographers and spatial development practitioners in Russia for decades, as outlined, for example, in [@Leyzerovich2010]. The composition of federal districts is defined by the Decree of the President of the Russian Federation (No. 849 of May 13, 2000) “On the Plenipotentiary Representative of the President of the Russian Federation in the Federal District”, with respective amendments.
 
-A global Moran's *I* statistic [@Moran1948] is calculated for each combination of naming pattern and spatial weight matrix. The variable of interest is the proportion of law firm names that follow a pattern in a total set of law firm names in a region. If there are no law firm names of the pattern in the region, the proportion is considered to be zero. For those naming patterns where the global Moran's *I* is statistically significant, and this significance is robust, a local Moran's *I~i~* is calculated for each region. In addition, each region is categorised and labelled according to its value and the values of its neighbors. Four typical categories are used: “High-High” (high value in a region and its neighbors), “Low-Low” (an opposite), “Low-High”, “High-Low”. *P*-values are adjusted for multiple comparisons using Holm's correction [@Holm1979]. The significance level is set at 0.05.
+A global Moran's *I* statistic [@Moran1948] is calculated for each combination of naming pattern and spatial weight matrix. The variable of interest is the proportion of law firm names that follow a pattern in a total set of law firm names in a region. If there are no law firm names of the pattern in the region, the proportion is considered to be zero. For those naming patterns where the global Moran's *I* is statistically significant, and this significance is robust, a local Moran's *I~i~* is calculated for each region and spatial weight matrix. In addition, each region is categorised and labelled according to its value and the values of its neighbors. Four typical categories are used: “High-High” (high value in a region and its neighbors), “Low-Low” (an opposite), “Low-High”, “High-Low”. The confidence level of a category is determined by the number of spatial weight matrices for which the local Moran's *I~i~* value is found to be statistically significant. The regions and their respective categories are then mapped. The geoBoundaries [@Runfola2020] dataset with national and subnational boundaries is used for map creation. *P*-values for both global and local Moran's statistics are adjusted for multiple comparisons using Holm's correction [@Holm1979]. The significance level is set at 0.05.
 
 ### 2.3.6. Data statistics
 
@@ -132,9 +132,26 @@ There are `r initial_firms_count` law firms in the SME registry in the selected 
 
 ## 3.1. Law firms naming patterns and strategies
 
-After clustering and manual grouping, 22 naming patterns are identified and assigned to one of four naming strategies (see Fig. 1 for a dendrogram and Table 1 for a complete list of clusters, their descriptions, patterns, and strategies). The most popular is the no-strategy followed by ~18, 700 law firms. Slightly less important is the belonging strategy with ~15, 000 companies. The uniqueness strategy (~8, 300 law firms) is relatively rare, and the least used is the market strategy (~5, 300 companies).
+After clustering and manual grouping, 22 naming patterns are identified and assigned to one of four naming strategies (see Fig. 1 for a dendrogram and Table 1 for a sample of 10 clusters, their descriptions, patterns, and strategies). The most popular is the no-strategy followed by ~18, 700 law firms. Slightly less important is the belonging strategy with ~15, 000 companies. The uniqueness strategy (~8, 300 law firms) is relatively rare, and the least used is the market strategy (~5, 300 companies).
+
+```{r fig-1-naming-patterns-and-strategies, fig.cap="**Fig 1.** Dendrogram of law firm naming patterns and strategies in Russia", fig.height=8}
+names_classification_plot
+```
 
 Belonging strategy includes law firms that directly state that they are law firms. “Law firm” is the most common pattern of this strategy. Most of the others (“Law”, “Lawyer”, “Legal service”) are semantically similar to it. It may seem questionable to include the “Personal brand” pattern (names such as “Mr. Brilliant and partners”) in this category, since personal branding also serves as a differentiation tool and thus implies uniqueness with the corresponding strategy. However, in Russia this way of naming is associated with lawyers, and such names often include the mention of law (“Law firm of Mr. Brilliant” instead of just “Mr. Brilliant”). In addition, Bassols i Gardella et al. [@BassolsiGardella2023] also categorise the personal branding of tourism firms as the belonging strategy.
+
+```{r table-1-clusters}
+clusters_info_table %>% 
+  slice_head(n = 10) %>% 
+  kable(
+    col.names = c(
+      "# of cluster", "# of names", "Description",
+      "Pattern", "Strategy"
+    ),
+    caption = "**Table 1.** Characteristics of clusters of law firm names"
+  )
+write_csv(clusters_info_table, "ESM2.csv")
+```
 
 Market strategy, according to the original definition, is used by firms “having a name directly appealing to markets” [@BassolsiGardella2023]. In the case of law firms, this can be achieved by mentioning target clients (“Business” pattern) or by using words with positive meanings that attract customers (“Positive”, “Plus”, “Legal aid”, “Guarantor” patterns). The “Expert” pattern is complex, as this word can be used to indicate either a high level of service (“expert” as a synonym for “professional”) or forensic services (“expert” as a forensic scientist). It is included here into market strategy because the semantic similarity of “experts” and “forensic scientists” in the Russian language is probably used as a marketing tool by forensic companies.
 
@@ -144,9 +161,17 @@ No-strategy is a catch-all group for names that do not fit into any of the other
 
 ## 3.2. Spatial regularities in law firms naming 
 
-There are few patterns (3 out of 22) with statistically significant regularities in their spatial distribution (Fig. 2). These results are stable regardless of the technique used to construct the spatial weight matrix. The “Siberia” pattern is characterised by the highest global Moran's *I*, while the values for the “Expert” and “Personal brand” patterns are much lower, but still statistically significant.
+There are few patterns (3 out of 22) with statistically significant regularities in their spatial distribution (Fig. 2). These results are stable regardless of the technique used to construct the spatial weight matrix, with the sole exception of the “Expert” pattern where the spatial weight matrix constructed using economic regions has resulted in an insignificant Moran's *I* value. The “Siberia” pattern is characterised by the highest global Moran's *I*, while the values for the “Expert” and “Personal brand” patterns are much lower, but still statistically significant in the majority of the cases. The results for all the other naming patterns are statistically insignificant with Moran's *I* statistics close to zero (-0.1…0.1), so they are not visualised.
 
-A hotspot of the “Siberia” pattern is unsurprisingly located in Siberia (Fig. 3a). It includes four core regions (Novosibirsk, Tomsk, Kemerovo regions, Altai Territory) and a periphery of a few other regions (e.g. Omsk region, Republic of Khakassia, Republic of Altai). The hotspots of two other patterns (Fig. 3b, Fig. 3c) are located in the European South of Russia. This part of Russia is characterised by a mixture of regions where the popularity of a particular naming pattern is either high in a similar neighborhood or low in the neighborhood of regions with high values. This observation can be partly attributed to the presence of outliers among the national republics of the North Caucasus where the characteristics and composition of the legal services market differ significantly from their nearest neighbors. Some of these nearest neighbors (e.g. Krasnodar Territory) are, on the contrary, the regions with a relatively developed legal services market. In summary, the analysis and mapping of its results revealed two geographical parts of Russia where some naming patterns differ from the rest of the country: Siberia and the European South. However, the majority of naming patterns show no spatial regularities, i.e. their spatial distribution is not statistically significantly different from random.
+```{r fig-2-global-moran-i, fig.cap="Fig. 2. Global Moran's *I* statistics and p-values for some law firm naming patterns", fig.height=5, fig.width=4}
+moran_test_global_res_plot
+```
+
+```{r fig-3-localmoran-maps, fig.cap="**Fig. 3.** Maps of hotspots in the spatial distribution of three law firms naming patterns: (a) Expert (b) Personal brand (c) Siberia", fig.height=10}
+localmoran_maps
+```
+
+A hotspot of the “Siberia” pattern is unsurprisingly located in Siberia (Fig. 3c). It includes four core regions (Novosibirsk, Tomsk, Kemerovo regions, Altai Territory) and a periphery of a few other regions (e.g. Omsk region, Republic of Khakassia, Republic of Altai). The hotspots of two other patterns (Fig. 3a, Fig. 3b) are located in the European South of Russia. This part of Russia is characterised by a mixture of regions where the popularity of a particular naming pattern is either high in a similar neighborhood or low in the neighborhood of regions with high values. This observation can be partly attributed to the presence of outliers among the national republics of the North Caucasus where the characteristics and composition of the legal services market differ significantly from their nearest neighbors. Some of these nearest neighbors (e.g. Krasnodar Territory) are, on the contrary, the regions with a relatively developed legal services market. In summary, the analysis and mapping of its results revealed two geographical parts of Russia where some naming patterns differ from the rest of the country: Siberia and the European South. However, the majority of naming patterns show no spatial regularities, i.e. their spatial distribution is not statistically significantly different from random.
 
 # 4. Conclusion
 
@@ -161,26 +186,3 @@ A dataset about Russian law firms, vectors of law firm names obtained from Yande
 # References
 
 <div id="refs"></div>
-
-```{r fig-1-naming-patterns-and-strategies, fig.cap="**Fig 1.** Dendrogram of law firm naming patterns and strategies in Russia", fig.height=8}
-names_classification_plot
-```
-
-```{r table-1-clusters}
-kable(
-  clusters_info_table,
-  col.names = c(
-    "# of cluster", "# of names", "Description",
-    "Pattern", "Strategy"
-  ),
-  caption = "Table 1. Characteristics of clusters of law firm names"
-)
-```
-
-```{r fig-2-global-moran-i, fig.cap="Fig. 2. Global Moran's *I* statistics and p-values for law firm naming patterns", fig.height=4}
-moran_test_global_res_plot
-```
-
-```{r fig-3-localmoran-maps, fig.cap="Fig. 3. Maps of hotspots in the spatial distribution of three law firms naming patterns", fig.height=5}
-localmoran_maps
-```

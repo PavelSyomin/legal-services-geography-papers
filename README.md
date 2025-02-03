@@ -10,7 +10,7 @@ In the following tables, links reference the particular folders with the paper's
 
 Some journal articles were first presented on conferences, and then enhanced and published in the journals without a separate publication in conference proceedings. In this case, they are placed in the “Journal articles” section without a record in “Conference papers”, and the relevant conference details can be found on the particular paper's page.
 
-*InterCatro.InterGIS* is a conference proceedings, but usually it is referred to as a journal, thus the respective paper is placed in the “Journal articles”.
+*InterCatro. InterGIS* is a conference proceedings, but usually it is referred to as a journal, thus the respective paper is placed in the “Journal articles”.
 
 ### Conference papers
 
@@ -18,9 +18,8 @@ Some journal articles were first presented on conferences, and then enhanced and
 | -- | -- | -- |
 | [Migration of Russian Legal Companies in 2016–23](bel-geo-congress-2024) | First Belarus Geographical Congress (Belarus, Minsk, April 9–13, 2024) | English |
 | [Legal Services Market in Russia: Regional Specialization](legal-companies-regional-specialization) | Geographical problems of development of countries and regions (Russia, Stavropol, April 17–19, 2024) | English |
-| [The “Rank-Size” Rule in the Distribution of Russian Cities by the Count of Legal Companies and their Employees](The “Rank-Size” Rule in the Distribution of Russian Cities by the Count of Legal Companies and their Employees) | 10th Maksakov's Readings (Russia, Moscow, May 16–17, 2024) | Russian |
-| [A Python CLI application to generate a geo-referenced dataset of small and medium-sized businesses in Russia based on Federal Tax Service open data
-](argo-conf-2024-paper) | XV Scientific Assembly of the Association of Russian Social Geographers (ARGO) (Russia, Krasnodar, September 29 – October 8, 2024) | Russian |
+| [The “Rank-Size” Rule in the Distribution of Russian Cities by the Count of Legal Companies and their Employees](legal-companies-zipf-law) | 10th Maksakov's Readings (Russia, Moscow, May 16–17, 2024) | Russian |
+| [A Python CLI application to generate a geo-referenced dataset of small and medium-sized businesses in Russia based on Federal Tax Service open data](argo-conf-2024-paper) | XV Scientific Assembly of the Association of Russian Social Geographers (ARGO) (Russia, Krasnodar, September 29 – October 8, 2024) | Russian |
 
 ### Journal articles
 

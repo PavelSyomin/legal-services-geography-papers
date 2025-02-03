@@ -10,9 +10,7 @@
 
 # Compiled files, source Excel tables and data archives, slides, images,
 # other stuff such as information letters for conferences
-*docx
 *doc
-*pdf
 *odt
 *zip
 *xls

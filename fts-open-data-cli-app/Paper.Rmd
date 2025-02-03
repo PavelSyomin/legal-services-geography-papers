@@ -1,9 +1,9 @@
 ---
 output: 
   word_document:
-    reference_docx: reference.docx
-bibliography: refs.bib
-csl: "gost-r-7-0-5-2008-numeric-alphabetical.csl"
+    reference_docx: assets/reference.docx
+bibliography: assets/refs.bib
+csl: assets/gost-r-7-0-5-2008-numeric-alphabetical.csl
 ---
 
 ```{r setup, include = FALSE}
@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r imports, include = FALSE, cache = TRUE}
-source("Script.R")
+source("helpers/Script.R")
 ```
 
 УДК 911.3, 519.688

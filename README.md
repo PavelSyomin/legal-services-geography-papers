@@ -6,19 +6,27 @@ This repository contains source code for a number of papers based on open data a
 
 ## Papers details
 
-In the following tables, links reference the particular folders with the paper's code, text, published PDF (if any), and metadata. Papers are sorted in the order of conference/publication date.
+In the following tables, links reference the particular folders with the paper's code, text, published PDF (if any), and citation info. Papers are sorted in the order of conference/publication date.
+
+Some journal articles were first presented on conferences, and then enhanced and published in the journals without a separate publication in conference proceedings. In this case, they are placed in the “Journal articles” section without a record in “Conference papers”, and the relevant conference details can be found on the particular paper's page.
+
+*InterCatro.InterGIS* is a conference proceedings, but usually it is referred to as a journal, thus the respective paper is placed in the “Journal articles”.
 
 ### Conference papers
 
 | Paper title | Conference information | Text language |
 | -- | -- | -- |
-| [Mapping Russian Small and Medium-Sized Businesses Using Tax Service Open Data](law-firms-mapping) | 3rd Big Cartographic Forum (Russia, Pskov, March 15, 2024) | English, Russian |
+|  |  |  |
 
 ### Journal articles
 
-| Paper title | Journal information | Text language |
+| Paper title | Journal name | Text language |
 | -- | -- | -- |
 | [Relocation of Russian Legal Companies in 2016–23](legal-companies-migration) | Regional geosystems | Russian |
+| [Mapping Russian Small and Medium-Sized Businesses Using Tax Service Open Data](law-firms-mapping) | Pskov State University Herald (Natural and Physics&Math Sciences series) | English, Russian |
+| [Application of Tax Service Open Data for Analysis in Economic Geography](fts-open-data-in-economic-geography) | Geographical Bulletin | Russian |
+| [Legal Business Geography in Russia: Regional Analysis and Mapping Using Tax Service Open Data](law-firms-geography) | InterCarto. InterGIS | English |
+| [Spatial and regression analysis of provision of commercial legal services in Russian cities](legal-services-provision) | Journal of Geography and Environmental Management | English |
 
 ## Reproducibility
 

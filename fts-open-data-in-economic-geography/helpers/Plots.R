@@ -50,18 +50,17 @@ labels <- data.frame(
 labels <- labels[["ru"]]
 
 # Data
-rsmp_data_path <- here("../../ru-smb-companies/group_A/smb.csv")
+rsmp_data_path <- here("../large-datasets/ncea-group-a-firms/smb.csv")
 rsmp_data <- read_csv(rsmp_data_path)
 
 # Maps
-regions_boundaries <- st_read(here("assets", "ru.geojson"))
-municipal_boundaries <- st_read(here("assets", "ru-mun-gadm.geojson"))
+regions_boundaries <- st_read(here("assets/ru.geojson"))
+municipal_boundaries <- st_read(here("assets/ru-mun-gadm.geojson"))
 ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
-regions <- read_csv(here("assets", "regions.csv"))
+regions <- read_csv(here("assets/regions.csv"))
 regions <- regions_boundaries %>% 
   left_join(regions, by = c("shapeISO" = "iso_code")) %>% 
   select(name, name_en = shapeName)
-ru_svr <- st_read(here("assets", "ru_svr.geojson"))
 
 # Regional distribution
 ac_code_mapping <- c("01" = labels[4], "02" = labels[5])

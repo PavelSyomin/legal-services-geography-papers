@@ -1,9 +1,9 @@
 ---
 output:
   word_document:
-    reference_doc: "assets/reference.docx"
-bibliography: "assets/biblio_ru.bib"
-csl: "assets/citations-ru.csl"
+    reference_doc: assets/reference.docx
+bibliography: assets/biblio_ru.bib
+csl: assets/citations-ru.csl
 link-bibliography: false
 ---
 

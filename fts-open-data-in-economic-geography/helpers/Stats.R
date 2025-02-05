@@ -32,7 +32,7 @@ labels <- data.frame(
 labels <- labels[[LOCALE]]
 
 # Counts
-rsmp_data <- read_csv(here("../../ru-smb-companies/group_A/smb.csv"))
+rsmp_data <- read_csv(here("../large-datasets/ncea-group-a-firms/smb.csv"))
 counts <- rsmp_data %>% 
   mutate(kind = replace(kind, kind == 3, 2)) %>% 
   distinct(tin, .keep_all = TRUE) %>% 
@@ -40,12 +40,12 @@ counts <- rsmp_data %>%
   pull(n)
 
 # Activity codes
-ac <- read_csv(here("assets", "activity_codes_classifier.csv"))
+ac <- read_csv(here("assets/activity_codes_classifier.csv"))
 ac_groups <- filter(ac, is.na(code)) %>%
   mutate(name = str_to_sentence(name))
 
 # Validation
-val_stats <- read_csv(here("assets", "validation-stats.csv"))
+val_stats <- read_csv(here("assets/validation-stats.csv"))
 
 corr_by_year_all <- val_stats %>% 
   group_by(year) %>% 

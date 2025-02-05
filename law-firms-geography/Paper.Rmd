@@ -1,9 +1,9 @@
 ---
 output: 
   word_document:
-    reference_doc: reference.docx
-bibliography: refs.bib
-csl: style.csl
+    reference_doc: assets/reference.docx
+bibliography: assets/refs.bib
+csl: assets/style.csl
 link-bibliography: False
 ---
 
@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r imports, include=FALSE, cache=TRUE}
-source("Script.R")
+source("helpers/Script.R")
 ```
 
 

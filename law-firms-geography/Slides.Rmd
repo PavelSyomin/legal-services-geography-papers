@@ -7,7 +7,7 @@ format: revealjs
 #| label: imports
 #| include: false
 #| cache: true
-source("Script.R")
+source("helpers/Script.R")
 ```
 
 # Мотивация и идея исследования

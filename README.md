@@ -16,7 +16,7 @@ Some journal articles were first presented on conferences, and then enhanced and
 
 | Paper title | Conference information | Text language |
 | -- | -- | -- |
-| [Migration of Russian Legal Companies in 2016–23](bel-geo-congress-2024) | First Belarus Geographical Congress (Belarus, Minsk, April 9–13, 2024) | English |
+| [Migration of Russian Legal Companies in 2016–23](legal-companies-migration) | First Belarus Geographical Congress (Belarus, Minsk, April 9–13, 2024) | English |
 | [Legal Services Market in Russia: Regional Specialization](legal-companies-regional-specialization) | Geographical problems of development of countries and regions (Russia, Stavropol, April 17–19, 2024) | English |
 | [The “Rank-Size” Rule in the Distribution of Russian Cities by the Count of Legal Companies and their Employees](legal-companies-zipf-law) | 10th Maksakov's Readings (Russia, Moscow, May 16–17, 2024) | Russian |
 | [A Python CLI application to generate a geo-referenced dataset of small and medium-sized businesses in Russia based on Federal Tax Service open data](fts-open-data-cli-app) | XV Scientific Assembly of the Association of Russian Social Geographers (ARGO) (Russia, Krasnodar, September 29 – October 8, 2024) | Russian |

@@ -417,3 +417,89 @@ localmoran_maps <- localmoran_res %>%
     strip.text = element_text(hjust = 0)
   ) +
   labs(caption = "Boundaries source: www.geoboundaries.org (CC BY 4.0)")
+
+
+aas <- read_csv("aas.csv")
+fas <- read_csv("fas.csv")
+df <- cbind(
+  x1 = sort(aas$region),
+  x2 = sort(regions[regions$name != "Ненецкий автономный округ", ]$name)
+)
+
+w <- regions[regions$name != "Ненецкий автономный округ", ] %>% 
+  arrange(name) %>% 
+  poly2nb() %>% 
+  nb2listw(zero.policy = T)
+
+moran.test(aas %>% arrange(region) %>% pull(appeal_count), w)
+moran.plot(aas %>% arrange(region) %>% pull(appeal_count), w)
+localmoran(aas %>% arrange(region) %>% pull(appeal_count), w) %>% 
+  hotspot(
+    Prname="Pr(z != E(Ii))",
+    cutoff = 2, 
+    p.adjust = "holm",
+    droplevels=FALSE
+  ) %>% 
+  data.frame(
+    group = ., 
+    name = sort(aas$region),
+    geom = regions[regions$name != "Ненецкий автономный округ", ] %>% 
+      arrange(name) %>% 
+      pull(geometry)
+  ) %>% 
+  st_as_sf() %>% 
+  ggplot(aes(fill = group)) +
+  geom_sf() +
+  coord_sf(crs = ru_crs)
+
+d <- cbind(
+  aas %>% arrange(region),
+  geom = regions[regions$name != "Ненецкий автономный округ", ] %>% 
+    arrange(name) %>% 
+    pull(geometry)
+) %>% 
+  st_as_sf()
+
+d %>% 
+  ggplot(aes(fill = appeal_count)) +
+  geom_sf() +
+  coord_sf(crs = ru_crs) +
+  scale_fill_fermenter(
+    name = "",
+    palette = "RdYlBu",
+    breaks = quantile(
+      d$appeal_count,
+      c(.2, .4, .6, .8),
+      na.rm = TRUE
+    ),
+    labels = function(x) round(x, digits = 0),
+    show.limits = TRUE,
+    na.value = "white"
+  )
+
+moran.test(fas %>% arrange(region) %>% pull(fas_count), w)
+moran.plot(fas %>% arrange(region) %>% pull(fas_count), w)
+d2 <- cbind(
+  fas %>% arrange(region),
+  geom = regions[regions$name != "Ненецкий автономный округ", ] %>% 
+    arrange(name) %>% 
+    pull(geometry)
+) %>% 
+  st_as_sf()
+
+d2 %>% 
+  ggplot(aes(fill = fas_count)) +
+  geom_sf() +
+  coord_sf(crs = ru_crs) +
+  scale_fill_fermenter(
+    name = "",
+    palette = "RdYlBu",
+    breaks = quantile(
+      d2$fas_count,
+      c(.2, .4, .6, .8),
+      na.rm = TRUE
+    ),
+    labels = function(x) round(x, digits = 0),
+    show.limits = TRUE,
+    na.value = "white"
+  )

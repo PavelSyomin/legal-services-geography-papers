@@ -9,13 +9,13 @@ library(tibble)
 library(tidyr)
 
 # Load data
-panel <- read_csv(here("../../ru-smb-companies/legal/panel.csv"))
+panel <- read_csv(here("../large-datasets/law-firms/panel.csv"))
 cities <- rbind(
-  read_csv(here("common", "cities.csv")),
-  read_csv(here("common", "cities_additional.csv"))
+  read_csv(here("common/cities.csv")),
+  read_csv(here("common/cities_additional.csv"))
 )
-economic_regions <- read_csv(here("journal-article", "economic-regions.csv"))
-regions_geo <- st_read(here("common", "ru.geojson")) %>% 
+economic_regions <- read_csv(here("journal-article/assets/economic-regions.csv"))
+regions_geo <- st_read(here("common/ru.geojson")) %>% 
   left_join(economic_regions, by = c("shapeISO" = "iso_code"))
 
 # Build table with number of employees by city

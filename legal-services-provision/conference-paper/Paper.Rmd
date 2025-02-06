@@ -3,9 +3,9 @@ title: "UDC 911.3"
 subtitle: "Concentration of Legal Companies and Accessibility of Legal Services: Empirical Evidence from Russian Cities"
 output:
   word_document:
-    reference: reference.docx
-bibliography: biblio.bib
-csl: biblio-style.csl
+    reference: assets/reference.docx
+bibliography: assets/biblio.bib
+csl: assets/biblio-style.csl
 ---
 
 ```{r setup, include=FALSE}
@@ -21,8 +21,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r imports, include=FALSE, cache = TRUE}
-library(here)
-source(here("conference-paper", "Script.R"))
+source("helpers/Script.R")
 ```
 
 <div custom-style="Author">

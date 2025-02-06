@@ -7,7 +7,7 @@ library(sf)
 library(tidyr)
 
 # Data on firms, and cities lookup table
-panel <- read_csv(here("../../ru-smb-companies/legal/panel.csv"))
+panel <- read_csv(here("../large-datasets/law-firms/panel.csv"))
 cities <- rbind(
   read_csv(here("common", "cities.csv")),
   read_csv(here("common", "cities_additional.csv"))

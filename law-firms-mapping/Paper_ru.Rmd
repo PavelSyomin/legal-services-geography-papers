@@ -3,7 +3,7 @@ output:
   odt_document:
     reference_odt: assets/reference.odt
 bibliography: assets/biblio_ru.bib
-csl: "assets/gost-r-7-0-100-2018-numeric-alphabetical.csl"
+csl: assets/gost-r-7-0-100-2018-numeric-alphabetical.csl
 link-bibliography: false
 ---
 

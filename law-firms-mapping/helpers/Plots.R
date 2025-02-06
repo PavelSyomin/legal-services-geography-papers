@@ -1,24 +1,25 @@
 library(dplyr)
 library(forcats)
 library(ggplot2)
+library(here)
 library(readr)
 library(scales)
 library(sf)
 library(tidyr)
 
 # Data
-smb_data <- read_csv("assets/smb.csv")
-revexp_data <- read_csv("assets/revexp.csv")
-empl_data <- read_csv("assets/empl.csv")
+smb_data <- read_csv(here("../large-datasets/law-firms/smb.csv"))
+revexp_data <- read_csv(here("../large-datasets/law-firms/revexp.csv"))
+empl_data <- read_csv(here("../large-datasets/law-firms/empl.csv"))
 
 # Maps
-regions_boundaries <- st_read("assets/ru.geojson")
+regions_boundaries <- st_read(here("assets/ru.geojson"))
 ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
-regions <- read_csv("assets/regions.csv")
+regions <- read_csv(here("assets/regions.csv"))
 regions <- regions_boundaries %>% 
   left_join(regions, by = c("shapeISO" = "iso_code")) %>% 
   select(name, name_en = shapeName)
-ru_svr <- st_read("assets/ru_svr.geojson")
+ru_svr <- st_read(here("assets/ru_svr.geojson"))
 
 # Regional distribution
 regions_map <- smb_data %>%

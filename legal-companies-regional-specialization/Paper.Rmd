@@ -4,9 +4,9 @@ author: "Pavel O. Syomin"
 date: "PhD Student at Perm State University"
 output:
   word_document:
-    reference: reference.docx
-bibliography: biblio.bib
-csl: biblio-style.csl
+    reference: assets/reference.docx
+bibliography: assets/biblio.bib
+csl: assets/biblio-style.csl
 ---
 
 ```{r setup, include=FALSE}
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r imports, include=FALSE, cache = TRUE}
-source("Script.R")
+source("helpers/Script.R")
 ```
 
 <br>

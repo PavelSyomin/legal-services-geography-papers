@@ -9,7 +9,7 @@ format:
 ```{r}
 # | include: false
 # | cache: true
-source("Script.R")
+source("helpers/Script.R")
 ```
 
 # Задача

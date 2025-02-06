@@ -1,11 +1,12 @@
 library(dplyr)
 library(ggplot2)
+library(here)
 library(readr)
 library(tidyr)
 
-panel <- read_csv("../../ru-smb-companies/legal/panel.csv")
-empl <- read_csv("empl.csv")
-tiles <- read_csv("russia-tiles.csv")
+panel <- read_csv(here("../large-datasets/law-firms/panel.csv"))
+empl <- read_csv(here("assets/empl.csv"))
+tiles <- read_csv(here("assets/russia-tiles.csv"))
 
 spec <- panel %>% 
   filter(year == 2021) %>% 

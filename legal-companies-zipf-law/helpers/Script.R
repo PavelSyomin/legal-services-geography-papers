@@ -1,14 +1,15 @@
 library(dplyr)
 library(ggplot2)
+library(here)
 library(readr)
 library(sf)
 library(tidyr)
 
 # Data on firms, and cities lookup table
-panel <- read_csv("../../ru-smb-companies/legal/panel.csv")
+panel <- read_csv(here("../large-datasets/law-firms/panel.csv"))
 cities <- rbind(
-  read_csv("cities.csv"),
-  read_csv("cities_additional.csv")
+  read_csv(here("assets/cities.csv")),
+  read_csv(here("assets/cities_additional.csv"))
 )
 
 lcc <- panel %>% 
@@ -111,5 +112,3 @@ rank_empl_lm <- data %>%
   lm(log(rank) ~ log(empl), .)
 summary(rank_empl_lm)
 rank_empl_rsq <- summary(rank_empl_lm)$adj.r.squared
-
-

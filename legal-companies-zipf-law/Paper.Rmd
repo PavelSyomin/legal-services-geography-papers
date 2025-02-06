@@ -3,9 +3,9 @@ title: "Зависимость «ранг-размер» в распредел�
 author: Сёмин П. О.
 output: 
   word_document:
-    reference: reference.docx
-bibliography: biblio.bib
-csl: biblio-style.csl
+    reference: assets/reference.docx
+bibliography: assets/biblio.bib
+csl: assets/biblio-style.csl
 ---
 
 ```{r setup, include=FALSE}
@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r imports, include=FALSE, cache = TRUE}
-source("Script.R")
+source("helpers/Script.R")
 ```
 
 <div custom-style="Author">

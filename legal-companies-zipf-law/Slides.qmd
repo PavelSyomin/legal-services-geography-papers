@@ -8,7 +8,7 @@ format: revealjs
 #| label: imports
 #| include: FALSE
 #| cache: TRUE
-source("Script.R")
+source("helpers/Script.R")
 ```
 
 # Задачи

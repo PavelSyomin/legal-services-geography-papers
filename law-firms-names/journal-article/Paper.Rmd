@@ -1,11 +1,11 @@
 ---
-title: "Identification and spatial analysis of law firms naming patterns in Russia using text embeddings"
+title: "Spatial distribution of naming patterns in Russian law firms through text embeddings"
 author: "Pavel Syomin"
 output:
   word_document:
-    reference_doc: "journal-article/reference.docx"
-bibliography: "journal-article/refs.bib"
-csl: "journal-article/apa_numeric.csl"
+    reference_doc: assets/reference.docx
+bibliography: assets/refs.bib
+csl: assets/apa_numeric.csl
 link-bibliography: False  
 ---
 
@@ -35,7 +35,7 @@ library(units)
 ```
 
 ```{r data-imports, cache=TRUE, include=FALSE}
-source(here("journal-article/Script.R"))
+source("helpers/Script.R")
 ```
 
 <div custom-style="Affiliation">

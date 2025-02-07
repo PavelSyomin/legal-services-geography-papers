@@ -14,9 +14,9 @@ library(tidyr)
 sf_use_s2(FALSE) # disable to avoid errors in distances and intersections
 
 # Load the data
-data <- read_csv(here("common/panel.csv"))
-er <- read_csv(here("journal-article/economic-regions.csv"))
-fd <- read_csv(here("journal-article/federal-districts.csv"))
+data <- read_csv(here("../large-datasets/law-firms/panel.csv"))
+er <- read_csv(here("journal-article/assets/economic-regions.csv"))
+fd <- read_csv(here("journal-article/assets/federal-districts.csv"))
 org_forms <- c(
   "общество с ограниченной ответственностью",
   "общество с дополнительной ответственностью",
@@ -29,9 +29,9 @@ org_forms <- c(
   "полное товарищество",
   "товарищество на вере"
 )
-regions <- st_read(here("common", "regions.geojson")) %>% 
+regions <- st_read(here("common/regions.geojson")) %>% 
   left_join(
-    read_csv(here("common", "regions.csv")),
+    read_csv(here("journal-article/assets/regions.csv")),
     by = c("shapeISO" = "iso_code")
   ) %>% 
   arrange(code) %>% 
@@ -88,7 +88,7 @@ if (!get0("IS_PAPER", ifnotfound = FALSE)) {
 }
 
 # Load vectors obtained from YandexGPT API
-vectors <- read_csv(here("common", "names-vectors.csv"))
+vectors <- read_csv(here("common/names-vectors.csv"))
 
 # Cluster the names using vectors
 ## Find optimal number of clusters
@@ -122,7 +122,7 @@ if (!get0("IS_PAPER", ifnotfound = FALSE)) {
 }
 
 # Load the results of manual analysis and join them with names
-cluster_labels <- read_excel(here("journal-article/cluster-labels.xlsx"))
+cluster_labels <- read_excel(here("journal-article/assets/cluster-labels.xlsx"))
 firms_lifetime <- count(firms, tin, name = "lifetime")
 clustered <- clustered_names %>%
   left_join(cluster_labels) %>%
@@ -417,89 +417,3 @@ localmoran_maps <- localmoran_res %>%
     strip.text = element_text(hjust = 0)
   ) +
   labs(caption = "Boundaries source: www.geoboundaries.org (CC BY 4.0)")
-
-
-aas <- read_csv("aas.csv")
-fas <- read_csv("fas.csv")
-df <- cbind(
-  x1 = sort(aas$region),
-  x2 = sort(regions[regions$name != "Ненецкий автономный округ", ]$name)
-)
-
-w <- regions[regions$name != "Ненецкий автономный округ", ] %>% 
-  arrange(name) %>% 
-  poly2nb() %>% 
-  nb2listw(zero.policy = T)
-
-moran.test(aas %>% arrange(region) %>% pull(appeal_count), w)
-moran.plot(aas %>% arrange(region) %>% pull(appeal_count), w)
-localmoran(aas %>% arrange(region) %>% pull(appeal_count), w) %>% 
-  hotspot(
-    Prname="Pr(z != E(Ii))",
-    cutoff = 2, 
-    p.adjust = "holm",
-    droplevels=FALSE
-  ) %>% 
-  data.frame(
-    group = ., 
-    name = sort(aas$region),
-    geom = regions[regions$name != "Ненецкий автономный округ", ] %>% 
-      arrange(name) %>% 
-      pull(geometry)
-  ) %>% 
-  st_as_sf() %>% 
-  ggplot(aes(fill = group)) +
-  geom_sf() +
-  coord_sf(crs = ru_crs)
-
-d <- cbind(
-  aas %>% arrange(region),
-  geom = regions[regions$name != "Ненецкий автономный округ", ] %>% 
-    arrange(name) %>% 
-    pull(geometry)
-) %>% 
-  st_as_sf()
-
-d %>% 
-  ggplot(aes(fill = appeal_count)) +
-  geom_sf() +
-  coord_sf(crs = ru_crs) +
-  scale_fill_fermenter(
-    name = "",
-    palette = "RdYlBu",
-    breaks = quantile(
-      d$appeal_count,
-      c(.2, .4, .6, .8),
-      na.rm = TRUE
-    ),
-    labels = function(x) round(x, digits = 0),
-    show.limits = TRUE,
-    na.value = "white"
-  )
-
-moran.test(fas %>% arrange(region) %>% pull(fas_count), w)
-moran.plot(fas %>% arrange(region) %>% pull(fas_count), w)
-d2 <- cbind(
-  fas %>% arrange(region),
-  geom = regions[regions$name != "Ненецкий автономный округ", ] %>% 
-    arrange(name) %>% 
-    pull(geometry)
-) %>% 
-  st_as_sf()
-
-d2 %>% 
-  ggplot(aes(fill = fas_count)) +
-  geom_sf() +
-  coord_sf(crs = ru_crs) +
-  scale_fill_fermenter(
-    name = "",
-    palette = "RdYlBu",
-    breaks = quantile(
-      d2$fas_count,
-      c(.2, .4, .6, .8),
-      na.rm = TRUE
-    ),
-    labels = function(x) round(x, digits = 0),
-    show.limits = TRUE,
-    na.value = "white"
-  )

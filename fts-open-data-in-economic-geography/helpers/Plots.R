@@ -2,6 +2,7 @@ library(dplyr)
 library(forcats)
 library(ggplot2)
 library(here)
+library(nanoparquet)
 library(readr)
 library(scales)
 library(sf)
@@ -50,8 +51,7 @@ labels <- data.frame(
 labels <- labels[["ru"]]
 
 # Data
-rsmp_data_path <- here("../large-datasets/ncea-group-a-firms/smb.csv")
-rsmp_data <- read_csv(rsmp_data_path)
+rsmp_data <- read_parquet(here("../datasets/ncea-group-a/smb-full-compact.parquet"))
 
 # Maps
 regions_boundaries <- st_read(here("assets/ru.geojson"))

@@ -1,18 +1,16 @@
 library(dplyr)
 library(ggplot2)
 library(here)
-library(readr)
+library(nanoparquet)
 library(sf)
 library(tidyr)
 
-data_path <- here("../large-datasets/ncea-group-a-firms/panel.csv")
-data <- read_csv(data_path)
+data_full <- read_parquet(here("../datasets/ncea-group-a/smb-full-compact.parquet"))
+data <- read_parquet(here("../datasets/ncea-group-a/smb-orgs-2021-panel.parquet"))
 
-total <- data %>% distinct(tin) %>% nrow()
+total <- data_full %>% distinct(tin) %>% nrow()
 
-sample_row <- data %>%
-  filter(year == 2021, kind == 1) %>%
-  slice(1000:1001)
+sample_row <- data %>% slice(1000:1001)
 sample_table <- data.frame(
   var = colnames(sample_row),
   value = as.character(sample_row[1, ])
@@ -22,10 +20,7 @@ regions_boundaries <- st_read(here("assets/ru.geojson"))
 ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
 
 plot_1 <- data %>%
-  filter(
-    year == 2021,
-    kind == 1,
-    substr(activity_code_main, 1, 2) == "01") %>%
+  filter(substr(activity_code_main, 1, 2) == "01") %>%
   mutate(activity = case_when(
     substr(activity_code_main, 1, 4) %in% c("01.1", "01.2", "01.3") ~ "Растениеводство",
     substr(activity_code_main, 1, 4) == "01.4" ~ "Животноводство")) %>%
@@ -47,4 +42,3 @@ plot_1 <- data %>%
   theme_bw(base_size = 12, base_family = "Times New Roman") +
   theme(legend.position = "bottom", legend.direction = "horizontal")
 plot_1
-

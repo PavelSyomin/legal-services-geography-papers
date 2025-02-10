@@ -3,45 +3,46 @@ library(dplyr)
 library(ggplot2)
 library(glue)
 library(here)
+library(nanoparquet)
 library(readr)
 library(sf)
 library(tibble)
 library(tidyr)
 
 # Load data
-panel <- read_csv(here("../large-datasets/law-firms/panel.csv"))
+panel <- read_parquet(here("../datasets/law-firms/panel.parquet"))
 cities <- rbind(
   read_csv(here("common/cities.csv")),
   read_csv(here("common/cities_additional.csv"))
 )
 economic_regions <- read_csv(here("journal-article/assets/economic-regions.csv"))
-regions_geo <- st_read(here("common/ru.geojson")) %>% 
+regions_geo <- st_read(here("common/ru.geojson")) %>%
   left_join(economic_regions, by = c("shapeISO" = "iso_code"))
 
 # Build table with number of employees by city
 # lfc means Law Firms by City
-lfc <- panel %>% 
+lfc <- panel %>%
   filter(
-    kind == 1, 
-    year == 2021, 
+    kind == 1,
+    year == 2021,
     settlement_type == "г",
     revenue > 0,
     expenditure > 0
-  ) %>% 
+  ) %>%
   mutate(city = case_when(
     region == "Москва" & is.na(settlement) ~ "Москва",
     region == "Санкт-Петербург" & is.na(settlement) ~ "Санкт-Петербург",
     TRUE ~ settlement
-  )) %>% 
-  select(region, city, oktmo, empl = employees_count) %>% 
-  replace_na(list(empl = 0)) %>% 
-  mutate(empl = replace(empl, empl == 0, 1)) %>% 
-  group_by(region, city, oktmo) %>% 
+  )) %>%
+  select(region, city, oktmo, empl = employees_count) %>%
+  replace_na(list(empl = 0)) %>%
+  mutate(empl = replace(empl, empl == 0, 1)) %>%
+  group_by(region, city, oktmo) %>%
   summarise(count = n(), empl = sum(empl), .groups = "drop")
 
 # Build table with cities population
 # cp means Cities Population
-cp <- cities %>% 
+cp <- cities %>%
   mutate(
     city = coalesce(cities$city, cities$area, cities$region),
     is_regional_center = case_when(
@@ -49,14 +50,14 @@ cp <- cities %>%
       city == "Санкт-Петербург" ~ TRUE,
       capital_marker == 2 ~ TRUE,
       TRUE ~ FALSE
-    )) %>% 
-  select(city, oktmo, population, 
+    )) %>%
+  select(city, oktmo, population,
          lat = geo_lat, lon = geo_lon,
          is_regional_center)
 
 # Make joint data table for analysis
-data <- left_join(lfc, cp, by = c("oktmo", "city")) %>% 
-  drop_na(count, empl, population) %>% 
+data <- left_join(lfc, cp, by = c("oktmo", "city")) %>%
+  drop_na(count, empl, population) %>%
   mutate(
     provision = 1e4 * empl / population,
     size = cut(
@@ -64,34 +65,34 @@ data <- left_join(lfc, cp, by = c("oktmo", "city")) %>%
       breaks = c(0, 5e4, 1e5, 2.5e5, 5e5, 1e6, 1e8),
       labels = c(
         "Small (<50k)", "Medium (50–100k)", "Big (100–250k)",
-        "Large (250–500k)", "Extra-large (500k–1M)", 
+        "Large (250–500k)", "Extra-large (500k–1M)",
         "Millionaire (>1M)")
-    )) %>% 
-  group_by(region) %>% 
+    )) %>%
+  group_by(region) %>%
   ungroup()
 
 # Look at the regression variables extreme values
 # to identify outliers
 arrange(data, -empl) %>% select(city, empl)
 arrange(data, -provision) %>% select(city, provision)
-data %>% 
+data %>%
   ggplot(aes(x = empl, y = provision, label = city)) +
   geom_point() +
   geom_text(check_overlap = TRUE)
-outliers <- c("Иннополис", "Кировск", "Бронницы", "Красноармейск", 
+outliers <- c("Иннополис", "Кировск", "Бронницы", "Красноармейск",
               "Москва", "Санкт-Петербург")
 
-ep_with_outliers_plot <- data %>% 
+ep_with_outliers_plot <- data %>%
   mutate(
-    is_msk_spb = city %in% c("Москва", "Санкт-Петербург")) %>% 
+    is_msk_spb = city %in% c("Москва", "Санкт-Петербург")) %>%
   filter(!(city %in% outliers) | is_msk_spb) %>%
   ggplot(aes(x = empl, y = provision)) +
   geom_point(
-    aes(color = is_msk_spb), 
+    aes(color = is_msk_spb),
     size = 1,
     shape = 21) +
   geom_text(
-    data = ~ filter(.x, is_msk_spb) %>% mutate(city = if_else(city == "Москва", "Msk", "SPb")), 
+    data = ~ filter(.x, is_msk_spb) %>% mutate(city = if_else(city == "Москва", "Msk", "SPb")),
     aes(label = city),
     vjust = "inward",
     hjust = "inward") +
@@ -106,24 +107,24 @@ ep_with_outliers_plot <- data %>%
 ep_with_outliers_plot
 
 # Make the main plot: provision ~ empl grouped by size
-ep_plot <- data %>% 
-  filter(!(city %in% outliers)) %>% 
+ep_plot <- data %>%
+  filter(!(city %in% outliers)) %>%
   ggplot(aes(x = empl, y = provision)) +
   geom_point(
-    aes(color = size, shape = is_regional_center), 
+    aes(color = size, shape = is_regional_center),
     size = 2,
     alpha = .8
   ) +
   geom_smooth(
-    aes(color = size, linetype = "solid"), 
-    method = "lm", 
+    aes(color = size, linetype = "solid"),
+    method = "lm",
     se = FALSE,
     linewidth = .5,
     alpha = 1
   ) +
   geom_smooth(
     aes(linetype = "dotted"),
-    method = "lm", 
+    method = "lm",
     formula = y ~ sqrt(x),
     se = FALSE,
     color = "gray80",
@@ -131,14 +132,14 @@ ep_plot <- data %>%
     alpha = .75
   ) +
   annotation_custom(
-    ggplotGrob(ep_with_outliers_plot), 
-    xmin = 750, 
+    ggplotGrob(ep_with_outliers_plot),
+    xmin = 750,
     ymax = 5) +
   scale_shape_manual(
-    name = "City type", 
+    name = "City type",
     values = c("TRUE" = 8, "FALSE" = 21),
     labels = c(
-      "TRUE" = "Regional center", 
+      "TRUE" = "Regional center",
       "FALSE" = "Regular city"),
     guide = guide_legend(order = 1)) +
   scale_linetype_manual(
@@ -161,8 +162,8 @@ ep_plot <- data %>%
 ep_plot
 
 # Make a binned version of the main plot
-ep_binned_plot <- data %>% 
-  filter(!(city %in% outliers)) %>% 
+ep_binned_plot <- data %>%
+  filter(!(city %in% outliers)) %>%
   ggplot(aes(x = empl, y = provision)) +
   geom_bin2d(binwidth = c(250, 5)) +
   geom_point(color = "gray50", shape = 21, size = 2) +
@@ -188,10 +189,10 @@ ep_binned_plot
 
 # Make a map with provision > 5
 ru_crs <- st_crs("+proj=aea +lat_0=0 +lon_0=100 +lat_1=68 +lat_2=44 +x_0=0 +y_0=0 +ellps=krass +towgs84=28,-130,-95,0,0,0,0 +units=m +no_defs")
-map <- data %>% 
+map <- data %>%
   filter(
     !(city %in% outliers) | city %in% c("Москва", "Санкт-Петербург"),
-    provision >= 5) %>% 
+    provision >= 5) %>%
   mutate(city_label = case_when(
     city == "Москва" ~ "Moscow",
     city == "Санкт-Петербург" ~ "Saint Petersburg",
@@ -200,8 +201,8 @@ map <- data %>%
     city == "Новосибирск" ~ "Novosibirsk",
     city == "Иркутск" ~ "Irkutsk",
     TRUE ~ NA_character_
-  )) %>% 
-  st_as_sf(coords = c("lon", "lat"), crs = "EPSG:4326") %>% 
+  )) %>%
+  st_as_sf(coords = c("lon", "lat"), crs = "EPSG:4326") %>%
   ggplot() +
   geom_sf(aes(fill = economic_region), data = regions_geo, color = "gray50") +
   geom_sf(aes(size = provision), shape = 21) +
@@ -212,7 +213,7 @@ map <- data %>%
     label.size = 0,
     label.padding = unit(0, "mm"),
     label.r = unit(0, "mm"),
-    na.rm = TRUE) + 
+    na.rm = TRUE) +
   coord_sf(crs = ru_crs) +
   scale_size_binned(
     name = "Lawyers per 10,000 people",
@@ -242,7 +243,7 @@ lines <- data.frame(
   y = c(1, 1, 0, 1, 1, 0, 0, 1),
   group = factor(
     c(1, 1, 2, 2, 3, 3, 4, 4),
-    levels = 1:4, 
+    levels = 1:4,
     labels = facet_labels
   )
 )
@@ -267,7 +268,7 @@ data_points <- rbind(
     y = runif(20),
     group = 4
   )
-) %>% 
+) %>%
   mutate(group = factor(group, 1:4, labels = facet_labels))
 
 theoretical_models_plot <- ggplot(lines, aes(x = x, y = y)) +
@@ -293,20 +294,20 @@ theoretical_models_plot
 model <- function(df) {
   fit <- lm(provision ~ empl, df)
   g <- glance(fit)[, c("adj.r.squared", "nobs", "p.value")]
-  t <- tidy(fit) %>% 
-    select(-std.error, -statistic) %>% 
-    mutate(term = if_else(term == "(Intercept)", "icpt", term)) %>% 
+  t <- tidy(fit) %>%
+    select(-std.error, -statistic) %>%
+    mutate(term = if_else(term == "(Intercept)", "icpt", term)) %>%
     pivot_wider(
       names_from = "term", values_from = c("estimate", "p.value"))
   cbind(g, t)
 }
 
 lm_res <- do.call(rbind, by(data, data$size, model))
-lm_res_for_table <- lm_res %>% 
-  mutate(size = rownames(.)) %>% 
-  select(size, 
-         intercept = estimate_icpt, 
+lm_res_for_table <- lm_res %>%
+  mutate(size = rownames(.)) %>%
+  select(size,
+         intercept = estimate_icpt,
          slope = estimate_empl,
          rsq = adj.r.squared,
-         nobs) %>% 
+         nobs) %>%
   remove_rownames()

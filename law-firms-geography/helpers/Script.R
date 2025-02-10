@@ -1,12 +1,13 @@
 library(dplyr)
 library(ggplot2)
 library(here)
+library(nanoparquet)
 library(readr)
 library(tidyr)
 
 # Load raw data
 courts <- read_csv(here("assets/courts.csv"))
-data <- read_csv(here("../large-datasets/law-firms/panel.csv"))
+data <- read_parquet(here("../datasets/law-firms/panel.parquet"))
 empl <- read_csv(here("assets/empl.csv"))
 pop <- read_csv(here("assets/population.csv"))
 tiles <- read_csv(here("assets/russia-tiles.csv"))

@@ -1,7 +1,7 @@
 ---
 title: "География названий юридических фирм в России"
 author: "Сёмин Павел Олегович, Пермский государственный национальный исследовательский университет"
-format: 
+format:
   revealjs:
     scrollable: true
 ---
@@ -14,6 +14,7 @@ library(dplyr)
 library(ggplot2)
 library(here)
 library(knitr)
+library(nanoparquet)
 library(readr)
 library(sf)
 library(spatstat)
@@ -27,10 +28,10 @@ library(tidyr)
 #| include: false
 
 # load the data
-data <- read_csv(here("../large-datasets/law-firms/panel.csv"))
+data <- read_parquet(here("../datasets/law-firms/panel.parquet"))
 cluster_labels <- read_csv(
   here("conference-paper/assets/cluster-labels-conf.csv"))
-vectors <- read_csv(here("common/names-vectors.csv"))
+vectors <- read_parquet(here("common/names-vectors.parquet"))
 ru <- st_read(here("common/regions.geojson"))
 
 # additional variables
@@ -49,40 +50,40 @@ org_forms <- c(
 )
 
 # prepare firm names
-firm_names <- data %>% 
+firm_names <- data %>%
   filter(
     kind == 1, # companies only
     year <= 2021, # 2016–2021
-  ) %>% 
+  ) %>%
   mutate(
     name_id = row_number(),
     settlement = case_when(
       region == "Москва" ~ "Москва",
       region == "Санкт-Петербург" ~ "Санкт-Петербург",
       TRUE ~ settlement)
-  ) %>% 
-  select(name_id, name = org_name, region, settlement, lat, lon, year) %>% 
+  ) %>%
+  select(name_id, name = org_name, region, settlement, lat, lon, year) %>%
   mutate(
     name = str_to_lower(name),
     name = str_remove(name, paste0(org_forms, collapse = "|")),
     name = str_remove_all(name, fixed("\"")),
     name = str_trim(name))
-unique_firm_names <- distinct(firm_names, name) %>% 
-  left_join(vectors) %>% 
+unique_firm_names <- distinct(firm_names, name) %>%
+  left_join(vectors) %>%
   drop_na(dim_0)
 
 # cluster firm names
 set.seed(42)
-fit <- kmeans(select(unique_firm_names, dim_0:dim_255), 
+fit <- kmeans(select(unique_firm_names, dim_0:dim_255),
               centers = 20)
 unique_firm_names$cluster <- fit$cluster
 
 # add cluster groups
-firm_names_clusters <- firm_names %>% 
-  left_join(unique_firm_names, by = "name") %>% 
-  left_join(cluster_labels) %>% 
-  select(name_id, name, region, settlement, lat, lon, year, group) %>% 
-  drop_na() %>% 
+firm_names_clusters <- firm_names %>%
+  left_join(unique_firm_names, by = "name") %>%
+  left_join(cluster_labels) %>%
+  select(name_id, name, region, settlement, lat, lon, year, group) %>%
+  drop_na() %>%
   mutate(group = factor(group))
 ```
 
@@ -104,7 +105,7 @@ firm_names_clusters <- firm_names %>%
 
 ```{r}
 kable(
-  select(firm_names, name, region, settlement, lat, lon) %>% 
+  select(firm_names, name, region, settlement, lat, lon) %>%
     slice_head(n = 10)
 )
 ```
@@ -128,11 +129,11 @@ KMeans на векторах, 20 кластеров
 ```{r}
 #| label: clusters-sample
 
-nc_sample <- unique_firm_names %>% 
-  group_by(cluster) %>% 
-  slice_sample(n = 3) %>% 
+nc_sample <- unique_firm_names %>%
+  group_by(cluster) %>%
+  slice_sample(n = 3) %>%
   select(name)
-  
+
 kable(nc_sample)
 ```
 
@@ -169,9 +170,9 @@ kable(cluster_labels)
 #| label: density-map
 #| cache: true
 
-ppp_data <- firm_names_clusters %>% 
-  st_as_sf(coords = c("lon", "lat"), crs = 4326) %>% 
-  st_transform(n, crs = ru_crs) %>% 
+ppp_data <- firm_names_clusters %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(n, crs = ru_crs) %>%
   filter(year == 2021, region != "Москва", region != "Санкт-Петербург")
 firm_names_ppp <- as.ppp(
   ppp_data$geometry, W = as.owin(st_transform(ru, ru_crs)))
@@ -183,6 +184,6 @@ plot(density(firm_names_spp, sigma = 125000))
 # Выводы
 
 1. Распространение разных типов именования юридических фирм в целом похоже.
-2. Тип «сфера деятельности» наиболее широко распространён и ярко выражен. 
+2. Тип «сфера деятельности» наиболее широко распространён и ярко выражен.
 3. Тип «организационная форма» преобладает в Центральной России и отчасти на Урале.
 4. Тип «характер услуг» наиболее выражен на юге России, а также образует второстепенный «пояс» от Москвы до Урала.

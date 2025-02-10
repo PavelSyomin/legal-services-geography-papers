@@ -1,6 +1,7 @@
 library(dplyr)
 library(ggplot2)
 library(here)
+library(nanoparquet)
 library(readr)
 library(stringr)
 library(tidyr)
@@ -32,7 +33,7 @@ labels <- data.frame(
 labels <- labels[[LOCALE]]
 
 # Counts
-rsmp_data <- read_csv(here("../large-datasets/ncea-group-a-firms/smb.csv"))
+rsmp_data <- read_parquet(here("../datasets/ncea-group-a/smb-full-compact.parquet"))
 counts <- rsmp_data %>% 
   mutate(kind = replace(kind, kind == 3, 2)) %>% 
   distinct(tin, .keep_all = TRUE) %>% 

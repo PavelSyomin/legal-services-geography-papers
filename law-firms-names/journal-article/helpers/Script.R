@@ -4,6 +4,7 @@ library(here)
 library(igraph)
 library(ggraph)
 library(knitr)
+library(nanoparquet)
 library(readr)
 library(readxl)
 library(sf)
@@ -14,7 +15,7 @@ library(tidyr)
 sf_use_s2(FALSE) # disable to avoid errors in distances and intersections
 
 # Load the data
-data <- read_csv(here("../large-datasets/law-firms/panel.csv"))
+data <- read_parquet(here("../datasets/law-firms/panel.parquet"))
 er <- read_csv(here("journal-article/assets/economic-regions.csv"))
 fd <- read_csv(here("journal-article/assets/federal-districts.csv"))
 org_forms <- c(
@@ -88,7 +89,7 @@ if (!get0("IS_PAPER", ifnotfound = FALSE)) {
 }
 
 # Load vectors obtained from YandexGPT API
-vectors <- read_csv(here("common/names-vectors.csv"))
+vectors <- read_parquet(here("common/names-vectors.parquet"))
 
 # Cluster the names using vectors
 ## Find optimal number of clusters

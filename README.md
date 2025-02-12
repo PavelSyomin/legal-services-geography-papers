@@ -31,18 +31,40 @@ Some journal articles were first presented on conferences, and then enhanced and
 | [Legal Business Geography in Russia: Regional Analysis and Mapping Using Tax Service Open Data](law-firms-geography) | InterCarto. InterGIS | English |
 | [Spatial and regression analysis of provision of commercial legal services in Russian cities](legal-services-provision) | Journal of Geography and Environmental Management | English |
 
+## Projects structure
+
+Each paper (or a pair of a conference paper with a journal article) has its own project located in a separate folder. Folders share a common structure with a similar naming of subfolders and files.
+
+1. `assets` — auxiliary data files used by the code to build the paper.
+2. `helpers` — one or many R scripts with the main code for data analysis.
+3. `Paper.Rmd` — the main source file of the paper.
+4. `Paper.pdf` — file of the published paper.
+5. `renv`, `renv.lock`, `.Rpofile` — helpers used primarily to facilitate reproducibility.
+6. `*.Rproj` — R project file to be opened with RStudio.
+7. `Readme.md` — general paper info.
+
+If a folder contains both a conference paper and a journal article, it has three subfolders: `common`, `conference-paper`, `journal-article`. Their names are likely to be self-explanatory. The internal structure of `conference-paper` and `journal-article` folders is similar to those outlined above, expect for `renv`, project file, and readme that are situated in the main folder of the paper.
+
 ## Reproducibility
 
-All the papers have been designed to follow the principles of open science and reproducible research. In particular, they are based on open data (primarily [open administrative data published by Federal Tax Service of Russia](https://www.nalog.gov.ru/opendata/)) and written with [RMarkdown](https://rmarkdown.rstudio.com/). All the code used to generate the papers is available in this repository, and the auxiliary datasets are also published. I hope that the steps outlined below will be enough to fully reproduce the main results of the research as well as the entire texts of the papers.
+All the papers have been designed to follow the principles of open science and reproducible research. In particular, they are based on open data (primarily [open administrative data published by Federal Tax Service of Russia](https://www.nalog.gov.ru/opendata/)), written with [RMarkdown](https://rmarkdown.rstudio.com/), and use [renv](https://rstudio.github.io/renv/index.html) to manage information about R packages and environment. All the code used to generate the papers is available in this repository, and the auxiliary datasets are also published. I hope that the steps outlined below will be enough to fully reproduce the main results of the research as well as the entire texts of the papers.
 
-## Getting the data
+### Getting the data
 
-TBD
+All the foundation datasets as well as auxiliary data used by the papers' code is stored either in the root `datasets` folder or in `assets` or `common` subfolders inside individual papers' folders. Cloning this repository is enough to obtain all the necessary data.
 
-## Building the manuscript
+### Building the manuscript
 
-TBD
+1. Install R 4.0 or higher, RStudio.
+2. Clone this repository.
+3. Open a project of a paper of interest.
+4. If prompted, install `renv` and all the packages suggested by `renv`.
+5. Open a `*.Rmd` file (usually `Paper.Rmd`) and click the Knit button.
 
-## Packages and environment information
+### Troubleshooting
 
-TBD
+1. If `renv` is not instelled and is not being installed automatically, install it with `install.packages("renv")`.
+2. If `renv` does not attempt to automatically install the required packages, call `renv::restore()` after opening the project.
+3. If some of the required packages fail to install, try reading the error message and fix the issue. For example, `sf` package required a few GDAL development libraries to be installed on your system. See [notes on sf package installation](https://r-spatial.github.io/sf/#installing) on various operating systems for details.
+
+

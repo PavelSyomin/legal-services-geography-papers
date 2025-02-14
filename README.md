@@ -1,16 +1,16 @@
-# Papers about legal services geography in Russia
+# Papers (mainly) on the geography of legal services in Russia
 
 ## Summary
 
-This repository contains source code for a number of papers based on open data about small and medium-sized enterprises in Russia. Some of them are conference papers, the other are journal articles. Some are in English, some are in Russian. Almost all the papers deals with the various aspects of the geography of legal services in Russia. All the papers accompany my PhD thesis on legal services geography in Russia. The thesis has not been defended yet, but almost all the papers have already been published.
+This repository contains the source code for a number of academic papers. All but two deal with different aspects of the geography of legal services in Russia. The remaining two papers focus on relevant data processing issues. Some are conference papers, the others are journal articles. Some are in English, others in Russian, and the one paper is in both languages. All the papers accompany my PhD thesis on the geography of legal services in Russia. The thesis has not yet been defended, but almost all the papers have already been published.
 
 ## Papers details
 
-In the following tables, links reference the particular folders with the paper's code, text, published PDF (if any), and citation info. Papers are sorted in the order of conference/publication date. Unpublished papers (currently, there is one unpublished paper) are not listed.
+In the following tables, the links point to the respective home folders of the papers with the paper code, text, published PDF (if available), and citation information. Papers are sorted by conference/publication date. An unpublished paper is not listed.
 
-Some journal articles were first presented on conferences, and then enhanced and published in the journals without a separate publication in conference proceedings. In this case, they are placed in the “Journal articles” section without a record in “Conference papers”, and the relevant conference details can be found on the particular paper's page.
+Some journal articles were first presented at conferences and then revised and published in the journals without separate publication in the conference proceedings. In this case, they are placed in the “Journal articles” section without a record in “Conference papers”, and the relevant conference details can be found on the paper page.
 
-*InterCatro. InterGIS* is a conference proceedings, but usually it is referred to as a journal, thus the respective paper is placed in the “Journal articles”.
+*InterCatro. InterGIS* is a conference proceedings, but is usually referred to as a journal, so the paper is placed in the “Journal articles” section.
 
 ### Conference papers
 
@@ -31,40 +31,38 @@ Some journal articles were first presented on conferences, and then enhanced and
 | [Legal Business Geography in Russia: Regional Analysis and Mapping Using Tax Service Open Data](law-firms-geography) | InterCarto. InterGIS | English |
 | [Spatial and regression analysis of provision of commercial legal services in Russian cities](legal-services-provision) | Journal of Geography and Environmental Management | English |
 
-## Projects structure
-
-Each paper (or a pair of a conference paper with a journal article) has its own project located in a separate folder. Folders share a common structure with a similar naming of subfolders and files.
+Paper's home folders have a consistent structure with a similar naming of subfolders and files.
 
 1. `assets` — auxiliary data files used by the code to build the paper.
-2. `helpers` — one or many R scripts with the main code for data analysis.
-3. `Paper.Rmd` — the main source file of the paper.
-4. `Paper.pdf` — file of the published paper.
-5. `renv`, `renv.lock`, `.Rpofile` — helpers used primarily to facilitate reproducibility.
+2. `helpers` — one or more R scripts containing the main data analysis code.
+3. `Paper.Rmd` — the main source file for the paper text.
+4. `Paper.pdf` — file of the published paper (if avaialble).
+5. `renv`, `renv.lock`, `.Rpofile` — utilites for reproducibility.
 6. `*.Rproj` — R project file to be opened with RStudio.
-7. `Readme.md` — general paper info.
+7. `Readme.md` — general notes about the paper.
+8. `Slides.qmd` — optional source file for conference slides, if the paper was presented at the conference.
+9. `Paper_*.Rmd` — optional source files for the paper text or metadata (author information and references) in a language other that the main language of the paper.
 
-If a folder contains both a conference paper and a journal article, it has three subfolders: `common`, `conference-paper`, `journal-article`. Their names are likely to be self-explanatory. The internal structure of `conference-paper` and `journal-article` folders is similar to those outlined above, expect for `renv`, project file, and readme that are situated in the main folder of the paper.
+If a folder contains both a conference paper and a journal article, there are three subfolders: `common`, `conference-paper`, `journal-article`. Their names should be self-explanatory. The internal structure of the `conference-paper` and `journal-article` folders is similar to that outlined above, except that `renv` utilites, project file, and readme are located in the home folder of the paper.
 
 ## Reproducibility
 
-All the papers have been designed to follow the principles of open science and reproducible research. In particular, they are based on open data (primarily [open administrative data published by Federal Tax Service of Russia](https://www.nalog.gov.ru/opendata/)), written with [RMarkdown](https://rmarkdown.rstudio.com/), and use [renv](https://rstudio.github.io/renv/index.html) to manage information about R packages and environment. All the code used to generate the papers is available in this repository, and the auxiliary datasets are also published. I hope that the steps outlined below will be enough to fully reproduce the main results of the research as well as the entire texts of the papers.
+All papers are designed to follow the principles of open science and reproducible research. In particular, they are based on open data (mainly [open administrative data published by the Federal Tax Service of Russia](https://www.nalog.gov.ru/opendata/)), written in [RMarkdown](https://rmarkdown.rstudio.com/), and use [renv](https://rstudio.github.io/renv/index.html) to manage information about R packages and environment. All the code used to generate the papers is available in this repository, and the auxiliary datasets are also published. I hope that the steps outlined below will be sufficient to fully reproduce the main results of the research as well as the full text of the papers.
 
 ### Getting the data
 
-All the foundation datasets as well as auxiliary data used by the papers' code is stored either in the root `datasets` folder or in `assets` or `common` subfolders inside individual papers' folders. Cloning this repository is enough to obtain all the necessary data.
+All the basic datasets, as well as the auxiliary data used by the code of the papers, are stored either in the root folder `datasets` or in `assets` or `common` subfolders inside a paper's home folder. Cloning this repository is sufficient to obtain all the data required to reproduce the paper.
 
 ### Building the manuscript
 
-1. Install R 4.0 or higher, RStudio.
+1. Install git, [R](https://www.r-project.org/) 4.0 or higher, [RStudio](https://posit.co/download/rstudio-desktop/). Also install [Quarto](https://quarto.org/) if you want to render conference slides.
 2. Clone this repository.
-3. Open a project of a paper of interest.
-4. If prompted, install `renv` and all the packages suggested by `renv`.
-5. Open a `*.Rmd` file (usually `Paper.Rmd`) and click the Knit button.
+3. Navigate to the home folder of the paper of interest and open its project file.
+4. If prompted, install `renv` and any packages it suggests.
+5. Open a `Paper.Rmd` and click the Knit button.
 
 ### Troubleshooting
 
-1. If `renv` is not instelled and is not being installed automatically, install it with `install.packages("renv")`.
-2. If `renv` does not attempt to automatically install the required packages, call `renv::restore()` after opening the project.
-3. If some of the required packages fail to install, try reading the error message and fix the issue. For example, `sf` package required a few GDAL development libraries to be installed on your system. See [notes on sf package installation](https://r-spatial.github.io/sf/#installing) on various operating systems for details.
-
-
+1. If `renv` is not installed and does not attempt to install itself automatically, install it with `install.packages("renv")`.
+2. If `renv` does not attempt to install the required packages automatically, call `renv::restore()` after opening the project.
+3. If some of the required packages fail to install, try to read the error messages and fix the problem. For example, the `sf` package requires some GDAL development libraries to be installed on your system. See [sf package installation notes](https://r-spatial.github.io/sf/#installing) for details.

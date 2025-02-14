@@ -38,10 +38,11 @@ Paper's home folders have a consistent structure with a similar naming of subfol
 3. `Paper.Rmd` — the main source file for the paper text.
 4. `Paper.pdf` — file of the published paper (if avaialble).
 5. `renv`, `renv.lock`, `.Rpofile` — utilites for reproducibility.
-6. `*.Rproj` — R project file to be opened with RStudio.
-7. `Readme.md` — general notes about the paper.
-8. `Slides.qmd` — optional source file for conference slides, if the paper was presented at the conference.
-9. `Paper_*.Rmd` — optional source files for the paper text or metadata (author information and references) in a language other that the main language of the paper.
+6. `*.Rproj` — R project file to open with RStudio.
+7. `Readme.md` — paper title, abstract, and sometimes additional notes such as conference name.
+8. `citation.bib` — citation information in BibTeX.
+9. `Slides.qmd` — optional source file for conference slides, if the paper was presented at the conference.
+10. `Paper_*.Rmd` — optional source files for the paper text or metadata (author information and references) in a language other that the main language of the paper.
 
 If a folder contains both a conference paper and a journal article, there are three subfolders: `common`, `conference-paper`, `journal-article`. Their names should be self-explanatory. The internal structure of the `conference-paper` and `journal-article` folders is similar to that outlined above, except that `renv` utilites, project file, and readme are located in the home folder of the paper.
 

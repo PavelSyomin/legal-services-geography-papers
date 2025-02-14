@@ -1,54 +1,5 @@
-# Conference paper and journal article about migration of Russian law firms
+# Relocation of Russian Legal Companies in 2016–23
 
-Originally prepared for a conference, then split into conference paper (short edition) and journal article (full-length edition).
+The paper features the results of analysis of relocation of Russian legal companies in 2016–23. Relocation, or migration, here is defined as a change in legal address of a company. The research is based on open data published by Federal Tax Service of Russia that has been processed to make a panel geo-referenced tabular dataset. Descriptive statistics, exact Fisher's test, data visualization, and mapping are used as methods. It is found that relocation of legal companies is relatively a rare phenomenon. Typically, businesses move to a short distance (10–50 km), and two thirds of all the migrations are intra-regional, i.e. within the constituent entity of Russia. Small companies are more likely to relocate compared to microbusinesses. The spatial patterns and migration flows are diverse and have few remarkable tendencies. Moscow city has the top decline in the number of legal companies, while Moscow region (oblast) has gained the largest number of businesses. The flows from or to the center are almost equal if measured by the number of companies or employees. However, if estimated by the total revenue, the migration from the periphery to the center dominates.
 
-The paper “Migration of Russian Legal Companies in 2016–23” was prepared for the First Belarus Geographical Congress. The conference [took place](https://geo.bsu.by/index.php/glavnye-novosti.html?view=article&id=1999:i-belorusskij-geograficheskogo-kongress-nachinaet-rabotu&catid=124) in Minsk(+online) in April 8–13, 2024. The conference paper is published in the [Vol. 2 of conference proceedings](https://elib.bsu.by/handle/123456789/310913?mode=full). `conference-paper/Paper_published.pdf` is the published paper file itself without the whole proceedings. BibTex entry is below.
-
-```
-@inproceedings{Syomin_migration_2024,
-    address = {Минск},
-    title = {Migration of {Russian} {Legal} {Companies} in 2016–23},
-    volume = {2},
-    isbn = {9789858815721},
-    shorttitle = {Материалы {I} Белорусского географического конгресса},
-    url = {https://elib.bsu.by/handle/123456789/310913},
-    abstract = {The migration of Russian commercial legal companies in 2016–23 is described and analyzed. Distributions by migration count and distance are estimated and visualized, the relationship between company size and migration decision is statistically tested, net migration rate by region is mapped, and top migration paths are listed. It is found that migrations are rare, mostly short-distance (10–50 km). Bigger companies tend to relocate more often. Moscow has probably lost small and inefficient businesses but gained larger and more profitable ones.},
-    language = {en},
-    booktitle = {Материалы {I} Белорусского географического конгресса: к 90-летию факультета географии и геоинформатики Белорусского государственного университета и 70-летию Белорусского географического общества},
-    publisher = {БГУ},
-    author = {Syomin, Pavel Olegovich},
-    year = {2024},
-    pages = {325--329},
-}
-
-```
-
-The extended version of the conference paper was published in “Regional geosystems”. The publication file is `journal-article/Paper.pdf`. A Bibtex entry is below.
-
-```
-@article{Syomin_migration_paper_2024,
-    title={Relocation of {Russian} {Legal} {Companies} in 2016–23},
-    DOI={10.52575/2712-7443-2024-48-2-135-148},
-    abstractNote={The paper features the results of analysis of relocation of Russian legal companies in 2016–23. Relocation, or migration, here is defined as a change in legal address of a company. The research is based on open data published by Federal Tax Service of Russia that has been processed to make a panel geo-referenced tabular dataset. Descriptive statistics, exact Fisher's test, data visualization, and mapping are used as methods. It is found that relocation of legal companies is relatively a rare phenomenon. Typically, businesses move to a short distance (10–50 km), and two thirds of all the migrations are intra-regional, i.e. within the constituent entity of Russia. Small companies are more likely to relocate compared to microbusinesses. The spatial patterns and migration flows are diverse and have few remarkable tendencies. Moscow city has the top decline in the number of legal companies, while Moscow region (oblast) has gained the largest number of businesses. The flows from or to the center are almost equal if measured by the number of companies or employees. However, if estimated by the total revenue, the migration from the periphery to the center dominates.},
-    number={48 (2)},
-    journal={Regional geosystems},
-    author={Syomin, Pavel Olegovich},
-    year={2024},
-    month=jun,
-    language={ru}
-}
-```
-
-```
-@article{Syomin_migration_paper_2024,
-    title={Релокация юридических компаний в {России} в 2016–2023 гг.},
-    DOI={10.52575/2712-7443-2024-48-2-135-148},
-    abstractNote={В статье представлены результаты анализа релокации юридических фирм в России в 2016–2023 гг. Релокация (миграция) компании понимается как изменение адреса регистрации. Исследование основано на открытых данных Федеральной налоговой службы (ФНС России), преобразованных в панельный геопривязанный табличный набор данных. Методы анализа — описательная статистика, статистический тест Фишера, картографирование, визуализация данных. Показано, что релокация юридических фирм в России — редкое явление. Как правило, компании перемещаются на небольшое расстояние (10–50 км). Две трети организаций мигрируют в пределах субъекта федерации. Малые предприятия меняют адрес статистически значимо чаще, чем микропредприятия. Пространственная картина релокаций разнообразная и не характеризуется чёткими тенденциями. Москва лидирует по оттоку фирм, а Московская область — по их притоку. Центростремительная и центробежные тенденции примерно уравновешивают друг друга по числу перемещающихся фирм и работников, но по движению доходов преобладает центростремительная.},
-    number={48 (2)},
-    journal={Региональные геосистемы},
-    author={Сёмин, Павел Олегович},
-    year={2024},
-    month=jun,
-    language={ru}
-}
-```
+The paper “Migration of Russian Legal Companies in 2016–23” was initially prepared for the First Belarus Geographical Congress. The conference [took place](https://geo.bsu.by/index.php/glavnye-novosti.html?view=article&id=1999:i-belorusskij-geograficheskogo-kongress-nachinaet-rabotu&catid=124) in Minsk(+online) in April 8–13, 2024. The conference paper was published in the [Vol. 2 of conference proceedings](https://elib.bsu.by/handle/123456789/310913?mode=full).

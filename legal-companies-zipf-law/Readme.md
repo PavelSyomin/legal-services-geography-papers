@@ -1,23 +1,3 @@
 # Conference paper about Zipf's law in the distribution of Russian cities by the number of law firms and their employees
 
-The paper “The “Rank-Size” Rule in the Distribution of Russian Cities by the Count of Legal Companies and their Employees” was prepared for the Maksakov's Readings Conference (Moscow+online, May 16–17, 2024).
-
-The paper was published in the conference proceedings.
-
-`Paper_published.pdf` is the published paper file.
-
-BibTex entry is below. The paper is in Russian, so the information is in Russian either.
-
-```
-@inproceedings{Syomin_zipf_law_2024,
-    address={Москва},
-    title={Зависимость «ранг-размер» в распределении городов {России} по количеству юридических фирм и их работников},
-    ISBN={978-5-00227-242-6},
-    booktitle={Социально-экономическая география: теория, методология и практика преподавания: Материалы Всероссийской научно-практической конференции «Десятые Максаковские чтения»},
-    publisher={OOO «Сам Полиграфист»},
-    author={Сёмин, Павел Олегович},
-    year={2024},
-    pages={136--140},
-    language={ru}
-}
-```
+This paper examines whether the distribution of Russian cities by the count of legal companies and their employees follows Zipf's Law (rank-size rule). It also investigates the relationship between the city population and the count of legal companies or their workers.Since this rule has been demonstrated for Russian cities and the geography of services is closely related to the geography of population, the study assumes that the rule is followed. The analysis utilizes open data from the Federal Tax Service on small and medium-sized businesses, as well as the average yearly count of employees. The study employs linear regression and data visualization as methods. The relationship between population and the count of legal companies/workers is linear (R^2^ ≈ 0.7), and the distribution of cities by the count of legal companies/employees generally follows Zipf's Law (R^2^ > 0.9).

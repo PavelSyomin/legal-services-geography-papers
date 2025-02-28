@@ -10,6 +10,7 @@ library(readxl)
 library(sf)
 library(spdep)
 library(stopwords)
+library(stringr)
 library(tidyr)
 
 sf_use_s2(FALSE) # disable to avoid errors in distances and intersections
@@ -325,7 +326,7 @@ moran_test_global_res_plot <- moran_test_global_res %>%
   ) +
   coord_fixed() +
   labs(
-    x = "Law firm names category",
+    x = "Law firm naming pattern",
     y = "Type of weights matrix"
   ) +
   theme_minimal()

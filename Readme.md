@@ -6,7 +6,7 @@ This repository contains the source code for a number of academic papers. All bu
 
 ## Papers details
 
-In the following tables, the links point to the respective home folders of the papers with the paper code, text, published PDF (if available), and citation information. Papers are sorted by conference/publication date. An unpublished paper is not listed.
+In the following tables, the links point to the respective home folders of the papers with the paper code, text, published PDF (if available), and citation information. Papers are sorted by conference/publication date.
 
 Some journal articles were first presented at conferences and then revised and published in the journals without separate publication in the conference proceedings. In this case, they are placed in the “Journal articles” section without a record in “Conference papers”, and the relevant conference details can be found on the paper page.
 
@@ -30,6 +30,7 @@ Some journal articles were first presented at conferences and then revised and p
 | [Application of Tax Service Open Data for Analysis in Economic Geography](fts-open-data-in-economic-geography) | Geographical Bulletin | Russian |
 | [Legal Business Geography in Russia: Regional Analysis and Mapping Using Tax Service Open Data](law-firms-geography) | InterCarto. InterGIS | English |
 | [Spatial and regression analysis of provision of commercial legal services in Russian cities](legal-services-provision) | Journal of Geography and Environmental Management | English |
+| [Spatial distribution of naming patterns in Russian law firms through text embeddings](law-firms-names) | Spatial Information Research | English |
 
 Paper's home folders have a consistent structure with a similar naming of subfolders and files.
 

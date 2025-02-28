@@ -2,7 +2,7 @@
 
 ## Summary
 
-This repository contains the source code for a number of academic papers. All but two deal with different aspects of the geography of legal services in Russia. The remaining two papers focus on relevant data processing issues. Some are conference papers, the others are journal articles. Some are in English, others in Russian, and the one paper is in both languages. All the papers accompany my PhD thesis on the geography of legal services in Russia. The thesis has not yet been defended, but almost all the papers have already been published.
+This repository contains the source code for a number of academic papers. All but two deal with different aspects of the geography of legal services in Russia. The remaining two papers focus on relevant data processing issues. Some are conference papers, the others are journal articles. Some are in English, others in Russian, and the one paper is in both languages. All the papers accompany my PhD thesis on the geography of legal services in Russia. The thesis has not yet been defended, but all the papers have already been published.
 
 ## Papers details
 

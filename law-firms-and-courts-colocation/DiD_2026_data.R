@@ -7,7 +7,6 @@ library(nanoparquet)
 library(readr)
 library(stringr)
 library(tidyr)
-library(vroom)
 library(zoo)
 
 # Main data
@@ -22,6 +21,15 @@ agglomerations <- read_csv("agglomerations.csv", col_types = cols("oktmo_stable_
     oktmo_stable_part = str_pad(oktmo_stable_part, 8, "left", "0")
   ) %>% 
   distinct(oktmo_stable_part, .keep_all = TRUE)
+cities_base <- read_csv(
+  "assets/cities.csv",
+  col_types = cols("oktmo" = "c")
+)
+cities_additional <- read_csv(
+  "assets/cities_additional.csv",
+  col_types = cols("oktmo" = "c")
+)
+cities <- rbind(cities_base, cities_additional)
 courts <- read_csv(here("assets/courts.csv"))
 population <- read_csv2_chunked(
   "assets/data_Y48112027_112_v20250918.csv",
@@ -44,10 +52,28 @@ population <- read_csv2_chunked(
     }
   )
 )
-
+area <- read_csv2_chunked(
+  "assets/data_Y48006001_112_v20250918.csv", 
+  callback = DataFrameCallback$new(
+    function(part, idx) {
+      part %>% 
+        filter(
+          year >= 2016,
+          oktmo_stable != "CD"
+        ) %>% 
+        select(
+          oktmo,
+          oktmo_stable,
+          municipality,
+          year,
+          indicator_period,
+          indicator_value
+        )
+    }
+  )
+)
 
 # Misc controls
-area <- vroom("assets/data_Y48006001_112_v20250918.csv")
 goods_1 <- vroom("assets/data_Y48201001_112_v20250918.csv")
 goods_2 <- vroom("assets/data_Y48401011_112_v20250918.csv")
 invest <- vroom("assets/data_section9_112_v20250918.csv")
@@ -75,6 +101,189 @@ migrations <- do.call(
       return(res)
     }
   )
+)
+
+# Basic spec: just cities as is
+cities_courts <- courts %>% 
+  rename(settlement = city) %>% 
+  group_by(region, settlement) %>% 
+  summarise(
+    has_ordinary_court = any(branch == "ordinary"),
+    has_commercial_court = any(branch == "commercial")
+  )
+cities_ppl = select(cities, settlement = city, municipality_code = oktmo, population)
+
+add_months_base <- function(x, n) {
+  d <- as.POSIXlt(x)
+  d$mon <- d$mon + n
+  as.Date(d)
+}
+q_starts <- seq(as.Date("2016-01-01"), as.Date("2026-10-01"), by = "3 months")
+
+quarters <- tibble(
+  quarter_start = q_starts,
+  quarter_end   = add_months_base(quarter_start, 3) - 1
+) %>%
+  mutate(
+    year = as.integer(format(quarter_start, "%Y")),
+    q    = as.integer(substr(quarters(quarter_start), 2, 2))  # 1–4 from "Q1".."Q4"
+  )
+
+counts_list <- lapply(seq_len(nrow(quarters)), function(i) {
+  qs <- quarters$quarter_start[i]
+  qe <- quarters$quarter_end[i]
+  
+  res <- data %>%
+    filter(
+      settlement_type == "г", 
+      region != "Москва", 
+      region != "Санкт-Петербург"
+    ) %>%
+    distinct(tax_number, start_date, end_date, .keep_all = TRUE) %>% 
+    filter(start_date <= qe, end_date >= qs) %>% 
+    group_by(region, settlement, municipality_code) %>%
+    summarise(count = n(), .groups = "drop") %>% 
+    mutate(year = quarters$year[i], quarter = quarters$q[i])
+  
+  res
+})
+
+qpanel <- bind_rows(counts_list) %>% 
+  mutate(
+    time_id = paste0(year, "Q", quarter)
+  ) %>%
+  left_join(cities_ppl) %>% 
+  left_join(cities_courts, by = c("region", "settlement")) %>% 
+  replace_na(list(
+    has_ordinary_court = FALSE,
+    has_commercial_court = FALSE
+  )) %>%
+  drop_na() %>% 
+  mutate(
+    post_law = ifelse((year >= 2018 & quarter >= 3) | year >= 2019, 1, 0),
+    post_act = ifelse((year >= 2019 & quarter >= 4) | year >= 2020, 1, 0),
+    treat = as.numeric(has_ordinary_court),
+    ln_count = log(count + 1),
+    city = paste(region, settlement, sep = ", "),
+    size = cut(
+      population,
+      breaks = c(0, 5e4, 1e5, 2.5e5, 5e5, 1e6, 1e8),
+      labels = c(
+        "small", 
+        "medium", 
+        "big",
+        "large", 
+        "largest",
+        "millionare"
+      ),
+      ordered_result = TRUE
+    )
+  ) %>% 
+  group_by(region, settlement) %>% 
+  mutate(n_years = n_distinct(year)) %>% 
+  ungroup() %>% 
+  filter(n_years == 11, size >= "largest")
+
+model <- feols(
+  ln_count ~ treat:post_law | city + year^quarter, 
+  data = qpanel,
+  cluster = ~city
+)
+summary(model)
+
+qpanel$rel_q <- (as.numeric(qpanel$year) - 2019) * 4 + qpanel$quarter - 3
+es <- feols(
+  ln_count ~ i(rel_q, treat, ref = 0) | city + year^quarter, 
+  data = qpanel, 
+  cluster = ~city
+)
+summary(es)
+iplot(
+  es, 
+  main = "Event Study: Влияние на число юрфирм (log)",
+  xlab = "Год",
+  sub = "Доверительные интервалы 95%. Базовый год: 2018"
+)
+
+qdata <- data %>%
+  filter(
+    settlement_type == "г", 
+    region != "Москва", 
+    region != "Санкт-Петербург"
+  ) %>%
+  distinct(tax_number, start_date, end_date, .keep_all = TRUE) %>% 
+  select(tax_number, start_date, end_date, region, settlement, municipality_code, year) %>% 
+  mutate(
+    month = purrr::pmap(list(start_date, end_date), \(s, e) seq(s, e, by = "month"))
+  ) %>%
+  unnest(month) %>%
+  mutate(
+    quarter = as.numeric(substr(quarters(month), 2, 2)),
+    year = as.numeric(format(month, "%Y")),
+    time_id = paste0(year, "Q", quarter)
+  ) %>%
+  group_by(tax_number, time_id) %>% 
+  slice_head(n = 1)
+panel <- qdata %>% 
+  group_by(region, settlement, municipality_code, year, quarter, time_id) %>%
+  summarise(count = n(), .groups = "drop") %>% 
+  left_join(cities_ppl) %>% 
+  left_join(cities_courts, by = c("region", "settlement")) %>% 
+  replace_na(list(
+    has_ordinary_court = FALSE,
+    has_commercial_court = FALSE
+  )) %>%
+  drop_na() %>% 
+  mutate(
+    post_law = ifelse((year >= 2018 & quarter >= 3) | year >= 2019, 1, 0),
+    post_act = ifelse((year >= 2019 & quarter >= 4) | year >= 2020, 1, 0),
+    treat = as.numeric(has_ordinary_court),
+    ln_count = log(count + 1),
+    #ln_empl = log(empl + 1),
+    city = paste(region, settlement, sep = ", "),
+    size = cut(
+      population,
+      breaks = c(0, 5e4, 1e5, 2.5e5, 5e5, 1e6, 1e8),
+      labels = c(
+        "small", 
+        "medium", 
+        "big",
+        "large", 
+        "largest",
+        "millionare"
+      ),
+      ordered_result = TRUE
+    )
+  ) %>% 
+  group_by(region, settlement) %>% 
+  mutate(n_years = n_distinct(year)) %>% 
+  ungroup() %>% 
+  filter(n_years == 11, size >= "largest") %>% 
+  filter(
+    !(settlement %in% c("Воронеж", "Иваново", "Томск", "Казань", "Пермь", "Калуга"))
+  )
+
+count(panel, treat)
+
+model <- feols(
+  ln_count ~ treat:post_law | city + year^quarter, 
+  data = panel,
+  cluster = ~city
+)
+summary(model)
+
+panel <- panel %>% mutate(relq = (year - 2018) * 4 + quarter - 2)
+es <- feols(
+  ln_count ~ i(relq, treat, ref = 0) | city + year^quarter, 
+  data = panel, 
+  cluster = ~city
+)
+summary(es)
+iplot(
+  es, 
+  main = "Event Study: Влияние на число юрфирм (log)",
+  xlab = "Год",
+  sub = "Доверительные интервалы 95%. Базовый год: 2018"
 )
 
 # Prepare a mapping of data and BDMO (settlement to municipality)
@@ -274,8 +483,9 @@ law_firms_data <- data %>%
   group_by(region, settlement, year) %>%
   summarise(count = n(), rev = sum(revenue), empl = sum(empl), .groups = "drop") %>% 
   left_join(oktmo_mapping, by = c("region", "settlement")) %>% 
-  group_by(oktmo_stable, year) %>% 
-  summarise(across(count:empl, sum))
+  group_by(oktmo_stable_aggl, year) %>% 
+  summarise(across(count:empl, sum)) %>% 
+  rename(oktmo_stable = oktmo_stable_aggl)
 
 population_data <- population %>% 
   filter(mest == "Городское население") %>% 
@@ -287,6 +497,28 @@ population_data <- population %>%
   drop_na() %>% 
   ungroup() %>% 
   count(oktmo_stable, year, wt = indicator_value, name = "population")
+
+area_data <- area %>% 
+  count(oktmo_stable, year, wt = indicator_value, name = "area")
+
+regional_centers <- cities %>% 
+  filter(capital_marker == 2) %>% 
+  mutate(
+    oktmo_2021 = case_when(
+      str_length(oktmo) == 10 ~ str_pad(oktmo, 11, "left", "0"),
+      str_length(oktmo) == 7 ~ str_pad(oktmo, 8, "left", "0"),
+      .default = oktmo
+    ),
+    oktmo_2021 = substr(oktmo_2021, 1, 8),
+    # BDMO data points at area-level municipalities with OKTMOs ending with zeros
+    oktmo_2021 = if_else(
+      substr(oktmo_2021, 6, 8) != "000",
+      paste0(substr(oktmo_2021, 1, 5), "000"),
+      oktmo_2021
+    )
+  ) %>% 
+  left_join(bdmo_oktmo) %>% 
+  pull(oktmo_stable)
 
 panel <- law_firms_data %>% 
   left_join(population_data, by = c("oktmo_stable", "year")) %>% 
@@ -302,6 +534,7 @@ panel <- law_firms_data %>%
     ln_count = log(count + 1),
     ln_empl = log(empl + 1),
     ln_population = log(population + 1),
+    is_regional_center = oktmo_stable %in% regional_centers
   ) %>% 
   group_by(oktmo_stable) %>% 
   mutate(
@@ -317,13 +550,24 @@ panel <- law_firms_data %>%
         "large", 
         "largest",
         "millionare"
-      )
+      ),
+      ordered_result = TRUE
     )
   ) %>% 
   ungroup() %>% 
   filter(
     n_years >= 9
   )
+
+panel %>% 
+  filter(is_regional_center == T) %>% 
+  distinct(oktmo_stable) %>% 
+  left_join(oktmo_mapping) %>% 
+  right_join(data.frame(oktmo_stable = regional_centers)) %>% 
+  filter(is.na(region))
+
+panel %>% filter(treat == 1) %>% count(size)
+  
 
 model <- feols(
   ln_count ~ treat:post | oktmo_stable + year, 
@@ -334,7 +578,7 @@ summary(model)
 
 es <- feols(
   ln_count ~ i(year, treat, ref = 2018) | oktmo_stable + year, 
-  data = panel, 
+  data = panel %>% filter(size >= "largest"), 
   cluster = ~oktmo_stable
 )
 summary(es)
@@ -346,8 +590,8 @@ iplot(
 )
 
 # Auto-matching
-panel_2018_count_changes <- panel %>% 
-  filter(year <= 2018) %>% 
+panel_2017_count_changes <- panel %>% 
+  filter(year <= 2017) %>% 
   select(oktmo_stable, year, count) %>% 
   pivot_wider(
     names_from = year,
@@ -356,47 +600,70 @@ panel_2018_count_changes <- panel %>%
   ) %>% 
   mutate(
     change_2016_2017 = count_2017 - count_2016,
-    change_2017_2018 = count_2018 - count_2017,
   )
-panel_2018 <- panel %>% 
-  filter(year == 2018) %>%
-  left_join(panel_2018_count_changes) %>% 
+
+panel_2017 <- panel %>% 
+  filter(year == 2017) %>%
+  left_join(panel_2017_count_changes) %>% 
   drop_na()
 
+max_ppl_change <- matched_panel %>% 
+  group_by(oktmo_stable, treat) %>% 
+  arrange(year, .by_group = T) %>% 
+  summarise(c = last(population) - first(population)) %>% 
+  arrange(-abs(c)) %>% 
+  group_by(treat) %>% 
+  slice_head(n = 5) %>% 
+  pull(oktmo_stable)
+
 m.out <- matchit(
-  treat ~ count_2016 + count_2017 + count_2018 + change_2016_2017 + change_2017_2018 + ln_population, 
-  data = panel_2018, 
+  treat ~ count_2016 + count_2017 + change_2016_2017 + ln_population, 
+  data = panel_2017, 
   method = "nearest", 
   distance = "glm",
-  exact = c("has_commercial_court", "size"),
+  exact = c("has_commercial_court", "size", "is_regional_center"),
   ratio = 3
 )
 matched_data_2018 <- match.data(m.out)
 matched_ids <- unique(matched_data_2018$oktmo_stable)
-matched_panel <- panel %>% filter(oktmo_stable %in% matched_ids)
-matched_panel %>% 
-  group_by(oktmo_stable, treat) %>% 
-  arrange(year, .by_group = T) %>% 
-  summarise(c = last(ln_population) - first(ln_population)) %>% 
-  arrange(-c)
+matched_panel <- panel %>% 
+  filter(oktmo_stable %in% matched_ids)
 
 matched_panel %>% 
-  filter(!(oktmo_stable %in% c("07727000", "03701000", "71701000", "03726000", "58701000", "04701000"))) %>% 
+  filter(!(oktmo_stable %in% max_ppl_change)) %>% 
   group_by(year, treat) %>% 
   summarise(ppl = median(ln_population)) %>% 
   ggplot(aes(x = year, y = ppl, col = factor(treat), group = treat)) +
   geom_line()
 
+matched_panel %>% 
+  ggplot(aes(x = year, y = ln_population, col = factor(treat), group = oktmo_stable)) +
+  geom_line()
+
 model_matched <- feols(
   ln_count ~ treat:post | oktmo_stable + year, 
-  data = matched_panel, #%>% filter(!(oktmo_stable %in% c("07727000", "03701000", "71701000", "03726000", "58701000", "04701000"))), 
+  data = matched_panel,
+  cluster = ~oktmo_stable
+)
+summary(model_matched)
+
+model_matched <- feols(
+  ln_count ~ treat:post | oktmo_stable + year, 
+  data = matched_panel %>% filter(!(oktmo_stable %in% max_ppl_change)), 
   cluster = ~oktmo_stable
 )
 summary(model_matched)
 
 es_matched <- feols(
   ln_count ~ i(year, treat, ref = 2018) | oktmo_stable + year, 
-  data = matched_panel, #%>% filter(!(oktmo_stable %in% c("07727000", "03701000", "71701000", "03726000", "58701000", "04701000"))),
+  data = matched_panel,
+  cluster = ~oktmo_stable
+)
+summary(es_matched)
+
+es_matched <- feols(
+  ln_count ~ i(year, treat, ref = 2018) | oktmo_stable + year, 
+  data = matched_panel %>% filter(!(oktmo_stable %in% max_ppl_change)),
   cluster = ~oktmo_stable
 )
 summary(es_matched)
@@ -406,7 +673,6 @@ iplot(es_matched,
       main = "Event Study (Matched Sample)",
       xlab = "Год", 
       ylab = "Эффект политики")
-
 
 set.seed(42)
 random_cities <- sample(unique(panel_reduced$oktmo_stable), 10)
@@ -465,44 +731,6 @@ ggplot(loo_results, aes(x = reorder(excluded_city, estimate), y = estimate)) +
        x = "Исключенный город (ОКТМО)", y = "Оценка коэффициента") +
   theme_minimal()
 
-
-# Matching
-manual_pairs <- data.frame(
-  treat = sort(unique(panel[panel$treat == 1, ]$oktmo_stable)),
-  control = c(
-    "04701000", "98701000", "08701000", "46790000",
-    "57701000", "53701000", "52701000", "80701000", 
-    "71701000", "60701000"
-  )
-)
-
-matched_panel <- panel %>% filter(oktmo_stable %in% unlist(manual_pairs))
-matched_panel$treated <- matched_panel$treat * matched_panel$post
-model_matched <- feols(
-  ln_count ~ treated + ln_area + ln_population + ln_wages | treat + post, 
-  data = matched_panel, 
-  #cluster = ~oktmo_stable
-)
-summary(model_matched)
-
-ggplot(matched_panel, aes(x = year, y = ln_count, color = factor(treat), group = treat)) +
-  stat_summary(fun = mean, geom = "line", size = 1) +
-  geom_vline(xintercept = 2019.5, linetype = "dashed", color = "red") +
-  labs(title = "Тренды после мэтчинга: Число фирм", color = "Группа (1=Суд)") +
-  theme_minimal()
-
-summarise(matched_panel, count = median(count), .by = c("treat", "year"))
-ggplot(matched_panel, aes(x = count, fill = factor(treat))) +
-  geom_histogram(binwidth = 100)
-
-
-
-plot(summary(m.out), 
-     var.names = TRUE, 
-     abs = TRUE, 
-     main = "Качество мэтчинга (SMD)")
-# Если нужно добавить линию порога, используйте abline() после вызова plot
-abline(v = 0.1, lty = 2, col = "red")
 
 # Извлекаем данные о балансе
 summ_data <- as.data.frame(summary(m.out)$sum.all[, "Std. Mean Diff.", drop = FALSE])
@@ -621,3 +849,127 @@ ggplot(panel_matched_q, aes(x = paste0(year, quarter), y = ln_count, color = fac
   geom_vline(xintercept = "2019Q3", linetype = "dashed", color = "red") +
   labs(title = "Тренды после мэтчинга: Число фирм", color = "Группа (1=Суд)") +
   theme_minimal()
+
+rfsd <- read_csv("assets/rfsd_extracted_agg.csv")
+count(rfsd, year, wt = count)
+data %>% filter(is_sole_trader == F) %>% count(year, name = "rmsp") %>% 
+  left_join(count(rfsd, year, wt = count, name = "rfsd")) %>% 
+  ggplot(aes(x = year)) +
+  geom_line(aes(y = rmsp), col = "blue") +
+  geom_line(aes(y = rfsd), col = "green")
+
+sum(rfsd[is.na(rfsd$oktmo), "count"])
+sum(rfsd$count)
+
+rfsd_panel <- rfsd %>% 
+  mutate(
+    oktmo = paste0(substr(oktmo, 1, 5), "000")
+  ) %>% 
+  filter(count > 1) %>% 
+  left_join(bdmo_oktmo, by = c("oktmo" = "oktmo_2021")) %>% 
+  filter(!is.na(oktmo_stable)) %>%
+  left_join(population_data) %>% 
+  left_join(courts_data) %>%
+  group_by(oktmo_stable, year) %>% 
+  summarise(
+    c = sum(count), 
+    r = sum(rev), 
+    has_ordinary_court = any(has_ordinary_court, na.rm = T), 
+    has_commercial_court = any(has_commercial_court, na.rm = T), 
+    population = median(population, na.rm = T)
+  ) %>% 
+  #filter(has_ordinary_court == T) %>% 
+  #ggplot(aes(x = year, y = c, group = oktmo_stable)) +
+  #geom_line()
+  #filter(!(oktmo_stable %in% c("75701000", "36701000"))) %>% 
+  group_by(oktmo_stable) %>% 
+  mutate(
+    ln_count = log(c + 1),
+    post = ifelse(year >= 2020, 1, 0),
+    treat = as.numeric(has_ordinary_court),
+    median_ppl = median(population, na.rm = T),
+    n_years = n(),
+    size = cut(
+      median_ppl,
+      breaks = c(0, 5e4, 1e5, 2.5e5, 5e5, 1e6, 1e8),
+      labels = c(
+        "small", 
+        "medium", 
+        "big",
+        "large", 
+        "largest",
+        "millionare"
+      ),
+      ordered_result = TRUE
+    )
+  ) %>% 
+  ungroup()
+
+es <- feols(
+  ln_count ~ i(year, treat, ref = 2018) | oktmo_stable + year, 
+  data = rfsd_panel %>% filter(size >= "largest"), 
+  cluster = ~oktmo_stable
+)
+summary(es)
+iplot(
+  es, 
+  main = "Event Study: Влияние на число юрфирм (log)",
+  xlab = "Год",
+  sub = "Доверительные интервалы 95%. Базовый год: 2018"
+)
+
+rfsd_panel_2017_count_changes <- rfsd_panel %>% 
+  filter(year <= 2017) %>% 
+  select(oktmo_stable, year, c) %>% 
+  pivot_wider(
+    names_from = year,
+    values_from = c,
+    names_prefix = "count_"
+  ) %>% 
+  mutate(
+    c1112 = count_2012 - count_2011,
+    c1213 = count_2013 - count_2012,
+    c1314 = count_2014 - count_2013,
+    c1415 = count_2015 - count_2014,
+    c1516 = count_2016 - count_2015,
+    c1617 = count_2017 - count_2016,
+  )
+
+rfsd_panel_2017 <- rfsd_panel %>% 
+  filter(year == 2017) %>%
+  left_join(rfsd_panel_2017_count_changes) %>% 
+  drop_na()
+
+m.out <- matchit(
+  treat ~ count_2011 + count_2012 + count_2013 + count_2014 + count_2015 + count_2016 + count_2017 + c1112 + c1213 + c1314 +c1415 +c1516 + c1617 + population, 
+  data = rfsd_panel_2017, 
+  method = "nearest", 
+  distance = "glm",
+  exact = c("size", "has_commercial_court"),
+  ratio = 3
+)
+matched_data_2018 <- match.data(m.out)
+matched_ids <- unique(matched_data_2018$oktmo_stable)
+
+matched_rfsd_panel <- rfsd_panel %>% 
+  filter(oktmo_stable %in% matched_ids)
+
+model_matched <- feols(
+  ln_count ~ treat:post | oktmo_stable + year, 
+  data = matched_rfsd_panel,
+  cluster = ~oktmo_stable
+)
+summary(model_matched)
+
+es_matched <- feols(
+  ln_count ~ i(year, treat, ref = 2018) | oktmo_stable + year, 
+  data = matched_rfsd_panel,
+  cluster = ~oktmo_stable
+)
+summary(es_matched)
+
+# 2. Визуализируем
+iplot(es_matched, 
+      main = "Event Study (Matched Sample)",
+      xlab = "Год", 
+      ylab = "Эффект политики")

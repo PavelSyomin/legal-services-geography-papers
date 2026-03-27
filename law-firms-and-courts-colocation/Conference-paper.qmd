@@ -1,0 +1,579 @@
+---
+title: "Суды окружного уровня влияют на размещение юридических фирм"
+format:
+  docx:
+    reference-doc: assets/template.docx
+    toc: false
+    number-sections: false
+bibliography: references.bib
+execute:
+  echo: false
+  warning: false
+  message: false
+  fig-dpi: 300
+lang: ru
+keep-md: true
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(dplyr)
+library(fixest)
+library(ggplot2)
+library(here)
+library(readr)
+library(stringr)
+library(tidyr)
+library(zoo)
+```
+
+```{r}
+#| label: data-common
+#| include: false
+#| cache: true
+
+data <- read_delim(
+  "assets/sme2026.csv",
+  delim = ";",
+  col_types = cols(municipality_code = "c")
+)
+courts <- read_csv(here("assets/courts.csv"))
+cities_courts <- courts %>%
+  rename(settlement = city) %>%
+  group_by(region, settlement) %>%
+  summarise(
+    has_ordinary_court = any(branch == "ordinary"),
+    has_commercial_court = any(branch == "commercial"),
+    .groups = "drop"
+  )
+```
+
+```{r}
+#| label: cities-panel
+#| include: false
+#| cache: true
+
+cities_base <- read_csv(
+  "assets/cities.csv",
+  col_types = cols("oktmo" = "c")
+)
+cities_additional <- read_csv(
+  "assets/cities_additional.csv",
+  col_types = cols("oktmo" = "c")
+)
+cities_ppl = rbind(cities_base, cities_additional) %>%
+  select(settlement = city, municipality_code = oktmo, population)
+
+cpanel <- data %>%
+  filter(
+    settlement_type == "г",
+    region != "Москва",
+    region != "Санкт-Петербург"
+  ) %>%
+  distinct(tax_number, year, .keep_all = TRUE) %>%
+  group_by(region, settlement, municipality_code, year) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  left_join(cities_ppl) %>%
+  left_join(cities_courts) %>%
+  replace_na(list(
+    has_ordinary_court = FALSE,
+    has_commercial_court = FALSE
+  )) %>%
+  drop_na() %>%
+  mutate(
+    post = ifelse(year >= 2020, 1, 0),
+    treat = as.numeric(has_ordinary_court),
+    ln_count = log(count + 1),
+    city = paste(region, settlement, sep = ", "),
+    city_size = cut(
+      population,
+      breaks = c(0, 5e4, 1e5, 2.5e5, 5e5, 1e6, 1e8),
+      labels = c(
+        "small",
+        "medium",
+        "big",
+        "large",
+        "largest",
+        "millionare"
+      ),
+      ordered_result = TRUE
+    )
+  ) %>%
+  group_by(region, settlement) %>%
+  mutate(n_years = n_distinct(year)) %>%
+  ungroup() %>%
+  filter(n_years == 11, city_size >= "large")
+```
+
+```{r}
+#| label: cities-models
+#| include: false
+
+model <- feols(
+  ln_count ~ treat:post | city + year,
+  data = cpanel,
+  cluster = ~city
+)
+
+es <- feols(
+  ln_count ~ i(year, treat, ref = 2018) | city + year,
+  data = cpanel,
+  cluster = ~city
+)
+```
+
+```{r}
+#| label: aggl-data
+#| include: false
+#| cache: true
+
+agglomerations <- read_csv("agglomerations.csv", col_types = cols("oktmo_stable_center" = "c", "oktmo_stable_part" = "c")) %>%
+  mutate(
+    oktmo_stable_center = str_pad(oktmo_stable_center, 8, "left", "0"),
+    oktmo_stable_part = str_pad(oktmo_stable_part, 8, "left", "0")
+  ) %>%
+  distinct(oktmo_stable_part, .keep_all = TRUE)
+
+population <- read_csv2_chunked(
+  "assets/data_Y48112027_112_v20250918.csv",
+  callback = DataFrameCallback$new(
+    function(part, idx) {
+      part %>%
+        filter(
+          year >= 2016,
+          oktmo_stable != "CD"
+        ) %>%
+        select(
+          oktmo,
+          oktmo_stable,
+          municipality,
+          year,
+          mest,
+          indicator_period,
+          indicator_value
+        )
+    }
+  )
+)
+
+# Prepare a mapping of data and BDMO (settlement to municipality)
+bdmo_oktmo <- population %>%
+  filter(year == 2021) %>%  # approx. matches municipality code year
+  distinct(municipality, oktmo, oktmo_stable) %>%
+  rename(oktmo_2021 = oktmo)
+
+# Incomplete list to filter out (no data in BDMO)
+closed_cities <- c(
+  "Межгорье",
+  "Циолковский",
+  "Вилючинск",
+  "Железногорск",
+  "Зеленогорск",
+  "Лесной",
+  "Мирный",
+  "Радужный",
+  "Новоуральск"
+)
+
+cities_oktmo <- data %>%
+  filter(
+    settlement_type == "г",
+    !(settlement %in% closed_cities)
+  ) %>%
+  distinct(municipality_code, .keep_all = TRUE) %>%
+  mutate(
+    oktmo_2021 = case_when(
+      str_length(municipality_code) == 10 ~ str_pad(municipality_code, 11, "left", "0"),
+      str_length(municipality_code) == 7 ~ str_pad(municipality_code, 8, "left", "0"),
+      .default = municipality_code
+    ),
+    oktmo_2021 = substr(oktmo_2021, 1, 8),
+    # BDMO data points at area-level municipalities with OKTMOs ending with zeros
+    oktmo_2021 = if_else(
+      substr(oktmo_2021, 6, 8) != "000",
+      paste0(substr(oktmo_2021, 1, 5), "000"),
+      oktmo_2021
+    )
+  ) %>%
+  select(region, settlement, oktmo_2021)
+
+automatic_oktmo_mapping <- cities_oktmo %>%
+  left_join(bdmo_oktmo)
+
+manual_mapping_addon <- tribble(
+  ~region, ~settlement, ~oktmo_2021, ~municipality, ~oktmo_stable,
+  # replace region-level code with municipality-level one
+  "Севастополь", "Севастополь", "67000000", "Ленинский муниципальный округ
+", "67312000",
+  # oktmo_2021 in data == oktmo_stable in BDMO
+  "Брянская область", "Стародуб", "15501000", "Город Стародуб
+", "15501000",
+  "Брянская область", "Жуковка", "15502000", "Жуковский муниципальный район
+", "15502000"
+)
+
+mismatch <- filter(automatic_oktmo_mapping, is.na(municipality))
+# There should be 6 rows:
+# - Moscow, Saint Petersburg, Zelenograd (part of Moscow) - omitted,
+# - Sevastopol Starodub, Zhukovka - manually fixed with addon,
+stopifnot(nrow(mismatch) == 6)
+
+oktmo_mapping <- rbind(
+  automatic_oktmo_mapping,
+  manual_mapping_addon
+) %>%
+  left_join(
+    agglomerations,
+    by = c("oktmo_stable" = "oktmo_stable_part")
+  ) %>%
+  mutate(oktmo_stable_aggl = coalesce(oktmo_stable_center, oktmo_stable)) %>%
+  select(
+    region,
+    settlement,
+    oktmo_stable,
+    oktmo_stable_aggl
+  ) %>%
+  drop_na()
+
+courts_data <- cities_courts %>%
+  left_join(oktmo_mapping) %>%
+  filter(
+    !(region == "Калужская область" & settlement == "Киров"),
+    !is.na(oktmo_stable)
+  ) %>%
+  select(oktmo_stable, has_ordinary_court, has_commercial_court)
+
+# Count law firms per municipality
+law_firms_data <- data %>%
+  filter(settlement_type == "г") %>%
+  distinct(tax_number, year, .keep_all = TRUE) %>%
+  rename(empl = employees_count) %>%
+  replace_na(list(empl = 0)) %>%
+  mutate(
+    revenue = replace(revenue, is.na(revenue), 0),
+    empl = replace(empl, empl == 0, 1)
+  ) %>%
+  group_by(region, settlement, year) %>%
+  summarise(count = n(), rev = sum(revenue), empl = sum(empl), .groups = "drop") %>%
+  left_join(oktmo_mapping, by = c("region", "settlement")) %>%
+  group_by(oktmo_stable_aggl, year) %>%
+  summarise(across(count:empl, sum)) %>%
+  rename(oktmo_stable = oktmo_stable_aggl)
+
+population_data <- population %>%
+  filter(mest == "Городское население") %>%
+  complete(oktmo, year) %>%
+  group_by(oktmo) %>%
+  arrange(year, .by_group = TRUE) %>%
+  mutate(indicator_value = na.approx(indicator_value, na.rm = F)) %>%
+  fill(oktmo_stable:indicator_period) %>%
+  drop_na() %>%
+  ungroup() %>%
+  left_join(
+    distinct(oktmo_mapping, oktmo_stable, oktmo_stable_aggl),
+    by = "oktmo_stable"
+  ) %>%
+  count(oktmo_stable_aggl, year, wt = indicator_value, name = "population") %>%
+  rename(oktmo_stable = oktmo_stable_aggl)
+
+apanel <- law_firms_data %>%
+  left_join(population_data, by = c("oktmo_stable", "year")) %>%
+  left_join(courts_data) %>%
+  replace_na(list(
+    has_ordinary_court = FALSE,
+    has_commercial_court = FALSE
+  )) %>%
+  drop_na(oktmo_stable, year, count) %>%
+  mutate(
+    post = ifelse(year >= 2020, 1, 0),
+    treat = as.numeric(has_ordinary_court),
+    ln_count = log(count + 1),
+  ) %>%
+  group_by(oktmo_stable) %>%
+  mutate(
+    median_ppl = median(population, na.rm = TRUE),
+    n_years = n(),
+    city_size = cut(
+      median_ppl,
+      breaks = c(0, 5e4, 1e5, 2.5e5, 5e5, 1e6, 1e8),
+      labels = c(
+        "small",
+        "medium",
+        "big",
+        "large",
+        "largest",
+        "millionare"
+      ),
+      ordered_result = TRUE
+    )
+  ) %>%
+  ungroup() %>%
+  filter(
+    n_years >= 9,
+    city_size >= "large",
+    !(oktmo_stable %in% c("40908000", "45000000"))
+  )
+```
+
+```{r}
+#| label: aggl-models
+#| include: false
+
+model_aggl <- feols(
+  ln_count ~ treat:post | oktmo_stable + year,
+  data = apanel,
+  cluster = ~oktmo_stable
+)
+
+es_aggl <- feols(
+  ln_count ~ i(year, treat, ref = 2018) | oktmo_stable + year,
+  data = apanel,
+  cluster = ~oktmo_stable
+)
+```
+
+```{r}
+#| label: rfsd-data
+#| include: false
+#| cache: true
+
+rfsd <- read_csv("assets/rfsd_extracted_agg.csv")
+
+rpanel <- rfsd %>%
+  mutate(
+    oktmo = paste0(substr(oktmo, 1, 5), "000")
+  ) %>%
+  left_join(bdmo_oktmo, by = c("oktmo" = "oktmo_2021")) %>%
+  filter(!is.na(oktmo_stable)) %>%
+  left_join(population_data) %>%
+  left_join(courts_data) %>%
+  group_by(oktmo_stable, year) %>%
+  summarise(
+    count = sum(count),
+    has_ordinary_court = any(has_ordinary_court, na.rm = T),
+    has_commercial_court = any(has_commercial_court, na.rm = T),
+    population = median(population, na.rm = T)
+  ) %>%
+  group_by(oktmo_stable) %>%
+  mutate(
+    ln_count = log(count + 1),
+    post = ifelse(year >= 2020, 1, 0),
+    treat = as.numeric(has_ordinary_court),
+    median_ppl = median(population, na.rm = T),
+    n_years = n(),
+    city_size = cut(
+      median_ppl,
+      breaks = c(0, 5e4, 1e5, 2.5e5, 5e5, 1e6, 1e8),
+      labels = c(
+        "small",
+        "medium",
+        "big",
+        "large",
+        "largest",
+        "millionare"
+      ),
+      ordered_result = TRUE
+    )
+  ) %>%
+  ungroup() %>%
+  filter(
+    n_years == 14,
+    city_size >= "large",
+    !(oktmo_stable %in% c("40908000", "45000000"))
+  )
+```
+
+```{r}
+#| label: rfsd-models
+#| include: false
+
+model_rfsd <- feols(
+  ln_count ~ treat:post | oktmo_stable + year,
+  data = rpanel,
+  cluster = ~oktmo_stable
+)
+
+es_rfsd <- feols(
+  ln_count ~ i(year, treat, ref = 2018) | oktmo_stable + year,
+  data = rpanel,
+  cluster = ~oktmo_stable
+)
+```
+
+```{r}
+#| label: loo
+#| include: false
+
+treated_cities <- unique(apanel[apanel$treat == 1, ]$oktmo_stable)
+loo_results <- do.call(
+  rbind,
+  lapply(
+    treated_cities,
+    function(city) {
+      tmp <- apanel %>% filter(oktmo_stable != city)
+      res <- feols(
+        ln_count ~ treat:post | oktmo_stable + year,
+        data = tmp,
+        cluster = ~oktmo_stable
+      )
+
+      data.frame(
+        excluded_city = city,
+        estimate = coef(res)["treat:post"],
+        se = se(res)["treat:post"],
+        p_val = pvalue(res)["treat:post"]
+      )
+    }
+  )
+)
+```
+
+```{r}
+#| label: placebo
+#| include: false
+
+set.seed(42)
+random_cities <- sample(unique(apanel$oktmo_stable), 10)
+apanel_placebo <- apanel %>%
+  mutate(treat_fake = ifelse(oktmo_stable %in% random_cities, 1, 0))
+
+model_placebo <- feols(
+  ln_count ~ treat_fake:post | oktmo_stable + year,
+  data = apanel_placebo,
+  cluster = ~oktmo_stable
+)
+es_placebo <- feols(
+  ln_count ~ i(year, treat_fake, ref = 2017) | oktmo_stable + year,
+  data = apanel_placebo,
+  cluster = ~oktmo_stable
+)
+
+# Time-placebo
+rpanel2017 <- filter(rpanel, year <= 2017) %>%
+  mutate(post = if_else(year >= 2014, 1, 0))
+es_time_placebo <- feols(
+  ln_count ~ i(year, treat, ref = 2013) | oktmo_stable + year,
+  data = rpanel2017,
+  cluster = ~oktmo_stable
+)
+```
+
+**Ключевые слова:** юридические услуги, размещение фирм, судоустройство, разность разностей, квази-эксперимент
+
+В географии сферы услуг территориальная организация юридической отрасли остаётся малоизученной темой. Сравнительно немного исследований юридических услуг и в области эмпирического правоведения. Между тем понимание факторов размещения юридических фирм имеет значение для обеспечения доступности правовой помощи и для оценки пространственных эффектов реформ судебной системы.
+
+**Проблема и гипотеза.** Юридические фирмы косвенно взаимодействуют с судами: их сотрудники выступают в качестве представителей сторон, готовят процессуальные документы, анализируют ход дела. Можно предположить, что судоустройство — это фактор размещения юридических фирм: фирме важно находится ближе к суду [@gorkin1973]. На первый взгляд, очевидно, что и ключевые суды, и наибольшее количество юридических фирм находятся в одних и тех же городах, что как будто автоматически подтверждает гипотезу. Однако в этой ситуации затруднительно отделить эффект судоустройства как такового от иных, более традиционных факторов, таких как население, уровень экономического развития и центральный статус города. Тем не менее, можно проверить, стимулирует ли создание нового суда в городе появление новых юридических фирм или их перемещение. В исследовании предполагается, что появление апелляционных и кассационных судов общей юрисдикции осенью 2019 года увеличило число юридических фирм в городах размещения этих судов по сравнению с тем, что случилось бы, не будь эти суды созданы.
+
+**Условия квази-эксперимента.** В конце июля 2018 года был принят закон (№1-ФКЗ от 29.07.2018) о создании пяти апелляционных и девяти кассационных судов общей юрисдикции. Заявленная цель реформы — укрепление независимости правосудия благодаря экстерриториальности: новые судебные округа включают несколько субъектов федерации [@korshunov2019]. По сути речь шла о частичном заимствовании опыта арбитражных судов, где к тому времени уже давно существовали 20 апелляционных и 10 кассационных экстерриториальных судов. Такие суды можно назвать судами окружного уровня, то есть действующими в границах округа, охватывающего несколько федеральных или административно-территориальных единиц. Они же одновременно являются судами вышестоящих (по отношению к первой) инстанций. Суды начали работу в октябре 2019 года в 12 городах. В некоторых из них ранее действовали арбитражные суды окружного уровня, в некоторых — нет. Города были выбраны на федеральном уровне без очевидной связи с динамикой местного рынка юридических услуг, что позволяет говорить об относительной случайности воздействия, которая необходима для квази-экспериментальной оценки.
+
+**Данные.** Используются два источника данных о юридических фирмах: Единый реестр субъектов малого и среднего предпринимательства (реестр МСП; авторская обработка) и Российская база финансовой отчётности [РБФО; @bondarkov2025]. Под юридическими фирмами понимались организации и индивидуальные предприниматели с кодом ОКВЭД2 69.10 (деятельность в области права). Охват данных реестра МСП — 2016–26 годы, РБФО — 2011–24. Второй источник, в отличие от первого, включает некоммерческие организации, но не содержит сведений об индивидуальных предпринимателях. Сведения о населении городов по годам, необходимые для их классификации по размеру, получены из базы данных муниципальных образований (БДМО) Росстата [@bdmo2024]. Для учёта пригородных юридических фирм, тяготеющих к центральному городу, использованы модельные результаты выделения российских городских агломераций [@raysikh2020]. Города или агломерации отфильтрованы по размеру: оставлены только крупные (население от 250 тысяч человек по широко используемой географами классификации [@lappo1997]), чтобы обеспечить параллельность трендов с учётом того, что экспериментальная группа — это крупные либо крупнейшие города и города-миллионеры. Москва, Санкт-Петербург и их агломерации исключены из анализа, поскольку они кардинально отличаются от остальных населённых пунктов.
+
+**Методы.** Основной метод — разность разностей (difference-in-differences, DiD), реализованный как модель с двухфакторными фиксированными эффектами [TWFE; @roth2023] с помощью пакета fixest [@berge2018]. Зависимая переменная — логарифм числа юридических фирм. Опытная группа — города с судами общей юрисдикции окружного уровня; контрольная — все прочие города. Для проверки предпосылки о параллельных трендах использован дизайн event study. Оценка проводилась с несколькими спецификациями моделей: на уровне городов по данным реестра МСП; на уровне муниципальных образований с учётом агломераций по тем же данным; на длинном временном ряде РБФО по муниципальным образованиям с учётом агломераций. Для проверки устойчивости проведены плацебо-тест с рандомизацией опытной группы на данных МСП, leave-one-out-анализ на данных МСП и временной плацебо-тест на данных РБФО.
+
+**Результаты.** Во всех спецификациях оценка коэффициента treat × post составляет около 0.075 и является статистически значимой (@tbl-models). Это соответствует увеличению числа юридических фирм приблизительно на 8% в городах, где были созданы окружные суды общей юрисдикции, по сравнению с ситуацией отсутствия воздействия. Event study на данных МСП по агломерациям демонстрирует небольшие и отчасти значимые, но стабильные различия между группами в 2016–17 годах и рост коэффициентов после создания судов (@fig-es-aggl). Event study на данных РБФО с 2011 года подтверждает наличие положительного эффекта после 2019 года (@fig-rfsd-es). Максимальный эффект наблюдается в 2021–22 годах, после чего происходит постепенное затухание, вероятно, связанное с общими макроэкономическими шоками. Тренды однозначно параллельны в 2011–13 годах, далее наблюдается небольшое и не всегда значимое отклонение не в пользу экспериментальной группы, достигающее максимума к 2016–17 году, что согласуется с результатами на данных МСП. Вероятно, причина — в наличии значительного количества крупных городов (250–500 тысяч жителей), динамика которых несколько отличается от динамики экспериментальной группы. В то же время плацебо-тесты не выявляют статистически значимого эффекта (@fig-placebo, @fig-time-placebo), что говорит о надёжности результата. Кроме того, общая динамика экспериментальной группы на фоне контрольной скорее свидетельствует о положительном влиянии создания судов после нескольких лет спада, вызванного иными причинами, чем о возвратном росте, так как до 2014–17 годов группы практически не отличались друг от друга. Leave-one-out-проверка показывает устойчивость к исключению любого отдельного города из опытной группы (@fig-loo).
+
+**Новизна и обсуждение.** Данное исследование впервые оценивает роль судоустройства как фактора размещения юридических фирм в России с помощью квази-эксперимента. Результаты показывают, что создание судов окружного уровня является значимым фактором локального развития юридической отрасли. Вероятный механизм — юридическим фирмам выгодно находиться ближе к судам, в которых рассматриваются дела их клиентов. Кроме того, создание суда может сигнализировать о росте «статуса» города. Несмотря на то что суды окружного уровня рассматривают меньше дел, чем прочие, это компенсируется относительной важностью дел. К ограничениям исследования можно отнести анализ только число фирм (без занятости и выручки), короткий предреформенный период в данных  МСП, отсутствие сведений об адвокатских кабинетах. Работа вносит вклад в литературу о факторах размещения учреждений сферы услуг и имеет практическое значение для оценки пространственных последствий реформ судебной системы.
+
+## Ссылки {.unnumbered}
+
+::: {#refs}
+:::
+
+## Рисунки и таблицы
+
+```{r}
+#| label: tbl-models
+#| tbl-cap: "Результаты DiD-моделей: влияние создания судов общей юрисдикции окружного уровня на число юридических фирм (ln)"
+
+etable(
+  model, model_aggl, model_rfsd,
+  headers = c("Города (МСП)", "Агломерации (МСП)", "Агломерации (РБФО)"),
+  se.below = TRUE,
+  depvar = FALSE,
+  tex = FALSE,
+  fitstat = c("n", "r2", "wr2"),
+  dict = c(
+    "treat:post" = "Treat × Post",
+    "city" = "Город",
+    "oktmo_stable" = "Агломерация",
+    "year" = "Год"
+  ),
+  notes = "Стандартные ошибки кластеризованы по единицам наблюдения (городам либо агломерациям). * p < 0.05, ** p < 0.01, *** p < 0.001"
+)
+```
+
+```{r}
+#| label: fig-es-aggl
+#| fig-cap: "Event study: влияние создания судов общей юрисдикции окружного уровня на число юрфирм (ln), спецификация с учётом агломераций (реестр МСП, 2016–2026). Доверительные интервалы 95%. Базовый год: 2018"
+#| fig-width: 7
+#| fig-height: 4.5
+
+iplot(
+  es_aggl,
+  main = "Event Study: Влияние на число юрфирм (ln)",
+  xlab = "Год",
+  sub = "Доверительные интервалы 95%. Базовый год: 2018"
+)
+```
+
+```{r}
+#| label: fig-placebo
+#| fig-cap: "Плацебо-тест: event study с рандомизированной опытной группой (реестр МСП, 2016–2026). Доверительные интервалы 95%. Базовый год: 2017"
+#| fig-width: 7
+#| fig-height: 4.5
+
+iplot(
+  es_placebo,
+  main = "Event Study: Влияние на число юрфирм (ln)",
+  xlab = "Год",
+  sub = "Доверительные интервалы 95%. Базовый год: 2018"
+)
+```
+
+```{r}
+#| label: fig-loo
+#| fig-cap: "Leave-one-out анализ: коэффициент treat × post при последовательном исключении каждого города опытной группы (реестр МСП, 2016–2026)"
+#| fig-width: 7
+#| fig-height: 4.5
+
+ggplot(loo_results, aes(x = reorder(excluded_city, estimate), y = estimate)) +
+  geom_pointrange(aes(ymin = estimate - 1.96*se, ymax = estimate + 1.96*se)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  coord_flip() +
+  labs(
+     x = "Исключенный город (ОКТМО)",
+     y = "Оценка коэффициента",
+     caption = "Каждая точка — коэффициент без указанного города"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+#| label: fig-rfsd-es
+#| fig-cap: "Event study на данных РБФО (2011–2024). Базовый год — 2018. Доверительные интервалы 95%"
+#| fig-width: 7
+#| fig-height: 4.5
+
+iplot(
+  es_rfsd,
+  main = "Event Study: Влияние на число юрфирм (ln)",
+  xlab = "Год",
+  sub = "Доверительные интервалы 95%. Базовые годы: 2011–2015"
+)
+```
+
+```{r}
+#| label: fig-time-placebo
+#| fig-cap: "Временной плацебо-тест (РБФО, 2011–2017): treatment перенесён на 2014 год. Базовый год: 2013. Доверительные интервалы 95%"
+#| fig-width: 7
+#| fig-height: 4.5
+
+iplot(
+  es_time_placebo,
+  main = "Event Study: Влияние на число юрфирм (ln)",
+  xlab = "Год",
+  sub = "Доверительные интервалы 95%. Базовый год: 2013"
+)
+```
